@@ -2,8 +2,14 @@
 // code is governed by the MIT license that can be found in the LICENSE
 // file.
 
-//go:build !windows && !darwin
-// +build !windows,!darwin
+// This is the full version, using Dup2 to hand a descriptor to tshark. The
+// arm64 file next to it is the version without that, for platforms where Dup2
+// is not available - the BSDs on arm64. Linux has it on every architecture, so
+// linux stays here whatever the arch; anything else on arm64 goes there.
+//go:build !windows && !darwin && (linux || !arm64)
+// +build !windows
+// +build !darwin
+// +build linux !arm64
 
 package system
 

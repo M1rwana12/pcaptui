@@ -27,6 +27,10 @@ builds:
       - arm
     # 32-bit ARM is only worth building where people actually run it: Raspberry
     # Pi class Linux boxes. The BSDs and Windows on ARM are not that.
+    #
+    # arm64 is built everywhere. The inherited config skipped Windows and the
+    # BSDs on arm64, which hid a duplicate DumpcapExt declaration for years -
+    # a build that never runs cannot fail.
     ignore:
       - goos: darwin
         goarch: arm
@@ -38,12 +42,6 @@ builds:
         goarch: arm
       - goos: openbsd
         goarch: arm
-      - goos: freebsd
-        goarch: arm64
-      - goos: netbsd
-        goarch: arm64
-      - goos: openbsd
-        goarch: arm64
 
 archives:
   - id: pcaptui

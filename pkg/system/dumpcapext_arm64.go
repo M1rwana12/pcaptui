@@ -2,8 +2,11 @@
 // code is governed by the MIT license that can be found in the LICENSE
 // file.
 
-//go:build !darwin && !linux
-// +build !darwin,!linux
+// The filename already restricts this to arm64. Windows has its own
+// implementation and must be excluded here, or both files are compiled for
+// windows/arm64 and DumpcapExt is declared twice.
+//go:build !darwin && !linux && !windows
+// +build !darwin,!linux,!windows
 
 package system
 
