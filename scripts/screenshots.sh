@@ -16,7 +16,7 @@ cd "$(dirname "$0")/.."
 
 FIXTURE=scripts/pcaps/demo.pcap
 OUT=.github/assets
-SIZE=110x32
+SIZE=130x34
 
 if ! command -v tshark >/dev/null 2>&1; then
   echo "tshark is not on PATH; screenshots need it to dissect the capture" >&2
@@ -25,6 +25,17 @@ fi
 
 check=0
 [ "${1:-}" = "--check" ] && check=1
+
+# The committed screenshots are the Linux rendering. gowid picks its frame
+# characters from runtime.GOOS - light box drawing on Windows, heavy elsewhere -
+# so regenerating on another platform produces a file that will never match in
+# CI. Download the screenshots-linux artifact from a CI run instead.
+if [ "$(uname -s)" != "Linux" ]; then
+  echo "warning: the committed screenshots are the Linux rendering." >&2
+  echo "         gowid draws different frame characters on $(uname -s), so what" >&2
+  echo "         this produces will not match CI. Use the screenshots-linux" >&2
+  echo "         artifact from a CI run to regenerate." >&2
+fi
 
 bin=$(mktemp -d)/pcaptui
 go build -o "$bin" ./cmd/pcaptui
