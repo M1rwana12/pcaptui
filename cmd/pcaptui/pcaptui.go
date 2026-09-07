@@ -221,6 +221,13 @@ func cmain() int {
 	// Run after accessing the config so I can use the configured tshark binary, if there is one. I need that
 	// binary in the case that pcaptui is run where stdout is not a tty, in which case I exec tshark - but
 	// it makes sense to use the one in pcaptui.toml
+	// --screenshot draws the interface into a simulation screen, so stdout is
+	// never a terminal and the auto rule below would hand everything to tshark
+	// before the UI was ever built.
+	if tsopts.Screenshot != "" {
+		passthru = false
+	}
+
 	if passthru &&
 		(cli.FlagIsTrue(tsopts.PassThru) ||
 			(tsopts.PassThru == "auto" && !isatty.IsTerminal(os.Stdout.Fd())) ||
@@ -891,6 +898,15 @@ func cmain() int {
 		}
 	}()
 
+	var shotScreen tcell.SimulationScreen
+	if opts.Screenshot != "" {
+		if shotScreen, err = newShotScreen(opts.ScreenshotSize); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			return 1
+		}
+		ui.ScreenOverride = shotScreen
+	}
+
 	if app, err = ui.Build(usetty); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		// Tcell returns ExitError now because if its internal terminfo DB does not have
@@ -1042,6 +1058,10 @@ func cmain() int {
 	checkedPcapCache := false
 	checkPcapCacheDuration := 5 * time.Second
 	checkPcapCacheTimer := time.NewTimer(checkPcapCacheDuration)
+
+	if shotScreen != nil {
+		go captureWhenSettled(app, shotScreen, opts.Screenshot)
+	}
 
 Loop:
 	for {
@@ -1204,10 +1224,18 @@ Loop:
 		case <-ui.StartUIChan:
 			log.Infof("Launching pcaptui UI")
 
-			// Go to pcaptui UI view
-			if err = app.ActivateScreen(); err != nil {
-				fmt.Fprintf(os.Stderr, "Error starting UI: %v\n", err)
-				return 1
+			// Go to pcaptui UI view.
+			//
+			// Not when drawing into a simulation screen: gowid's
+			// ActivateScreen opens a fresh terminal screen and installs it,
+			// ignoring the one it was handed at construction, so activating
+			// here would throw away the screen the screenshot is being drawn
+			// into. It is already initialised, so there is nothing to do.
+			if shotScreen == nil {
+				if err = app.ActivateScreen(); err != nil {
+					fmt.Fprintf(os.Stderr, "Error starting UI: %v\n", err)
+					return 1
+				}
 			}
 
 			// Need to do that here because the app won't know how many colors the screen

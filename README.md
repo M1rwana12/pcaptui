@@ -20,6 +20,14 @@ pcaptui -r traffic.pcap
 pcaptui -i eth0 'port 443'
 ```
 
+<p align="center">
+  <img src=".github/assets/screenshot-packets.svg" alt="The packet list, protocol tree and hex view" width="100%">
+</p>
+
+<sub>That image is drawn by the program itself from
+<a href="scripts/pcaps/demo.pcap"><code>scripts/pcaps/demo.pcap</code></a>, and CI
+fails if it stops matching what the program renders — so it cannot go stale.</sub>
+
 ## Why
 
 Wireshark is the best protocol analyser there is, and `tshark` carries all of

@@ -3312,6 +3312,14 @@ func ApplyCurrentTheme(app gowid.IApp) {
 
 //======================================================================
 
+// ScreenOverride, when set, is rendered into instead of the terminal.
+//
+// It exists so the interface can be drawn into a tcell simulation screen with
+// no terminal attached: that is how the images in the documentation are
+// generated, and how the tests compare what is drawn against a known-good
+// screen. Nothing else should set it.
+var ScreenOverride tcell.Screen
+
 func Build(tty string) (*gowid.App, error) {
 
 	var err error
@@ -4397,6 +4405,7 @@ func Build(tty string) (*gowid.App, error) {
 		Log:                  log.StandardLogger(),
 		EnableBracketedPaste: true,
 		DontActivate:         true,
+		Screen:               ScreenOverride, // nil in normal use; gowid then opens the tty
 		Tty:                  tty,
 	})
 
