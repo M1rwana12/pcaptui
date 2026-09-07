@@ -109,6 +109,19 @@ jobs:
       - name: Screenshots match the committed ones
         run: bash scripts/screenshots.sh --check
 
+      # gowid picks its frame characters from runtime.GOOS - light box drawing
+      # on Windows, heavy everywhere else - so a screenshot taken on Windows
+      # can never match one taken here. The committed files are the Linux
+      # rendering; this makes them downloadable so they can be regenerated
+      # without a Linux machine.
+      - name: Upload what this platform rendered
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-linux
+          path: .github/assets/screenshot-*
+          retention-days: 7
+
   vulncheck:
     name: govulncheck
     runs-on: ubuntu-latest
