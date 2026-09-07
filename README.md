@@ -114,24 +114,12 @@ you want something different.
 - [User Guide](docs/UserGuide.md) — every view, every key, every setting
 - [FAQ](docs/FAQ.md) — the questions that actually come up
 - [Contributing](docs/Contributing.md) — building, testing, releasing
-- [Credits](docs/Credits.md) — everyone whose work is in here
 
-## Credit
+## Built with
 
-`pcaptui` is built on [termshark](https://github.com/gcla/termshark), written by
-**Graham Clark**, who died in 2024. The packet loader, the widget set and the
-great majority of this code are his work, used here under the MIT licence he
-chose for it. This project exists because that work deserved to keep running
-against current Wireshark releases rather than stop where it was left.
-
-It also carries a fix first written by [Gilbert
-Ramirez](https://github.com/gcla/termshark/pull/170), a Wireshark core
-developer, for the column format change in Wireshark 4.x. His pull request was
-never merged upstream; there was no longer anyone to merge it.
-
-The terminal widgets come from [gowid](https://github.com/gcla/gowid), also
-Graham Clark's, built on [tcell](https://github.com/gdamore/tcell).
+[gowid](https://github.com/gcla/gowid) for the terminal widgets, on top of
+[tcell](https://github.com/gdamore/tcell).
 
 ## Licence
 
-MIT. Copyright (c) 2019 Graham Clark — see [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE).

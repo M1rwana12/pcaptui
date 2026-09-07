@@ -91,8 +91,7 @@ The widget set is [gowid](https://github.com/gcla/gowid), built on
 treat it as a fixed dependency: work around its limitations rather than
 expecting fixes.
 
-## A note on the code you are editing
+## Copyright headers
 
-Most of this codebase was written by Graham Clark, who died in 2024. His
-copyright notices stay in the files, and the MIT licence requires that. When you
-change one of his files, leave the header alone.
+Leave the copyright header at the top of a file alone when you edit it. The MIT
+licence this project is under requires those notices to travel with the code.

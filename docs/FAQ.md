@@ -7,23 +7,6 @@ hex view; `tshark` does all the analysis. There are no dissectors here and no
 protocol knowledge — when Wireshark learns a protocol, so does `pcaptui`,
 because it is the same code doing the work.
 
-## How is it related to termshark?
-
-`pcaptui` is built on [termshark](https://github.com/gcla/termshark), written by
-Graham Clark, who died in 2024. Most of this code is his, used under the MIT
-licence he chose. See the [credit section of the README](../README.md#credit).
-
-The practical differences: it works against current Wireshark releases, eleven
-known vulnerabilities are gone, it has Expert Information, Protocol Hierarchy
-and first-class TLS decryption, and its tests pass on Windows and macOS as well
-as Linux.
-
-## Can I use my old termshark config?
-
-Yes. Copy `termshark.toml` to `pcaptui.toml` in the new config directory —
-`:config` shows where that is. The settings are unchanged apart from the new
-`tls-keylog` key.
-
 ## Why does it need tshark? Why not read the pcap directly?
 
 Because Wireshark's dissectors are the point. There are around three thousand

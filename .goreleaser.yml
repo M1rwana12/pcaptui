@@ -77,5 +77,3 @@ changelog:
 
 release:
   draft: true
-  footer: |
-    Built on termshark by Graham Clark, used under the MIT licence.
