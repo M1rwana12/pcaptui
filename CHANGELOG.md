@@ -1,5 +1,27 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- **Hiding every column stopped the program from starting.** With no visible
+  column, gowid renders each child of the packet list as Max, finds no maximum
+  height among them and panics — before the interface appears, so there was no
+  way to undo it from inside the program:
+
+  ```
+  panic: All columns widgets were rendered Max, so there is no max height to use.
+  ```
+
+  Nothing in the interface prevents hiding the last column, so a user could
+  write a configuration that made their own program refuse to start, with a
+  message that says nothing about columns. It now falls back to the default
+  columns and says why.
+
+  This was found by driving the program with a deliberately broken
+  configuration, using the same screenshot machinery that renders the images in
+  the README.
+
 ## [1.0.0] - 2026-09-07
 
 First release.

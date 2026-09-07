@@ -296,6 +296,22 @@ func GetPsmlColumnFormatFrom(colKey string) []PsmlColumnSpec {
 	return getPsmlColumnFormatWithoutLock(colKey)
 }
 
+// AllHidden reports whether every column is hidden.
+//
+// A packet list with no visible columns cannot be drawn: gowid's columns
+// widget renders every child as Max, finds no maximum height among them and
+// panics. It happens before the interface appears, so a configuration that
+// hides the last column leaves the program unable to start at all - and
+// nothing in the user interface stops you from writing one.
+func AllHidden(specs []PsmlColumnSpec) bool {
+	for _, s := range specs {
+		if !s.Hidden {
+			return false
+		}
+	}
+	return len(specs) > 0
+}
+
 func getPsmlColumnFormatWithoutLock(colKey string) []PsmlColumnSpec {
 	res := make([]PsmlColumnSpec, 0)
 	widths := profiles.ConfStringSlice(colKey, []string{})
@@ -344,6 +360,9 @@ func getPsmlColumnFormatWithoutLock(colKey string) []PsmlColumnSpec {
 		}
 		if len(res) == 0 {
 			logrus.Warnf("No configured PSML column formats were understood. Using safe default")
+			res = DefaultPsmlColumnSpec
+		} else if AllHidden(res) {
+			logrus.Warnf("Every configured PSML column is hidden. Using safe default")
 			res = DefaultPsmlColumnSpec
 		}
 
