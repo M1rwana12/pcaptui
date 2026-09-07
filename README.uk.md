@@ -95,6 +95,10 @@ go install github.com/m1rwana12/pcaptui/cmd/pcaptui@latest
 :expert
 ```
 
+<p align="center">
+  <img src=".github/assets/screenshot-expert.svg" alt="Експертна інформація з підозрою на ретрансмісію" width="100%">
+</p>
+
 Зазвичай це найшвидший спосіб знайти проблему в захопленні, яке вам щойно
 передали, не читаючи його пакет за пакетом.
 

@@ -57,8 +57,6 @@ func parseSize(size string) (int, int, error) {
 
 //======================================================================
 
-// How long the screen has to stop changing before it is considered finished,
-// and how long to wait for that before giving up and taking what is there.
 const (
 	shotPollEvery = 150 * time.Millisecond
 	shotStableFor = 3 // consecutive identical polls
@@ -67,16 +65,70 @@ const (
 
 // captureWhenSettled writes the screen once it stops changing, then quits.
 //
-// It waits for the picture to settle rather than sleeping for a fixed time
-// because loading a capture takes as long as it takes: a fixed sleep is either
-// too short on a slow machine, and produces a half-drawn image, or too long on
-// every machine. Settling is also what makes the result reproducible enough to
-// commit and compare against.
-func captureWhenSettled(app *gowid.App, screen tcell.SimulationScreen, prefix string) {
+// If keys are given, they are typed once the capture has finished loading, and
+// the screen is left to settle a second time before being written - that is how
+// the screenshot of a view reached by a command, rather than the one the
+// program opens on, is taken.
+func captureWhenSettled(app *gowid.App, screen tcell.SimulationScreen, prefix string, keys string) {
+	loaded := settle(app, screen, "")
+
+	if keys != "" {
+		log.Infof("Screenshot: typing %q", keys)
+		typeKeys(app, screen, keys)
+
+		// Pass what was on screen before, so a view that takes a moment to
+		// appear is waited for rather than photographed before it arrives.
+		settle(app, screen, loaded)
+	}
+
+	rows, w, h := screenshot.Grab(screen)
+	if err := writeShot(prefix, rows, w, h); err != nil {
+		fmt.Fprintf(os.Stderr, "Error writing screenshot: %v\n", err)
+	}
+
+	app.Quit()
+}
+
+// typeKeys feeds keystrokes to the interface one at a time.
+//
+// Explicit key events rather than InjectKeyBytes: the byte form has to be
+// parsed back into events by tcell's terminal decoder, which a simulation
+// screen is not driving. One key per poll interval, because the command line
+// builds its completion list between keystrokes and a burst arrives before it
+// is ready for it.
+//
+// "\n" in the string means Enter.
+func typeKeys(app *gowid.App, screen tcell.SimulationScreen, keys string) {
+	for _, r := range keys {
+		switch r {
+		case '\n', '\r':
+			screen.InjectKey(tcell.KeyEnter, ' ', tcell.ModNone)
+		default:
+			screen.InjectKey(tcell.KeyRune, r, tcell.ModNone)
+		}
+
+		app.Run(gowid.RunFunction(func(gowid.IApp) {}))
+		time.Sleep(shotPollEvery)
+	}
+}
+
+// settle polls until the screen has stopped changing, and returns what it
+// finally showed.
+//
+// It waits for the picture to stop moving rather than sleeping for a fixed
+// time because loading a capture takes as long as it takes: a fixed sleep is
+// either too short on a slow machine, and produces a half-drawn image, or too
+// long on every machine.
+//
+// differentFrom, when not empty, must be left behind first: the screen has to
+// change away from it before stability counts. Without that, a command whose
+// result takes a moment would be photographed before it appeared.
+func settle(app *gowid.App, screen tcell.SimulationScreen, differentFrom string) string {
 	deadline := time.Now().Add(shotGiveUp)
 
 	var last string
 	same := 0
+	moved := differentFrom == ""
 
 	for {
 		// The main loop only paints in response to a render event, and with no
@@ -87,8 +139,12 @@ func captureWhenSettled(app *gowid.App, screen tcell.SimulationScreen, prefix st
 
 		time.Sleep(shotPollEvery)
 
-		rows, w, h := screenshot.Grab(screen)
+		rows, _, _ := screenshot.Grab(screen)
 		now := screenshot.Text(rows)
+
+		if !moved && now != differentFrom {
+			moved = true
+		}
 
 		if now == last && strings.TrimSpace(now) != "" {
 			same++
@@ -97,23 +153,14 @@ func captureWhenSettled(app *gowid.App, screen tcell.SimulationScreen, prefix st
 		}
 		last = now
 
-		settled := same >= shotStableFor
-		expired := time.Now().After(deadline)
-
-		if !settled && !expired {
-			continue
+		if moved && same >= shotStableFor {
+			return now
 		}
 
-		if expired && !settled {
+		if time.Now().After(deadline) {
 			log.Warnf("Screenshot: screen still changing after %v, taking it anyway", shotGiveUp)
+			return now
 		}
-
-		if err := writeShot(prefix, rows, w, h); err != nil {
-			fmt.Fprintf(os.Stderr, "Error writing screenshot: %v\n", err)
-		}
-
-		app.Quit()
-		return
 	}
 }
 

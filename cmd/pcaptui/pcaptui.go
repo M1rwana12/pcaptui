@@ -1068,7 +1068,7 @@ func cmain() int {
 	checkPcapCacheTimer := time.NewTimer(checkPcapCacheDuration)
 
 	if shotScreen != nil {
-		go captureWhenSettled(app, shotScreen, opts.Screenshot)
+		go captureWhenSettled(app, shotScreen, opts.Screenshot, opts.ScreenshotKeys)
 	}
 
 Loop:

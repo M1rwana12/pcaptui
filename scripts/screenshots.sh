@@ -66,6 +66,8 @@ if [ "$check" = 1 ]; then
 fi
 
 shoot screenshot-packets
+shoot screenshot-expert --screenshot-keys ':expert
+'
 
 if [ "$check" = 1 ]; then
   for f in "$OUT"/screenshot-*.txt; do

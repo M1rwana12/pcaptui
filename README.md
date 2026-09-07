@@ -91,6 +91,10 @@ first.
 :expert
 ```
 
+<p align="center">
+  <img src=".github/assets/screenshot-expert.svg" alt="Expert Information, reporting a suspected retransmission" width="100%">
+</p>
+
 It is usually the fastest way to find the problem in a capture you have just
 been handed, without reading it packet by packet.
 
