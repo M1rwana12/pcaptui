@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 400" width="1280" height="400" role="img" aria-label="pcaptui - read packet captures in your terminal">
+  <title>pcaptui</title>
+
+  <rect width="1280" height="400" fill="#0D1117"/>
+
+  <!-- Terminal chrome, just enough to say "this lives in a terminal". -->
+  <rect x="56" y="56" width="1168" height="288" rx="14" fill="#010409" stroke="#21262D" stroke-width="2"/>
+  <g fill="#30363D">
+    <circle cx="88" cy="86" r="7"/>
+    <circle cx="112" cy="86" r="7"/>
+    <circle cx="136" cy="86" r="7"/>
+  </g>
+  <line x1="56" y1="110" x2="1224" y2="110" stroke="#21262D" stroke-width="2"/>
+
+  <!-- Wordmark. Monospace stack, because every machine that would render this
+       has one and the subject is a terminal program. -->
+  <text x="96" y="196"
+        font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace"
+        font-size="76" font-weight="700" fill="#E6EDF3" letter-spacing="-2">pcaptui</text>
+
+  <text x="99" y="242"
+        font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace"
+        font-size="23" fill="#8B949E">Read packet captures in your terminal.</text>
+
+  <text x="99" y="276"
+        font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace"
+        font-size="23" fill="#8B949E">Wireshark's dissectors do the work.</text>
+
+  <!-- Prompt line, blinking cursor drawn as a solid block. -->
+  <text x="99" y="318"
+        font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace"
+        font-size="23" fill="#3FB950">$ <tspan fill="#E6EDF3">pcaptui -r traffic.pcap</tspan></text>
+  <rect x="404" y="300" width="12" height="24" fill="#F0883E"/>
+
+  <!-- A packet list on the right, the selected row picked out in amber. -->
+  <g transform="translate(700, 140)">
+    <g fill="#21262D">
+      <rect x="0" y="0" width="30" height="12" rx="6"/>
+      <rect x="0" y="34" width="30" height="12" rx="6"/>
+      <rect x="0" y="68" width="30" height="12" rx="6"/>
+      <rect x="0" y="102" width="30" height="12" rx="6"/>
+      <rect x="0" y="136" width="30" height="12" rx="6"/>
+    </g>
+    <rect x="48" y="0" width="330" height="12" rx="6" fill="#21262D"/>
+    <rect x="48" y="34" width="430" height="12" rx="6" fill="#F0883E"/>
+    <rect x="48" y="68" width="266" height="12" rx="6" fill="#21262D"/>
+    <rect x="48" y="102" width="392" height="12" rx="6" fill="#21262D"/>
+    <rect x="48" y="136" width="304" height="12" rx="6" fill="#21262D"/>
+
+    <g fill="#30363D">
+      <rect x="70" y="52" width="6" height="6" rx="3"/>
+      <rect x="86" y="53" width="120" height="4" rx="2"/>
+    </g>
+  </g>
+</svg>

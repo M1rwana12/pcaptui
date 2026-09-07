@@ -1,6 +1,14 @@
-# pcaptui
+<p align="center">
+  <img src=".github/assets/banner.svg" alt="pcaptui — read packet captures in your terminal" width="100%">
+</p>
 
-Read packet captures in your terminal, with Wireshark's dissectors doing the work.
+<p align="center">
+  <a href="https://github.com/m1rwana12/pcaptui/actions/workflows/ci.yml"><img src="https://github.com/m1rwana12/pcaptui/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/m1rwana12/pcaptui/releases/latest"><img src="https://img.shields.io/github/v/release/m1rwana12/pcaptui?color=F0883E&label=release" alt="Latest release"></a>
+  <a href="https://pkg.go.dev/github.com/m1rwana12/pcaptui"><img src="https://pkg.go.dev/badge/github.com/m1rwana12/pcaptui.svg" alt="Go reference"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/licence-MIT-blue" alt="MIT licence"></a>
+  <img src="https://img.shields.io/badge/platforms-13-8B949E" alt="13 platforms">
+</p>
 
 `pcaptui` is a terminal interface to `tshark`. It gives you the packet list, the
 protocol tree and the hex view you would get from Wireshark, over SSH, on a
@@ -114,6 +122,8 @@ you want something different.
 - [User Guide](docs/UserGuide.md) — every view, every key, every setting
 - [FAQ](docs/FAQ.md) — the questions that actually come up
 - [Contributing](docs/Contributing.md) — building, testing, releasing
+- [Brand](docs/Brand.md) — how this project looks and sounds
+- [Security policy](SECURITY.md) — what counts as a vulnerability here
 
 ## Built with
 
@@ -122,4 +132,4 @@ you want something different.
 
 ## Licence
 
-MIT — see [LICENSE](LICENSE).
+MIT. Copyright (c) 2026 m1rwana12 — see [LICENSE](LICENSE).

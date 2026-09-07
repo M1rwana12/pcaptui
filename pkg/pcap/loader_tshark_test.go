@@ -243,7 +243,6 @@ func (f *fakeIfaceCmd) Start() error {
 		n, err := io.Copy(f.output, f.input)
 		if err != nil {
 			//panic(err)
-			//log.Infof("GCLA: err is %T", err)
 		}
 	}, Goroutinewg)
 	return nil
