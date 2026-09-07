@@ -226,6 +226,14 @@ func cmain() int {
 	// before the UI was ever built.
 	if tsopts.Screenshot != "" {
 		passthru = false
+
+		// Pin the terminal description. The theme, and with it the box-drawing
+		// characters and the column widths, is chosen from the terminal's
+		// colour capabilities - so without this the same capture renders
+		// differently on different machines and the committed screenshot could
+		// never match.
+		os.Setenv("TERM", "xterm-256color")
+		os.Setenv("COLORTERM", "")
 	}
 
 	if passthru &&
@@ -1249,9 +1257,15 @@ Loop:
 			// Start tcell/gowid events for keys, etc
 			appRunner.Start()
 
-			// Reinstate  our terminal overrides that allow ctrl-z
-			if err := ctrlzLineDisc.Set(usetty); err != nil {
-				ui.OpenError(fmt.Sprintf("Unexpected error setting Ctrl-z handler: %v\n", err), app)
+			// Reinstate  our terminal overrides that allow ctrl-z.
+			//
+			// Skipped when drawing into a simulation screen: there is no
+			// terminal, so this fails, and the error dialog it opens covers
+			// half of the screenshot being taken.
+			if shotScreen == nil {
+				if err := ctrlzLineDisc.Set(usetty); err != nil {
+					ui.OpenError(fmt.Sprintf("Unexpected error setting Ctrl-z handler: %v\n", err), app)
+				}
 			}
 
 			ui.Running = true

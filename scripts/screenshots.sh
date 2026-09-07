@@ -34,9 +34,24 @@ shoot() { # name, extra args...
   "$bin" --screenshot "$OUT/$name" --screenshot-size "$SIZE" -r "$FIXTURE" "$@" >/dev/null
 }
 
+# The comparison ignores everything from the Info column rightwards.
+#
+# That text comes from tshark's dissectors, and differs between Wireshark
+# releases - Ubuntu's tshark says "[TCP segment of a reassembled PDU]" where a
+# newer one does not. Asserting on it would mean the gate breaks whenever a
+# runner updates Wireshark, which is noise, not a regression in this program.
+# What is checked is the part pcaptui draws: the title bar, the filter box, the
+# panes, the column layout, and the values in every column up to Info.
+normalise() {
+  cut -c1-65 "$1" | sed 's/[[:space:]]*$//'
+}
+
 if [ "$check" = 1 ]; then
   tmp=$(mktemp -d)
-  cp "$OUT"/screenshot-*.txt "$tmp/" 2>/dev/null || true
+  for f in "$OUT"/screenshot-*.txt; do
+    [ -e "$f" ] || continue
+    normalise "$f" > "$tmp/$(basename "$f")"
+  done
 fi
 
 shoot screenshot-packets
@@ -44,7 +59,8 @@ shoot screenshot-packets
 if [ "$check" = 1 ]; then
   for f in "$OUT"/screenshot-*.txt; do
     base=$(basename "$f")
-    if ! diff -u "$tmp/$base" "$f" > /tmp/shotdiff 2>/dev/null; then
+    normalise "$f" > "$tmp/new-$base"
+    if ! diff -u "$tmp/$base" "$tmp/new-$base" > /tmp/shotdiff 2>/dev/null; then
       echo "Screenshot $base changed:" >&2
       head -40 /tmp/shotdiff >&2
       echo >&2
