@@ -1,39 +1,39 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 956 608" width="956" height="608" role="img">
-  <rect width="956" height="608" rx="10" fill="#0D1117"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1124 644" width="1124" height="644" role="img">
+  <rect width="1124" height="644" rx="10" fill="#0D1117"/>
   <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="14">
     <rect x="16.00" y="16.00" width="117.60" height="18.00" fill="#000000"/>
-    <rect x="133.60" y="16.00" width="638.40" height="18.00" fill="#000000"/>
-    <rect x="772.00" y="16.00" width="168.00" height="18.00" fill="#949494"/>
-    <rect x="16.00" y="34.00" width="924.00" height="18.00" fill="#000000"/>
+    <rect x="133.60" y="16.00" width="806.40" height="18.00" fill="#000000"/>
+    <rect x="940.00" y="16.00" width="168.00" height="18.00" fill="#949494"/>
+    <rect x="16.00" y="34.00" width="1092.00" height="18.00" fill="#000000"/>
     <rect x="16.00" y="52.00" width="75.60" height="18.00" fill="#000000"/>
-    <rect x="91.60" y="52.00" width="697.20" height="18.00" fill="#0087FF"/>
-    <rect x="788.80" y="52.00" width="58.80" height="18.00" fill="#949494"/>
-    <rect x="847.60" y="52.00" width="8.40" height="18.00" fill="#000000"/>
-    <rect x="856.00" y="52.00" width="67.20" height="18.00" fill="#949494"/>
-    <rect x="923.20" y="52.00" width="16.80" height="18.00" fill="#000000"/>
-    <rect x="16.00" y="70.00" width="924.00" height="18.00" fill="#000000"/>
-    <rect x="16.00" y="88.00" width="924.00" height="18.00" fill="#000000"/>
+    <rect x="91.60" y="52.00" width="865.20" height="18.00" fill="#0087FF"/>
+    <rect x="956.80" y="52.00" width="58.80" height="18.00" fill="#949494"/>
+    <rect x="1015.60" y="52.00" width="8.40" height="18.00" fill="#000000"/>
+    <rect x="1024.00" y="52.00" width="67.20" height="18.00" fill="#949494"/>
+    <rect x="1091.20" y="52.00" width="16.80" height="18.00" fill="#000000"/>
+    <rect x="16.00" y="70.00" width="1092.00" height="18.00" fill="#000000"/>
+    <rect x="16.00" y="88.00" width="1092.00" height="18.00" fill="#000000"/>
     <rect x="16.00" y="106.00" width="8.40" height="18.00" fill="#0087FF"/>
     <rect x="24.40" y="106.00" width="42.00" height="18.00" fill="#800080"/>
-    <rect x="66.40" y="106.00" width="873.60" height="18.00" fill="#0087FF"/>
-    <rect x="16.00" y="124.00" width="924.00" height="18.00" fill="#D7FFD7"/>
-    <rect x="16.00" y="142.00" width="924.00" height="18.00" fill="#D7FFD7"/>
-    <rect x="16.00" y="160.00" width="924.00" height="18.00" fill="#D7FFD7"/>
-    <rect x="16.00" y="178.00" width="924.00" height="18.00" fill="#D7FFD7"/>
-    <rect x="16.00" y="196.00" width="924.00" height="18.00" fill="#D7FFD7"/>
-    <rect x="16.00" y="214.00" width="924.00" height="18.00" fill="#000000"/>
-    <rect x="16.00" y="232.00" width="924.00" height="18.00" fill="#000000"/>
-    <rect x="16.00" y="250.00" width="924.00" height="18.00" fill="#000000"/>
-    <rect x="16.00" y="268.00" width="924.00" height="18.00" fill="#585858"/>
-    <rect x="16.00" y="286.00" width="924.00" height="18.00" fill="#000000"/>
-    <rect x="16.00" y="304.00" width="924.00" height="18.00" fill="#000000"/>
-    <rect x="16.00" y="322.00" width="924.00" height="18.00" fill="#000000"/>
-    <rect x="16.00" y="340.00" width="924.00" height="18.00" fill="#000000"/>
-    <rect x="16.00" y="358.00" width="924.00" height="18.00" fill="#000000"/>
-    <rect x="16.00" y="376.00" width="924.00" height="18.00" fill="#000000"/>
-    <rect x="16.00" y="394.00" width="924.00" height="18.00" fill="#000000"/>
-    <rect x="16.00" y="412.00" width="924.00" height="18.00" fill="#000000"/>
-    <rect x="16.00" y="430.00" width="924.00" height="18.00" fill="#000000"/>
+    <rect x="66.40" y="106.00" width="1041.60" height="18.00" fill="#0087FF"/>
+    <rect x="16.00" y="124.00" width="1092.00" height="18.00" fill="#D7FFD7"/>
+    <rect x="16.00" y="142.00" width="1092.00" height="18.00" fill="#D7FFD7"/>
+    <rect x="16.00" y="160.00" width="1092.00" height="18.00" fill="#D7FFD7"/>
+    <rect x="16.00" y="178.00" width="1092.00" height="18.00" fill="#D7FFD7"/>
+    <rect x="16.00" y="196.00" width="1092.00" height="18.00" fill="#D7FFD7"/>
+    <rect x="16.00" y="214.00" width="1092.00" height="18.00" fill="#000000"/>
+    <rect x="16.00" y="232.00" width="1092.00" height="18.00" fill="#000000"/>
+    <rect x="16.00" y="250.00" width="1092.00" height="18.00" fill="#000000"/>
+    <rect x="16.00" y="268.00" width="1092.00" height="18.00" fill="#585858"/>
+    <rect x="16.00" y="286.00" width="1092.00" height="18.00" fill="#000000"/>
+    <rect x="16.00" y="304.00" width="1092.00" height="18.00" fill="#000000"/>
+    <rect x="16.00" y="322.00" width="1092.00" height="18.00" fill="#000000"/>
+    <rect x="16.00" y="340.00" width="1092.00" height="18.00" fill="#000000"/>
+    <rect x="16.00" y="358.00" width="1092.00" height="18.00" fill="#000000"/>
+    <rect x="16.00" y="376.00" width="1092.00" height="18.00" fill="#000000"/>
+    <rect x="16.00" y="394.00" width="1092.00" height="18.00" fill="#000000"/>
+    <rect x="16.00" y="412.00" width="1092.00" height="18.00" fill="#000000"/>
+    <rect x="16.00" y="430.00" width="1092.00" height="18.00" fill="#000000"/>
     <rect x="16.00" y="448.00" width="50.40" height="18.00" fill="#444444"/>
     <rect x="66.40" y="448.00" width="16.80" height="18.00" fill="#000000"/>
     <rect x="83.20" y="448.00" width="16.80" height="18.00" fill="#000000"/>
@@ -43,37 +43,39 @@
     <rect x="511.60" y="448.00" width="8.40" height="18.00" fill="#000000"/>
     <rect x="520.00" y="448.00" width="42.00" height="18.00" fill="#FFFFFF"/>
     <rect x="562.00" y="448.00" width="75.60" height="18.00" fill="#444444"/>
-    <rect x="637.60" y="448.00" width="302.40" height="18.00" fill="#000000"/>
-    <rect x="16.00" y="466.00" width="924.00" height="18.00" fill="#000000"/>
-    <rect x="16.00" y="484.00" width="924.00" height="18.00" fill="#000000"/>
-    <rect x="16.00" y="502.00" width="924.00" height="18.00" fill="#000000"/>
-    <rect x="16.00" y="520.00" width="924.00" height="18.00" fill="#000000"/>
-    <rect x="16.00" y="538.00" width="924.00" height="18.00" fill="#000000"/>
-    <rect x="16.00" y="556.00" width="924.00" height="18.00" fill="#000000"/>
-    <rect x="16.00" y="574.00" width="924.00" height="18.00" fill="#000000"/>
+    <rect x="637.60" y="448.00" width="470.40" height="18.00" fill="#000000"/>
+    <rect x="16.00" y="466.00" width="1092.00" height="18.00" fill="#000000"/>
+    <rect x="16.00" y="484.00" width="1092.00" height="18.00" fill="#000000"/>
+    <rect x="16.00" y="502.00" width="1092.00" height="18.00" fill="#000000"/>
+    <rect x="16.00" y="520.00" width="1092.00" height="18.00" fill="#000000"/>
+    <rect x="16.00" y="538.00" width="1092.00" height="18.00" fill="#000000"/>
+    <rect x="16.00" y="556.00" width="1092.00" height="18.00" fill="#000000"/>
+    <rect x="16.00" y="574.00" width="1092.00" height="18.00" fill="#000000"/>
+    <rect x="16.00" y="592.00" width="1092.00" height="18.00" fill="#000000"/>
+    <rect x="16.00" y="610.00" width="1092.00" height="18.00" fill="#000000"/>
     <text x="16.00" y="28.96" fill="#FF0000" xml:space="preserve">pcaptui v1.0.0</text>
     <text x="133.60" y="28.96" fill="#FFFFFF" xml:space="preserve">  |  demo.pcap</text>
-    <text x="772.00" y="28.96" fill="#000000" xml:space="preserve">  Analysis    Misc</text>
-    <text x="16.00" y="46.96" fill="#FFFFFF" xml:space="preserve">┌────────────────────────────────────────────────────────────────────────────────────────────────────────────┐</text>
-    <text x="16.00" y="64.96" fill="#FFFFFF" xml:space="preserve">│Filter:</text>
-    <text x="788.80" y="64.96" fill="#000000" xml:space="preserve">&lt;Apply&gt;</text>
-    <text x="856.00" y="64.96" fill="#000000" xml:space="preserve">&lt;Recent&gt;</text>
-    <text x="923.20" y="64.96" fill="#FFFFFF" xml:space="preserve"> │</text>
-    <text x="16.00" y="82.96" fill="#FFFFFF" xml:space="preserve">└────────────────────────────────────────────────────────────────────────────────────────────────────────────┘</text>
+    <text x="940.00" y="28.96" fill="#000000" xml:space="preserve">  Analysis    Misc</text>
+    <text x="16.00" y="46.96" fill="#FFFFFF" xml:space="preserve">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓</text>
+    <text x="16.00" y="64.96" fill="#FFFFFF" xml:space="preserve">┃Filter:</text>
+    <text x="956.80" y="64.96" fill="#000000" xml:space="preserve">&lt;Apply&gt;</text>
+    <text x="1024.00" y="64.96" fill="#000000" xml:space="preserve">&lt;Recent&gt;</text>
+    <text x="1091.20" y="64.96" fill="#FFFFFF" xml:space="preserve"> ┃</text>
+    <text x="16.00" y="82.96" fill="#FFFFFF" xml:space="preserve">┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛</text>
     <text x="16.00" y="100.96" fill="#FFFFFF" xml:space="preserve"> No. - Time -       Source -      Dest -        Proto - Length - Info -</text>
     <text x="24.40" y="118.96" fill="#FFFFFF" xml:space="preserve">1</text>
-    <text x="66.40" y="118.96" fill="#FFFFFF" xml:space="preserve"> 0.000000000  192.0.2.10    198.51.100.20 TCP     137      GET /index.html HTTP/1.1</text>
+    <text x="66.40" y="118.96" fill="#FFFFFF" xml:space="preserve"> 0.000000000  192.0.2.10    198.51.100.20 TCP     137      GET /index.html HTTP/1.1  [TCP segment of a reassembled PDU]</text>
     <text x="16.00" y="136.96" fill="#262626" xml:space="preserve"> 2     1.000000000  198.51.100.20 192.0.2.10    HTTP    178      HTTP/1.1 200 OK  (text/html)</text>
-    <text x="16.00" y="154.96" fill="#262626" xml:space="preserve"> 3     2.000000000  192.0.2.10    198.51.100.20 TCP     123      GET /style.css HTTP/1.1</text>
+    <text x="16.00" y="154.96" fill="#262626" xml:space="preserve"> 3     2.000000000  192.0.2.10    198.51.100.20 TCP     123      GET /style.css HTTP/1.1  [TCP segment of a reassembled PDU]</text>
     <text x="16.00" y="172.96" fill="#262626" xml:space="preserve"> 4     3.000000000  198.51.100.20 192.0.2.10    HTTP    134      HTTP/1.1 404 Not Found  (text/plain)</text>
-    <text x="16.00" y="190.96" fill="#262626" xml:space="preserve"> 5     4.000000000  192.0.2.10    198.51.100.20 TCP     176      POST /api/report HTTP/1.1</text>
-    <text x="16.00" y="208.96" fill="#262626" xml:space="preserve"> 6     5.000000000  198.51.100.20 192.0.2.10    HTTP    142      HTTP/1.1 500 Internal Server Error  (text/pl</text>
-    <text x="16.00" y="262.96" fill="#FFFFFF" xml:space="preserve">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</text>
-    <text x="16.00" y="280.96" fill="#000000" xml:space="preserve">[+] Frame 1: Packet, 137 bytes on wire (1096 bits), 137 bytes captured (1096 bits) on interface Fake IF, text2</text>
+    <text x="16.00" y="190.96" fill="#262626" xml:space="preserve"> 5     4.000000000  192.0.2.10    198.51.100.20 TCP     176      POST /api/report HTTP/1.1  [TCP segment of a reassembled PDU]</text>
+    <text x="16.00" y="208.96" fill="#262626" xml:space="preserve"> 6     5.000000000  198.51.100.20 192.0.2.10    HTTP    142      HTTP/1.1 500 Internal Server Error  (text/plain)</text>
+    <text x="16.00" y="262.96" fill="#FFFFFF" xml:space="preserve">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</text>
+    <text x="16.00" y="280.96" fill="#000000" xml:space="preserve">[+] Frame 1: 137 bytes on wire (1096 bits), 137 bytes captured (1096 bits) on interface Fake IF, text2pcap, id 0 [=]</text>
     <text x="16.00" y="298.96" fill="#FFFFFF" xml:space="preserve">[+] Ethernet II, Src: Send_00 (20:53:45:4e:44:00), Dst: Receive_00 (20:52:45:43:56:00)</text>
     <text x="16.00" y="316.96" fill="#FFFFFF" xml:space="preserve">[+] Internet Protocol Version 4, Src: 192.0.2.10, Dst: 198.51.100.20</text>
     <text x="16.00" y="334.96" fill="#FFFFFF" xml:space="preserve">[+] Transmission Control Protocol, Src Port: 51000, Dst Port: 80, Seq: 1, Len: 83</text>
-    <text x="16.00" y="442.96" fill="#FFFFFF" xml:space="preserve">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</text>
+    <text x="16.00" y="442.96" fill="#FFFFFF" xml:space="preserve">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</text>
     <text x="16.00" y="460.96" fill="#FFFFFF" xml:space="preserve"> 0000</text>
     <text x="83.20" y="460.96" fill="#FFFFFF" font-weight="700" xml:space="preserve">20</text>
     <text x="100.00" y="460.96" fill="#000000" xml:space="preserve"> 52 45 43 56 00</text>
@@ -81,13 +83,14 @@
     <text x="436.00" y="460.96" fill="#FFFFFF" xml:space="preserve"> 45 00</text>
     <text x="520.00" y="460.96" fill="#000000" xml:space="preserve">RECV.</text>
     <text x="562.00" y="460.96" fill="#FFFFFF" xml:space="preserve"> S END...</text>
-    <text x="637.60" y="460.96" fill="#FFFFFF" xml:space="preserve">E.                                 ▲</text>
-    <text x="16.00" y="478.96" fill="#FFFFFF" xml:space="preserve"> 0010   00 7b 12 34 00 00 ff 06  bc f6 c0 00 02 0a c6 33   .{.4.... .......3                                 █</text>
+    <text x="637.60" y="460.96" fill="#FFFFFF" xml:space="preserve">E.</text>
+    <text x="16.00" y="478.96" fill="#FFFFFF" xml:space="preserve"> 0010   00 7b 12 34 00 00 ff 06  bc f6 c0 00 02 0a c6 33   .{.4.... .......3</text>
     <text x="16.00" y="496.96" fill="#FFFFFF" xml:space="preserve"> 0020   64 14 c7 38 00 50 00 00  00 00 00 00 00 00 50 00   d..8.P.. ......P.</text>
     <text x="16.00" y="514.96" fill="#FFFFFF" xml:space="preserve"> 0030   20 00 75 98 00 00 47 45  54 20 2f 69 6e 64 65 78    .u...GE T /index</text>
     <text x="16.00" y="532.96" fill="#FFFFFF" xml:space="preserve"> 0040   2e 68 74 6d 6c 20 48 54  54 50 2f 31 2e 31 0d 0a   .html HT TP/1.1..</text>
     <text x="16.00" y="550.96" fill="#FFFFFF" xml:space="preserve"> 0050   48 6f 73 74 3a 20 65 78  61 6d 70 6c 65 2e 74 65   Host: ex ample.te</text>
     <text x="16.00" y="568.96" fill="#FFFFFF" xml:space="preserve"> 0060   73 74 0d 0a 55 73 65 72  2d 41 67 65 6e 74 3a 20   st..User -Agent:</text>
-    <text x="16.00" y="586.96" fill="#FFFFFF" xml:space="preserve"> 0070   70 63 61 70 74 75 69 2d  64 65 6d 6f 0d 0a 41 63   pcaptui- demo..Ac                                 ▼</text>
+    <text x="16.00" y="586.96" fill="#FFFFFF" xml:space="preserve"> 0070   70 63 61 70 74 75 69 2d  64 65 6d 6f 0d 0a 41 63   pcaptui- demo..Ac</text>
+    <text x="16.00" y="604.96" fill="#FFFFFF" xml:space="preserve"> 0080   63 65 70 74 3a 20 2a 2f  2a                        cept: */ *</text>
   </g>
 </svg>
