@@ -10,6 +10,8 @@
   <img src="https://img.shields.io/badge/platforms-13-8B949E" alt="13 platforms">
 </p>
 
+<p align="center"><b>English</b> · <a href="README.uk.md">Українською</a></p>
+
 `pcaptui` is a terminal interface to `tshark`. It gives you the packet list, the
 protocol tree and the hex view you would get from Wireshark, over SSH, on a
 machine with no display, without copying a 2GB capture back to your desktop
