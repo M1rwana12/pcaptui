@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to build (must already exist)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # goreleaser reads the tag history for the changelog
+          ref: ${{ inputs.tag || github.ref }}
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          check-latest: true
+
+      # The version is compiled in, not injected, so a tag that disagrees with
+      # version.go would ship binaries reporting the wrong number. Releases
+      # cannot be quietly replaced once people have them.
+      - name: Tag must match version.go
+        run: |
+          tag="${{ inputs.tag || github.ref_name }}"
+          compiled=$(grep -oP 'Version string = "\K[^"]+' version.go)
+          echo "tag=$tag  version.go=$compiled"
+          if [ "$tag" != "$compiled" ]; then
+            echo "::error::tag $tag does not match version.go ($compiled)"
+            exit 1
+          fi
+
+      - name: Install tshark
+        run: |
+          sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq
+          echo "wireshark-common wireshark-common/install-setuid boolean false" | sudo debconf-set-selections
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tshark
+
+      # Releasing something whose tests were never run is how a broken binary
+      # reaches people who then have no reason to trust the next one.
+      - name: Test
+        run: go test ./...
+
+      - uses: goreleaser/goreleaser-action@v6
+        with:
+          version: '~> v2'
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

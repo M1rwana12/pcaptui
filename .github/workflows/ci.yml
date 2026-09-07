@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          check-latest: true
+
+      # pcaptui shells out to tshark for every capture it reads, so the
+      # tests are meaningless without it. The suite went years without
+      # running anywhere but Linux, which is how a test that asked Windows
+      # for a Unix environment variable survived.
+      - name: Install tshark (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq
+          echo "wireshark-common wireshark-common/install-setuid boolean false" | sudo debconf-set-selections
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tshark
+
+      - name: Install tshark (macOS)
+        if: runner.os == 'macOS'
+        run: brew install --quiet wireshark
+
+      - name: Install tshark (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          choco install --no-progress -y wireshark
+          echo "C:\Program Files\Wireshark" >> $env:GITHUB_PATH
+
+      - name: tshark version
+        run: tshark -v
+
+      - name: Build
+        run: go build ./...
+
+      # -composites=false suppresses one check: unkeyed fields in structs
+      # from other packages. There are 34 such literals, all of them gowid
+      # types, and they are a real fragility - if gowid ever reorders a
+      # field they break silently. They are not fixed yet, and turning the
+      # check off here is a deliberate, temporary choice rather than a
+      # claim that the code is clean. Re-enable it once they are keyed:
+      #   go vet -composites=true ./...  lists every remaining one.
+      - name: Vet
+        run: go vet -composites=false ./...
+
+      - name: Test
+        run: go test ./...
+
+  format:
+    name: gofmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      # Reports the offending files rather than just failing, because
+      # "gofmt failed" without a list is a wasted CI run.
+      - name: Check formatting
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "These files are not gofmt-clean:"
+            echo "$unformatted"
+            gofmt -d $unformatted
+            exit 1
+          fi
+
+  vulncheck:
+    name: govulncheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          check-latest: true
+
+      # This project's entire input is capture files, which are by nature
+      # untrusted. A parser with a known infinite loop is not a stale
+      # dependency, it is the bug.
+      - name: Run govulncheck
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...

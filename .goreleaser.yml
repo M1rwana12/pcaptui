@@ -1,0 +1,81 @@
+version: 2
+
+project_name: pcaptui
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: pcaptui
+    main: ./cmd/pcaptui
+    binary: pcaptui
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    goos:
+      - linux
+      - darwin
+      - windows
+      - freebsd
+      - netbsd
+      - openbsd
+    goarch:
+      - amd64
+      - arm64
+      - arm
+    # 32-bit ARM is only worth building where people actually run it: Raspberry
+    # Pi class Linux boxes. The BSDs and Windows on ARM are not that.
+    ignore:
+      - goos: darwin
+        goarch: arm
+      - goos: windows
+        goarch: arm
+      - goos: freebsd
+        goarch: arm
+      - goos: netbsd
+        goarch: arm
+      - goos: openbsd
+        goarch: arm
+      - goos: freebsd
+        goarch: arm64
+      - goos: netbsd
+        goarch: arm64
+      - goos: openbsd
+        goarch: arm64
+
+archives:
+  - id: pcaptui
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}
+    files:
+      - LICENSE
+      - README.md
+      - CHANGELOG.md
+      - docs/*
+
+checksum:
+  name_template: checksums.txt
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^style:'
+      - '^ci:'
+      - '^chore:'
+
+release:
+  draft: true
+  footer: |
+    Built on termshark by Graham Clark, used under the MIT licence.

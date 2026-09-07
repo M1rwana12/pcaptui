@@ -1,0 +1,9 @@
+# Go tooling assumes LF. Without this, a Windows checkout gets CRLF and
+# gofmt reports every file in the tree as unformatted.
+* text=auto eol=lf
+*.png binary
+*.gif binary
+*.jpg binary
+*.ico binary
+*.pcap binary
+*.pcapng binary
