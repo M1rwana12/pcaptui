@@ -151,7 +151,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: screenshots-linux
-          path: .github/assets/screenshot-*
+          path: |
+            .github/assets/screenshot-*
+            .github/assets/demo.*
           retention-days: 7
 
   vulncheck:
