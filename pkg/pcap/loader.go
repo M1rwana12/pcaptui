@@ -208,9 +208,13 @@ type PsmlLoader struct {
 	packetAverageLength []averageTracker // length of num columns
 	packetMaxLength     []maxTracker     // length of num columns
 	packetPsmlData      [][]string
-	packetPsmlColors    []PacketColors
-	packetPsmlHeaders   []string
-	PacketNumberMap     map[int]int // map from actual packet row <packet>12</packet> to pos in unsorted table
+	// One index per packet into colorPalette, rather than the colours
+	// themselves: two interfaces a packet cost 124 MB and eight million
+	// allocations per million packets, measured, against under 1 MB here.
+	packetPsmlColorIdx []uint16
+	colorPalette       *ColorPalette
+	packetPsmlHeaders  []string
+	PacketNumberMap    map[int]int // map from actual packet row <packet>12</packet> to pos in unsorted table
 	// This would be affected by a display filter e.g. packet 12 might be the 1st packet in the table.
 	// I need this so that if the user jumps to a mark stored as "packet 12", I can find the right table row.
 	PacketNumberOrder map[int]int // e.g. {12->44, 44->71, 71->72,...} - the packet numbers, in order, affected by a filter.
@@ -336,7 +340,8 @@ func (c *ParentLoader) RenewPsmlLoader() {
 		packetAverageLength: make([]averageTracker, 64),
 		packetMaxLength:     make([]maxTracker, 64),
 		packetPsmlData:      make([][]string, 0),
-		packetPsmlColors:    make([]PacketColors, 0),
+		packetPsmlColorIdx:  make([]uint16, 0),
+		colorPalette:        NewColorPalette(),
 		packetPsmlHeaders:   make([]string, 0, 10),
 		PacketNumberMap:     make(map[int]int),
 		PacketNumberOrder:   make(map[int]int),
@@ -1850,10 +1855,12 @@ func (p *PsmlLoader) loadPsmlSync(iloader *InterfaceLoader, e iPsmlLoaderEnv, cb
 						p.packetMaxLength[i].update(ct)
 					}
 
-					p.packetPsmlColors = append(p.packetPsmlColors, PacketColors{
-						FG: psmlColorToIColor(fg),
-						BG: psmlColorToIColor(bg),
-					})
+					// The palette parses each distinct pair once. tshark writes
+					// the same handful of colours for every packet in a
+					// capture, and parsing them per packet was 124 MB and
+					// eight million allocations per million packets.
+					p.packetPsmlColorIdx = append(p.packetPsmlColorIdx,
+						p.colorPalette.Add(fg, bg))
 					p.Unlock()
 
 				case "section":
@@ -1961,8 +1968,21 @@ func (p *PsmlLoader) PsmlHeaders() []string {
 	return p.packetPsmlHeaders
 }
 
-func (p *PsmlLoader) PsmlColors() []PacketColors {
-	return p.packetPsmlColors
+// ColorAt is the colours of one row.
+//
+// A method rather than the whole slice: handing out a []PacketColors would
+// mean building the very slice the palette exists to avoid.
+func (p *PsmlLoader) ColorAt(row int) PacketColors {
+	if row < 0 || row >= len(p.packetPsmlColorIdx) {
+		return PacketColors{}
+	}
+	return p.colorPalette.At(p.packetPsmlColorIdx[row])
+}
+
+// NumColors is how many rows have a colour yet, which is what a caller needs
+// during a load to know whether a row is covered.
+func (p *PsmlLoader) NumColors() int {
+	return len(p.packetPsmlColorIdx)
 }
 
 func (p *PsmlLoader) PsmlAverageLengths() []gwutil.IntOption {

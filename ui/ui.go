@@ -1025,10 +1025,18 @@ type psmlTableRowWidget struct {
 	// once and that this happens quickly, but then assume the user might want to move back to the
 	// table header manually, and it would be strange if the table keeps jumping back to the data...
 	didFirstAutoFocus bool
-	colors            []pcap.PacketColors
+	// The loader itself, asked for one row's colours at a time. Holding a
+	// slice of them meant a million packets carried a million pairs of
+	// interfaces; the loader keeps a palette instead.
+	colors iRowColors
 }
 
-func NewPsmlTableRowWidget(w *rowFocusTableWidget, c []pcap.PacketColors) *psmlTableRowWidget {
+type iRowColors interface {
+	ColorAt(row int) pcap.PacketColors
+	NumColors() int
+}
+
+func NewPsmlTableRowWidget(w *rowFocusTableWidget, c iRowColors) *psmlTableRowWidget {
 	res := &psmlTableRowWidget{
 		rowFocusTableWidget: w,
 		colors:              c,
@@ -1046,10 +1054,9 @@ func (t *psmlTableRowWidget) At(lpos list.IWalkerPosition) gowid.IWidget {
 
 	// Check the color array length because it might not yet be adequately
 	// populated from the arriving psml.
-	if pos >= 0 && PacketColors && pos < len(t.colors) {
-		res = styled.New(res,
-			gowid.MakePaletteEntry(t.colors[pos].FG, t.colors[pos].BG),
-		)
+	if pos >= 0 && PacketColors && t.colors != nil && pos < t.colors.NumColors() {
+		c := t.colors.ColorAt(pos)
+		res = styled.New(res, gowid.MakePaletteEntry(c.FG, c.BG))
 	}
 
 	return res
@@ -2502,7 +2509,7 @@ func makePacketListModel(psml iPsmlInfo, app gowid.IApp) *psmlmodel.Model {
 
 func updatePacketListWithData(psml iPsmlInfo, app gowid.IApp) {
 	updatePacketCount(psml, app)
-	packetListView.colors = psml.PsmlColors() // otherwise this isn't updated
+	packetListView.colors = psml // otherwise this isn't updated
 	model := makePacketListModel(psml, app)
 	newPacketsArrived = true
 	packetListTable.SetModel(model, app)
@@ -2551,7 +2558,8 @@ func ApplyAutoScroll(ev *tcell.EventKey, app gowid.IApp) bool {
 type iPsmlInfo interface {
 	PsmlData() [][]string
 	PsmlHeaders() []string
-	PsmlColors() []pcap.PacketColors
+	ColorAt(row int) pcap.PacketColors
+	NumColors() int
 	PsmlAverageLengths() []gwutil.IntOption
 	PsmlMaxLengths() []int
 }
@@ -2566,7 +2574,7 @@ func setPacketListWidgets(psml iPsmlInfo, app gowid.IApp) {
 			"packet-list-row-selected",
 			"packet-list-row-focus",
 		),
-		psml.PsmlColors(),
+		psml,
 	)
 
 	packetListView.OnFocusChanged(gowid.MakeWidgetCallback("cb", func(app gowid.IApp, w gowid.IWidget) {

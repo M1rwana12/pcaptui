@@ -75,6 +75,15 @@
   just handed you, could be missed entirely. The help now lists them, generated
   from the bindings so the two cannot drift apart.
 
+### Changed
+
+- **A million packets carry 1.9 MB of colour instead of 115 MB.** Measured
+  before and after on a million packets: 115 MB and 8,000,084 allocations
+  became 1.9 MB and 49. Every packet stored its own pair of colour interfaces,
+  built by parsing the hex strings tshark printed - per packet, though a
+  capture only ever uses the handful of pairs its colour rules define. Each
+  distinct pair is now parsed once and packets carry an index into it.
+
 ### Fixed
 
 - **The hex pane showed bytes that were not in the packet.** `tshark -x` prints
