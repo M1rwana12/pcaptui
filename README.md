@@ -88,7 +88,7 @@ packets, checksum failures, protocol violations — grouped by severity, worst
 first.
 
 ```
-:expert
+e         # or :expert
 ```
 
 <p align="center">
@@ -104,7 +104,7 @@ Every protocol present, by packet and byte count, as a tree. Answers "what is
 actually in this file" in one screen.
 
 ```
-:hierarchy
+y         # or :hierarchy
 ```
 
 Both views narrow to the display filter you have applied, the way Wireshark

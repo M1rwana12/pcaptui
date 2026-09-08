@@ -13,9 +13,9 @@
     <rect x="1091.20" y="52.00" width="16.80" height="18.00" fill="#000000"/>
     <rect x="16.00" y="70.00" width="1092.00" height="18.00" fill="#000000"/>
     <rect x="16.00" y="88.00" width="1092.00" height="18.00" fill="#000000"/>
-    <rect x="16.00" y="106.00" width="8.40" height="18.00" fill="#0087FF"/>
+    <rect x="16.00" y="106.00" width="8.40" height="18.00" fill="#FF875F"/>
     <rect x="24.40" y="106.00" width="42.00" height="18.00" fill="#800080"/>
-    <rect x="66.40" y="106.00" width="1041.60" height="18.00" fill="#0087FF"/>
+    <rect x="66.40" y="106.00" width="1041.60" height="18.00" fill="#FF875F"/>
     <rect x="16.00" y="124.00" width="1092.00" height="18.00" fill="#D7FFD7"/>
     <rect x="16.00" y="142.00" width="1092.00" height="18.00" fill="#D7FFD7"/>
     <rect x="16.00" y="160.00" width="1092.00" height="18.00" fill="#D7FFD7"/>
@@ -54,7 +54,7 @@
     <rect x="16.00" y="592.00" width="1092.00" height="18.00" fill="#000000"/>
     <rect x="16.00" y="610.00" width="1092.00" height="18.00" fill="#000000"/>
     <text x="16.00" y="28.96" fill="#FF0000" xml:space="preserve">pcaptui v1.0.0</text>
-    <text x="133.60" y="28.96" fill="#FFFFFF" xml:space="preserve">  |  demo.pcap</text>
+    <text x="133.60" y="28.96" fill="#FFFFFF" xml:space="preserve">  |  demo.pcap  |  7 packets</text>
     <text x="940.00" y="28.96" fill="#000000" xml:space="preserve">  Analysis    Misc</text>
     <text x="16.00" y="46.96" fill="#FFFFFF" xml:space="preserve">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓</text>
     <text x="16.00" y="64.96" fill="#FFFFFF" xml:space="preserve">┃Filter:</text>
@@ -64,7 +64,7 @@
     <text x="16.00" y="82.96" fill="#FFFFFF" xml:space="preserve">┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛</text>
     <text x="16.00" y="100.96" fill="#FFFFFF" xml:space="preserve"> No. - Time -       Source -      Dest -        Proto - Length - Info -</text>
     <text x="24.40" y="118.96" fill="#FFFFFF" xml:space="preserve">1</text>
-    <text x="66.40" y="118.96" fill="#FFFFFF" xml:space="preserve"> 0.000000000  192.0.2.10    198.51.100.20 TCP     137      GET /index.html HTTP/1.1  [TCP segment of a reassembled PDU]</text>
+    <text x="66.40" y="118.96" fill="#000000" xml:space="preserve"> 0.000000000  192.0.2.10    198.51.100.20 TCP     137      GET /index.html HTTP/1.1  [TCP segment of a reassembled PDU]</text>
     <text x="16.00" y="136.96" fill="#262626" xml:space="preserve"> 2     1.000000000  198.51.100.20 192.0.2.10    HTTP    178      HTTP/1.1 200 OK  (text/html)</text>
     <text x="16.00" y="154.96" fill="#262626" xml:space="preserve"> 3     2.000000000  192.0.2.10    198.51.100.20 TCP     123      GET /style.css HTTP/1.1  [TCP segment of a reassembled PDU]</text>
     <text x="16.00" y="172.96" fill="#262626" xml:space="preserve"> 4     3.000000000  198.51.100.20 192.0.2.10    HTTP    134      HTTP/1.1 404 Not Found  (text/plain)</text>

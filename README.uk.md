@@ -92,7 +92,7 @@ go install github.com/m1rwana12/pcaptui/cmd/pcaptui@latest
 найгірше згори.
 
 ```
-:expert
+e         # або :expert
 ```
 
 <p align="center">
@@ -108,7 +108,7 @@ go install github.com/m1rwana12/pcaptui/cmd/pcaptui@latest
 питання «що взагалі є в цьому файлі» одним екраном.
 
 ```
-:hierarchy
+y         # або :hierarchy
 ```
 
 Обидва вигляди звужуються до застосованого фільтра відображення — так само, як
