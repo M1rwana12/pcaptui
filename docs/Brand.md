@@ -48,15 +48,35 @@ screenshots it sits next to.
 | Muted | `#30363D` | unselected packet rows, gutter marks |
 | Grey | `#8B949E` | secondary text, captions |
 | Paper | `#E6EDF3` | primary text on ink |
-| **Accent** | **`#F0883E`** | the selected packet, the cursor, one thing per image |
+| **Accent** | **`#F0883E`** | the row under the cursor; one thing per image |
 | Signal | `#3FB950` | shell prompts, passing states |
 
-**The accent marks the selection and nothing else.** One amber element per
-image. The moment there are two, the picture stops saying "this is the packet
-you are looking at".
+**The accent marks where you are.** In the program that is exactly two palette
+entries in `assets/themes/default-256.toml` — `packet-list-row-focus` and
+`packet-struct-focus`, the row under the cursor in whichever of those two panes
+has focus. Only one pane has focus at a time, so only one amber band is ever on
+screen. Black text on it, not white: white on this amber is 2.5:1, black is
+8.3:1.
+
+A second, quieter marker sits inside that band — `packet-list-cell-focus`,
+purple, saying which column is current. It is deliberately not the accent: it
+answers a different question, and if it were amber too the band would say
+nothing.
 
 Amber rather than blue on purpose: blue in this field means Wireshark, and this
-project is not Wireshark and should not borrow its authority.
+project is not Wireshark and should not borrow its authority. The themes did
+use blue until 2026-09-08; this document described the amber before the program
+did, which was the wrong way round.
+
+Everything else that is coloured in the interface is a **state signal, not an
+accent**: the filter box is cyan when empty, amber-orange while the expression
+is incomplete, red when it is wrong, green when it is valid. Those follow
+Wireshark's convention on purpose — a user coming from Wireshark should not
+have to learn a new colour for "this filter is broken".
+
+A terminal with fewer than 256 colours cannot render `#F0883E`; the 16- and
+8-colour themes substitute the nearest thing they have, which is cyan. The
+palette below is what the 256-colour theme and the README assets use.
 
 ## Type
 

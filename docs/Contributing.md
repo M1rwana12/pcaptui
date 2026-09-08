@@ -39,6 +39,20 @@ CI runs these on Linux, macOS and Windows, plus `govulncheck`. All three
 platforms matter: a test that quietly only worked on Linux is how a Windows bug
 survived for years here.
 
+### If you change anything under `assets/`
+
+The themes are compiled into the binary by `statik`, not read from the source
+tree, so editing `assets/themes/*.toml` does nothing on its own — a rebuild
+will happily keep using the old colours and give you no reason why.
+
+```bash
+go install github.com/rakyll/statik@latest
+cd assets && statik -src=. -f      # or: go generate ./assets
+gofmt -w assets/statik/statik.go   # statik does not format what it writes
+```
+
+Commit the regenerated `assets/statik/statik.go` with your change.
+
 ### About `-composites=false`
 
 `go vet` flags 34 unkeyed struct literals, all of them `gowid` types. They are a

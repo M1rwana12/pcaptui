@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gcla/gowid"
+	"github.com/gcla/gowid/vim"
 	"github.com/gdamore/tcell/v2"
 	"github.com/m1rwana12/pcaptui/internal/screenshot"
 	log "github.com/sirupsen/logrus"
@@ -97,24 +98,24 @@ func captureWhenSettled(app *gowid.App, screen tcell.SimulationScreen, prefix st
 
 // typeKeys feeds keystrokes to the interface one at a time.
 //
+// The string is written in the same syntax the :map command documents:
+// printable characters stand for themselves, and compound keys are named -
+// <esc>, <enter>, <tab>, <down>, <pgdn>, <C-f>. Named keys are what let a
+// screenshot reach a pane other than the one the program opens focused on;
+// without them the only reachable states were the first screen and whatever a
+// typed command could produce.
+//
 // Explicit key events rather than InjectKeyBytes: the byte form has to be
 // parsed back into events by tcell's terminal decoder, which a simulation
 // screen is not driving. One key per poll interval, because the command line
 // builds its completion list between keystrokes and a burst arrives before it
 // is ready for it.
-//
-// "\n" in the string means Enter and "\t" means Tab, which is how a
-// screenshot reaches a pane that is not the one the program starts focused on.
 func typeKeys(app *gowid.App, screen tcell.SimulationScreen, keys string) {
-	for _, r := range keys {
-		switch r {
-		case '\n', '\r':
-			screen.InjectKey(tcell.KeyEnter, ' ', tcell.ModNone)
-		case '\t':
-			screen.InjectKey(tcell.KeyTab, '\t', tcell.ModNone)
-		default:
-			screen.InjectKey(tcell.KeyRune, r, tcell.ModNone)
-		}
+	for _, kp := range vim.VimStringToKeys(keys) {
+		// vim.KeyPress is a defined type over gowid.Key, so it carries none of
+		// its methods; the conversion is how the fields are read.
+		k := gowid.Key(kp)
+		screen.InjectKey(k.Key(), k.Rune(), k.Modifiers())
 
 		app.Run(gowid.RunFunction(func(gowid.IApp) {}))
 		time.Sleep(shotPollEvery)

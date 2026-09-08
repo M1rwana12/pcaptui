@@ -11,6 +11,15 @@
   filter that matched seven, and nothing said a number was still climbing.
   Wireshark's equivalent is the most-read part of its window.
 
+- **The row under the cursor is amber**, not blue. `docs/Brand.md` had said so
+  since the brand was written; the themes never did, so the document described
+  an intention as a fact. Blue in this field means Wireshark, and the reason
+  for choosing another colour applies to the program more than to the README.
+  Black text on it rather than white: 8.3:1 against 2.5:1.
+
+  Terminals with fewer than 256 colours cannot render it and keep the colour
+  they had.
+
 - **One key per analysis view**, the same key that now appears beside the entry
   in the Analysis menu: `p` capture file properties, `s` reassemble stream,
   `v` conversations, `e` expert information, `y` protocol hierarchy.
