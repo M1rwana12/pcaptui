@@ -1,0 +1,46 @@
+# Maintainer: m1rwana12 <senja3209@icloud.com>
+pkgname=pcaptui
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="Terminal interface to tshark: packet list, protocol tree and hex view, over SSH"
+arch=('x86_64' 'aarch64')
+url="https://github.com/m1rwana12/pcaptui"
+license=('MIT')
+depends=('wireshark-cli')
+makedepends=('go')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/m1rwana12/pcaptui/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('dcec9fb3179563e6fc9e1753d8d59bf8ff0ca0715a94b1024635f56abe068e87')
+
+build() {
+  cd "$pkgname-$pkgver"
+
+  # Arch's Go packaging guidelines: build with the distribution's flags, no
+  # network access at build time, and a reproducible trimmed path.
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw"
+
+  go build -ldflags "-linkmode=external -X main.version=$pkgver" \
+    -o "$pkgname" ./cmd/pcaptui
+}
+
+check() {
+  cd "$pkgname-$pkgver"
+
+  # Several tests drive a real tshark, which is what makes them worth running
+  # here: they check this program against the tshark the user will actually
+  # have, not against the one the developer had.
+  go test ./...
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+
+  install -Dm755 "$pkgname" "$pkgdir/usr/bin/$pkgname"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+  install -Dm644 docs/UserGuide.md "$pkgdir/usr/share/doc/$pkgname/UserGuide.md"
+  install -Dm644 docs/FAQ.md "$pkgdir/usr/share/doc/$pkgname/FAQ.md"
+}
