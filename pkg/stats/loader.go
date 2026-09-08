@@ -27,7 +27,7 @@ var Goroutinewg *sync.WaitGroup
 //======================================================================
 
 type ILoaderCmds interface {
-	Stats(pcapfile string, zarg string) pcap.IPcapCommand
+	Stats(pcapfile string, zargs ...string) pcap.IPcapCommand
 }
 
 type commands struct{}
@@ -40,8 +40,16 @@ var _ ILoaderCmds = commands{}
 
 // Stats runs tshark for one statistic. -q suppresses the per-packet output so
 // only the statistic itself reaches stdout.
-func (c commands) Stats(pcapfile string, zarg string) pcap.IPcapCommand {
-	args := []string{"-q", "-z", zarg, "-r", pcapfile}
+func (c commands) Stats(pcapfile string, zargs ...string) pcap.IPcapCommand {
+	// tshark takes several -z arguments and produces all of them from a single
+	// pass over the capture, which is why the overview costs one read of the
+	// file rather than three.
+	args := []string{"-q"}
+	for _, z := range zargs {
+		args = append(args, "-z", z)
+	}
+	args = append(args, "-r", pcapfile)
+
 	return &pcap.Command{
 		Cmd: exec.Command(pcaptui.TSharkBin(), args...),
 	}
@@ -84,13 +92,13 @@ type IStatsCallbacks interface {
 	AfterStatsEnd(success bool)
 }
 
-func (c *Loader) StartLoad(pcapfile string, zarg string, app gowid.IApp, cb IStatsCallbacks) {
+func (c *Loader) StartLoad(pcapfile string, zargs []string, app gowid.IApp, cb IStatsCallbacks) {
 	pcaptui.TrackedGo(func() {
-		c.loadStatsAsync(pcapfile, zarg, app, cb)
+		c.loadStatsAsync(pcapfile, zargs, app, cb)
 	}, Goroutinewg)
 }
 
-func (c *Loader) loadStatsAsync(pcapf string, zarg string, app gowid.IApp, cb IStatsCallbacks) {
+func (c *Loader) loadStatsAsync(pcapf string, zargs []string, app gowid.IApp, cb IStatsCallbacks) {
 	c.statsCtx, c.statsCancelFn = context.WithCancel(c.mainCtx)
 
 	procChan := make(chan int)
@@ -102,7 +110,7 @@ func (c *Loader) loadStatsAsync(pcapf string, zarg string, app gowid.IApp, cb IS
 		}
 	}()
 
-	c.statsCmd = c.cmds.Stats(pcapf, zarg)
+	c.statsCmd = c.cmds.Stats(pcapf, zargs...)
 
 	termChan := make(chan error)
 

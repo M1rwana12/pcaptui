@@ -9,6 +9,7 @@
 - [Copy mode](#copy-mode)
 - [Following a stream](#following-a-stream)
 - [Conversations](#conversations)
+- [Overview](#overview)
 - [Expert Information](#expert-information)
 - [Protocol Hierarchy](#protocol-hierarchy)
 - [Endpoints](#endpoints)
@@ -94,6 +95,7 @@ the Analysis menu:
 
 | Key | |
 |---|---|
+| `o` | overview — all three questions at once |
 | `p` | capture file properties |
 | `s` | reassemble the stream the selected packet is in |
 | `v` | conversations |
@@ -196,6 +198,25 @@ Select a row and **Prepare** writes a display filter for that conversation into
 the filter box without running it, so you can adjust it first; **Apply** runs it
 immediately. You can pick direction: both ways, one way, or by source or
 destination alone.
+
+## Overview
+
+`o`, `:overview`, or **Overview** in the Analysis menu.
+
+The three questions you have about a capture somebody just handed you, on one
+screen: **what is wrong with it**, **what is in it**, and **who is on the
+wire**. Each section shows its first few rows and says how many it left out;
+the full table for any of them is one key away.
+
+Every row keeps the filter its own table would have given it, so the summary is
+not a dead end — enter still narrows the packet list to those packets.
+
+Problems come first because that is what you are looking for, and because a
+capture with nothing wrong is worth knowing in one line rather than as a
+missing section.
+
+It is one `tshark` run, not three: `tshark` accepts several `-z` arguments and
+produces all of them from a single pass over the file.
 
 ## Expert Information
 

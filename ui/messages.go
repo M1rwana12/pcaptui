@@ -116,6 +116,7 @@ Activate cmdline mode with the : key.
 Hit tab to see and choose possible completions.
 
 capinfo______ - Capture file properties
+overview_____ - What is in this capture, what is wrong with it, who is on the wire
 clear-filter_ - Clear the display filter and apply
 clear-packets - Clear the current pcap
 columns______ - Choose the columns to display

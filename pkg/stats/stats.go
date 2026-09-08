@@ -28,6 +28,9 @@ type Stat struct {
 	Summary string
 	// zbase is the -z argument without any display filter.
 	zbase string
+	// extraZ are further -z arguments asked for in the same pass. tshark
+	// accepts several, and one pass over a capture beats three.
+	extraZ []string
 }
 
 var (
@@ -66,10 +69,25 @@ var (
 		Summary: "Who is on the wire, by packets and bytes",
 		zbase:   "endpoints,ip",
 	}
+	// Overview is the three of them at once: what is in the capture, what is
+	// wrong with it, and who is on the wire.
+	//
+	// It is the question somebody actually has when handed a capture, and
+	// answering it needed knowing three commands. tshark accepts several -z
+	// arguments in one invocation, so this is one pass over the file rather
+	// than three.
+	Overview = Stat{
+		Name:    "Overview",
+		Command: "overview",
+		Key:     'o',
+		Summary: "What is in this capture, what is wrong with it, who is on the wire",
+		zbase:   "io,phs",
+		extraZ:  []string{"expert", "endpoints,ip"},
+	}
 )
 
 // All is every statistic pcaptui offers, in the order they are presented.
-var All = []Stat{Expert, ProtoHierarchy, Endpoints}
+var All = []Stat{Overview, Expert, ProtoHierarchy, Endpoints}
 
 // Lookup finds a statistic by its minibuffer command.
 func Lookup(command string) (Stat, bool) {
@@ -88,11 +106,25 @@ func Lookup(command string) (Stat, bool) {
 // so a filter containing commas - "tcp.port in {80,443}" is ordinary Wireshark
 // syntax - is passed through whole and needs no escaping.
 func (s Stat) ZArg(displayFilter string) string {
+	return withFilter(s.zbase, displayFilter)
+}
+
+// ZArgs is every -z argument this statistic needs, narrowed to displayFilter.
+// Most have one; Overview asks for three in a single pass.
+func (s Stat) ZArgs(displayFilter string) []string {
+	res := []string{withFilter(s.zbase, displayFilter)}
+	for _, z := range s.extraZ {
+		res = append(res, withFilter(z, displayFilter))
+	}
+	return res
+}
+
+func withFilter(zbase string, displayFilter string) string {
 	filter := strings.TrimSpace(displayFilter)
 	if filter == "" {
-		return s.zbase
+		return zbase
 	}
-	return s.zbase + "," + filter
+	return zbase + "," + filter
 }
 
 //======================================================================

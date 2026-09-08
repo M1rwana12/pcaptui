@@ -71,11 +71,12 @@ statistic that matched nothing says so in words instead of opening an empty box.
 
 ## Analysis
 
-Six views, one key each — the same key that appears beside them in the Analysis
+Seven views, one key each — the same key that appears beside them in the Analysis
 menu.
 
 | Key | | |
 |---|---|---|
+| `o` | **Overview** | all three questions at once, on one screen |
 | `e` | Expert Information | what the dissectors think is wrong |
 | `y` | Protocol Hierarchy | what is in this capture, as a tree |
 | `t` | Endpoints | who is on the wire, busiest first |

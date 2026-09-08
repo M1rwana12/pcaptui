@@ -186,6 +186,120 @@ func TestNoEndpointsIsAnEmptyView(t *testing.T) {
 
 //======================================================================
 
+// One tshark run with three -z arguments produces all three tables in one
+// stream, in this order. Verbatim from
+// `tshark -q -z expert -z io,phs -z endpoints,ip -r telnet-cooked.pcap`.
+const overviewOutput = `================================================================================
+IPv4 Endpoints
+Filter:<No Filter>
+                       | Packets | |  Bytes  | | Tx Packets | | Tx Bytes | | Rx Packets | | Rx Bytes |
+192.168.0.2                    92   7748 bytes         48      3465 bytes          44      4283 bytes
+192.168.0.1                    92   7748 bytes         44      4283 bytes          48      3465 bytes
+================================================================================
+
+===================================================================
+Protocol Hierarchy Statistics
+Filter:
+
+frame                                    frames:92 bytes:7748
+  eth                                    frames:92 bytes:7748
+    ip                                   frames:92 bytes:7748
+      tcp                                frames:92 bytes:7748
+        telnet                           frames:46 bytes:4670
+          _ws.malformed                  frames:1 bytes:67
+===================================================================
+
+Errors (6)
+=============
+   Frequency      Group           Protocol  Summary
+           5   Protocol               IPv4  IPv4 total length exceeds packet length (52 bytes)
+           1  Malformed             TELNET  Malformed Packet (Exception occurred)
+`
+
+func TestTheOverviewAnswersAllThreeQuestions(t *testing.T) {
+	v := overviewLines(overviewOutput)
+
+	text := strings.Join(rowTexts(v), "\n")
+	assert.Contains(t, text, "What is wrong")
+	assert.Contains(t, text, "What is in it")
+	assert.Contains(t, text, "Who is on the wire")
+}
+
+// Problems first: that is what somebody handed a capture is looking for.
+func TestTheOverviewLeadsWithProblems(t *testing.T) {
+	v := overviewLines(overviewOutput)
+
+	assert.Equal(t, "What is wrong", v.Rows[0].Text)
+}
+
+// Three tables arrive in one stream, so each parser has to take its own rows
+// and leave the others alone. An expert line has seven fields once the word
+// "bytes" is dropped often enough to be a real risk of inventing an endpoint.
+func TestEachSectionTakesOnlyItsOwnRows(t *testing.T) {
+	v := overviewLines(overviewOutput)
+	text := strings.Join(rowTexts(v), "\n")
+
+	assert.Contains(t, text, "IPv4 total length exceeds")
+	assert.Contains(t, text, "192.168.0.2")
+	assert.Contains(t, text, "frame")
+
+	// The hierarchy's protocol names must not appear as endpoint addresses,
+	// nor expert frequencies as packet counts.
+	for _, r := range v.Rows {
+		if strings.Contains(r.Text, "192.168.0.") {
+			assert.Equal(t, "ip.addr == 192.168.0.2", r.Filter,
+				"an endpoint row should filter on its address")
+			break
+		}
+	}
+}
+
+// A summary that cannot be acted on is a dead end; every row keeps the filter
+// its own table would have given it.
+func TestOverviewRowsStillCarryTheirFilters(t *testing.T) {
+	v := overviewLines(overviewOutput)
+
+	var actionable int
+	for _, r := range v.Rows {
+		if r.actionable() {
+			actionable++
+		}
+	}
+
+	assert.GreaterOrEqual(t, actionable, 5,
+		"the overview should be mostly rows that lead somewhere")
+}
+
+func TestASectionSaysHowManyItLeftOut(t *testing.T) {
+	v := overviewLines(overviewOutput)
+
+	assert.Contains(t, strings.Join(rowTexts(v), "\n"), "and 2 more",
+		"six hierarchy rows shown four at a time should say so")
+}
+
+// A capture with nothing wrong is itself worth knowing, and in one line rather
+// than as a missing section.
+func TestAnEmptySectionSaysSoInWords(t *testing.T) {
+	onlyEndpoints := `192.168.0.2  92  7748 bytes  48  3465 bytes  44  4283 bytes
+`
+	v := overviewLines(onlyEndpoints)
+	text := strings.Join(rowTexts(v), "\n")
+
+	assert.Contains(t, text, "Nothing the dissectors object to")
+	assert.Contains(t, text, "No protocols reported")
+	assert.Contains(t, text, "192.168.0.2")
+}
+
+func rowTexts(v statsView) []string {
+	res := make([]string, 0, len(v.Rows))
+	for _, r := range v.Rows {
+		res = append(res, r.Text)
+	}
+	return res
+}
+
+//======================================================================
+
 // Both statistics honour the display filter. A reader who has forgotten what
 // is in the filter box would otherwise take a subset for the whole capture.
 func TestTheHeadingNamesTheFilterInForce(t *testing.T) {

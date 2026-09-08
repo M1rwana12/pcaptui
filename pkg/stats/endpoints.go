@@ -76,6 +76,14 @@ func endpointRow(line string) (EndpointRow, bool) {
 		return EndpointRow{}, false
 	}
 
+	// The first field has to look like an address. tshark can be asked for
+	// several statistics in one pass, and then the expert and hierarchy tables
+	// arrive in the same stream as this one; a count of seven fields alone
+	// would eventually let one of their lines through and invent an endpoint.
+	if !strings.ContainsAny(fields[0], ".:") {
+		return EndpointRow{}, false
+	}
+
 	// The header line has the same field count once the pipes are counted as
 	// words, so the numbers are what tells a row from a heading.
 	var n [6]int

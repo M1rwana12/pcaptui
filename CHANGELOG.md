@@ -4,6 +4,19 @@
 
 ### Added
 
+- **Overview** — `o`, or the Analysis menu. The three questions you have about a
+  capture somebody just handed you, on one screen: what is wrong with it, what
+  is in it, who is on the wire. Each section shows its first few rows and says
+  how many it left out; every row keeps the filter its own table would have
+  given it, so the summary is not a dead end.
+
+  Problems come first because that is what you are looking for, and because a
+  capture with nothing wrong is worth knowing in one line rather than as a
+  missing section.
+
+  One `tshark` run, not three: `tshark` accepts several `-z` arguments and
+  produces all of them from a single pass over the file.
+
 - **Endpoints** — `t`, or the Analysis menu. Every IPv4 address in the capture
   with what it accounts for and how much of that it sent versus received,
   busiest first, because the question it answers is who is doing the most;

@@ -158,6 +158,60 @@ func endpointLines(rows []stats.EndpointRow) statsView {
 	return v
 }
 
+// overviewLimit is how many rows of each section the overview shows.
+//
+// It is a summary, not a table: past a handful of rows the eye stops reading
+// and starts scrolling, and each section has its own view a keypress away for
+// when the whole thing is wanted.
+const overviewLimit = 4
+
+// overviewLines is the three statistics as one screen.
+//
+// Order is the order the questions get asked: what is wrong with this capture,
+// what is in it, who is on the wire. Problems first because that is what
+// someone handed a capture is looking for, and because a capture with none is
+// itself worth knowing in one line.
+//
+// Every row keeps the filter its own table would have given it, so the summary
+// is not a dead end - enter still lands on the packets.
+func overviewLines(out string) statsView {
+	var v statsView
+
+	add := func(title string, body statsView, empty string) {
+		if len(v.Rows) > 0 {
+			v.Rows = append(v.Rows, statsLine{})
+		}
+		v.Rows = append(v.Rows, statsLine{Text: title}, statsLine{Text: rule(title, nil)})
+
+		if len(body.Rows) == 0 {
+			v.Rows = append(v.Rows, statsLine{Text: "  " + empty})
+			return
+		}
+
+		shown := body.Rows
+		if len(shown) > overviewLimit {
+			shown = shown[:overviewLimit]
+		}
+		for _, r := range shown {
+			v.Rows = append(v.Rows, statsLine{Text: "  " + r.Text, Filter: r.Filter})
+		}
+		if len(body.Rows) > len(shown) {
+			v.Rows = append(v.Rows, statsLine{
+				Text: fmt.Sprintf("  … and %d more", len(body.Rows)-len(shown)),
+			})
+		}
+	}
+
+	add("What is wrong", expertLines(stats.ParseExpert(out)),
+		"Nothing the dissectors object to.")
+	add("What is in it", hierarchyLines(stats.ParseHierarchy(out)),
+		"No protocols reported.")
+	add("Who is on the wire", endpointLines(stats.ParseEndpoints(out)),
+		"No IPv4 addresses.")
+
+	return v
+}
+
 // rule draws the line under the column titles, as wide as the widest thing it
 // sits over. Sizing it from the titles alone would leave it stopping short of
 // most of the table, since the last column is free text.

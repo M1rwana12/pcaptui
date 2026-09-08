@@ -122,6 +122,14 @@ func openStatsDialog(v statsView, app gowid.IApp) {
 	YesNo = d
 
 	dialog.OpenExt(d, appView, ratio(0.9), ratio(0.8), app)
+
+	// Start at the top rather than at the first row that can be selected.
+	//
+	// A list opens positioned on its first selectable child, and the overview
+	// puts a section heading above its first actionable row - so without this
+	// the dialog opened with "What is wrong" already scrolled off the top,
+	// leaving the rows underneath it unlabelled.
+	walker.SetFocus(list.ListPos(0), app)
 }
 
 func statsLineWidget(l statsLine, apply func(string) func(gowid.IApp, gowid.IWidget)) gowid.IWidget {

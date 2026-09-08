@@ -38,7 +38,7 @@ func startStats(stat stats.Stat, app gowid.IApp) {
 
 	StatsLoader.StartLoad(
 		Loader.PcapPdml,
-		stat.ZArg(filter),
+		stat.ZArgs(filter),
 		app,
 		&statsParseHandler{stat: stat, filter: filter},
 	)
@@ -147,6 +147,9 @@ func (t *statsParseHandler) view() statsView {
 	}
 
 	switch t.stat.Command {
+	case stats.Overview.Command:
+		body := overviewLines(t.data)
+		v.Header, v.Rows = body.Header, body.Rows
 	case stats.Expert.Command:
 		body := expertLines(stats.ParseExpert(t.data))
 		v.Header, v.Rows = body.Header, body.Rows
