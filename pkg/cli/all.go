@@ -19,6 +19,7 @@ type Tshark struct {
 	Screenshot     string `long:"screenshot" hidden:"true" description:"Render one frame to this path prefix and exit (documentation tooling)." value-name:"<prefix>"`
 	ScreenshotSize string `long:"screenshot-size" hidden:"true" default:"120x36" description:"Screen size for --screenshot." value-name:"<WxH>"`
 	ScreenshotKeys string `long:"screenshot-keys" hidden:"true" description:"Type this after the capture loads, before the screenshot." value-name:"<keys>"`
+	Screencast     bool   `long:"screencast" hidden:"true" description:"Record a frame per keystroke and write an animated SVG (documentation tooling)."`
 	TailSwitch
 }
 
@@ -36,6 +37,7 @@ type Pcaptui struct {
 	Screenshot      string         `long:"screenshot" hidden:"true" description:"Render one frame to this path prefix and exit (documentation tooling)." value-name:"<prefix>"`
 	ScreenshotSize  string         `long:"screenshot-size" hidden:"true" default:"120x36" description:"Screen size for --screenshot." value-name:"<WxH>"`
 	ScreenshotKeys  string         `long:"screenshot-keys" hidden:"true" description:"Type this after the capture loads, before the screenshot." value-name:"<keys>"`
+	Screencast      bool           `long:"screencast" hidden:"true" description:"Record a frame per keystroke and write an animated SVG (documentation tooling)."`
 	PlatformSwitches
 	Profile  string   `long:"profile" short:"C" description:"Start with this configuration profile." value-name:"<profile>"`
 	PassThru string   `long:"pass-thru" default:"auto" optional:"true" optional-value:"true" choice:"auto" choice:"true" choice:"false" description:"Run tshark instead (auto => if stdout is not a tty)."`

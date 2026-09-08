@@ -73,25 +73,34 @@ normalise() {
 shoot screenshot-packets
 shoot screenshot-expert --screenshot-keys ':expert<enter>'
 
+# The demo is the animation the README opens with: open a capture, ask what is
+# in it, ask what is wrong with it, land on the packets that are wrong. Its
+# .txt holds every frame, so the check below covers it the same way as a still.
+#
+# A different capture from the stills on purpose - telnet-cooked has real
+# problems in it to find, which is the whole point of the sequence.
+"$bin" --screenshot "$dest/demo" --screencast --screenshot-size 110x28 \
+  --screenshot-keys 'y<esc>e<enter>' -r scripts/pcaps/telnet-cooked.pcap >/dev/null
+
 if [ "$check" = 0 ]; then
   echo "Regenerated:"
-  ls -1 "$OUT"/screenshot-*
+  ls -1 "$OUT"/screenshot-* "$OUT"/demo.*
   exit 0
 fi
 
 status=0
-for new in "$work"/screenshot-*.txt; do
+for new in "$work"/screenshot-*.txt "$work"/demo.txt; do
   base=$(basename "$new")
   old=$OUT/$base
 
   if [ ! -e "$old" ]; then
-    echo "Screenshot $base is new and has not been committed." >&2
+    echo "$base is new and has not been committed." >&2
     status=1
     continue
   fi
 
   if ! diff -u <(normalise "$old") <(normalise "$new") > "$work/diff"; then
-    echo "Screenshot $base changed:" >&2
+    echo "$base changed:" >&2
     head -40 "$work/diff" >&2
     echo >&2
     echo "If the change is intended, run scripts/screenshots.sh and commit the result." >&2

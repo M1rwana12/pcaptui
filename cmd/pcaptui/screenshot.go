@@ -116,6 +116,80 @@ func captureWhenSettled(app *gowid.App, screen tcell.SimulationScreen, prefix st
 	app.Quit()
 }
 
+// castHold is how long each recorded frame is shown for, in seconds. Slow
+// enough to read a screen of packet data, which is what the animation is for.
+const castHold = 1.6
+
+// captureCast records a frame per keystroke and writes them as one looping
+// animation.
+//
+// A still picture cannot show what this program is for - moving through a
+// capture. The keys are typed one at a time and the screen photographed after
+// each has settled, so what the animation shows is a real session rather than
+// a reconstruction, produced by the same renderer as the still screenshots and
+// checkable the same way.
+func captureCast(app *gowid.App, screen tcell.SimulationScreen, prefix string, keys string) {
+	var frames [][][]screenshot.Cell
+
+	// A keypress that changed nothing - the cursor already at the end of the
+	// list, a key the focused pane ignores - would otherwise hold the same
+	// picture for two turns and read as the animation being stuck.
+	shot := func() {
+		rows, _, _ := screenshot.Grab(screen)
+		if len(frames) > 0 && screenshot.Text(rows) == screenshot.Text(frames[len(frames)-1]) {
+			return
+		}
+		frames = append(frames, rows)
+	}
+
+	settle(app, screen, "")
+	shot()
+
+	for _, k := range parseKeys(keys) {
+		before := screenshot.Text(frames[len(frames)-1])
+
+		screen.InjectKey(k.Key(), k.Rune(), k.Modifiers())
+		app.Run(gowid.RunFunction(func(gowid.IApp) {}))
+
+		settle(app, screen, before)
+		shot()
+	}
+
+	_, w, h := screenshot.Grab(screen)
+	if err := writeCast(prefix, frames, w, h); err != nil {
+		fmt.Fprintf(os.Stderr, "Error writing screencast: %v\n", err)
+	}
+
+	app.Quit()
+}
+
+func writeCast(prefix string, frames [][][]screenshot.Cell, w, h int) error {
+	if dir := filepath.Dir(prefix); dir != "" && dir != "." {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			return err
+		}
+	}
+
+	svg := prefix + ".svg"
+	if err := os.WriteFile(svg, []byte(screenshot.AnimatedSVG(frames, w, h, castHold)), 0o644); err != nil {
+		return err
+	}
+
+	// The frames as text too, so CI can check the animation still shows what
+	// it is meant to without comparing a picture.
+	var b strings.Builder
+	for i, f := range frames {
+		fmt.Fprintf(&b, "=== frame %d ===\n%s", i+1, screenshot.Text(f))
+	}
+	txt := prefix + ".txt"
+	if err := os.WriteFile(txt, []byte(b.String()), 0o644); err != nil {
+		return err
+	}
+
+	fmt.Fprintf(os.Stderr, "Wrote %s and %s (%d frames, %dx%d)\n", svg, txt, len(frames), w, h)
+	return nil
+}
+
 // typeKeys feeds keystrokes to the interface one at a time.
 //
 // The string is written in the same syntax the :map command documents:

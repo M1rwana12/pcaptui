@@ -12,106 +12,85 @@
 
 <p align="center"><b>English</b> · <a href="README.uk.md">Українською</a></p>
 
-`pcaptui` is a terminal interface to `tshark`. It gives you the packet list, the
-protocol tree and the hex view you would get from Wireshark, over SSH, on a
-machine with no display, without copying a 2GB capture back to your desktop
-first.
-
-```bash
-pcaptui -r traffic.pcap
-pcaptui -i eth0 'port 443'
-```
+<h3 align="center">Wireshark's analysis, where the capture already is.</h3>
 
 <p align="center">
-  <img src=".github/assets/screenshot-packets.svg" alt="The packet list, protocol tree and hex view" width="100%">
+  <code>pcaptui</code> is a terminal interface to <code>tshark</code>: the packet list, the protocol
+  tree and the hex view, over SSH, on a machine with no display — without copying a
+  2&nbsp;GB capture back to your desktop first.
 </p>
 
-<sub>That image is drawn by the program itself from
-<a href="scripts/pcaps/demo.pcap"><code>scripts/pcaps/demo.pcap</code></a>, and CI
-fails if it stops matching what the program renders — so it cannot go stale.</sub>
+<p align="center">
+  <img src=".github/assets/demo.svg" alt="Opening a capture, asking what is in it, asking what is wrong with it, and landing on the packets that are wrong" width="100%">
+</p>
 
-## Why
-
-Wireshark is the best protocol analyser there is, and `tshark` carries all of
-it — every dissector, every display filter, every statistic. What `tshark`
-does not give you is a way to move around a capture: no scrolling packet list,
-no expandable protocol tree, no clicking a field to see the bytes it came from.
-
-`pcaptui` supplies exactly that, and delegates all the analysis to `tshark`.
-It has no dissectors of its own and no opinions about protocols. When Wireshark
-learns a new protocol, so does this.
-
-## Requirements
-
-`tshark`, from [Wireshark](https://www.wireshark.org). Version 1.10.2 or newer;
-anything from the last decade will do. `pcaptui` will tell you if it cannot
-find it.
-
-Live capture also needs permission to capture — on Linux that usually means
-`dumpcap` with the right capabilities, which the Wireshark packages set up for
-you.
-
-## Install
+<p align="center">
+  <sub><b>y</b> what is in this file · <b>e</b> what is wrong with it · <b>enter</b> land on those packets</sub>
+</p>
 
 ```bash
 go install github.com/m1rwana12/pcaptui/cmd/pcaptui@latest
+
+pcaptui -r traffic.pcap          # a file
+pcaptui -i eth0 'port 443'       # an interface
+tcpdump -w - port 53 | pcaptui -r -
 ```
 
-The binary lands in `~/go/bin`. It is a single static executable with no
-runtime dependencies beyond `tshark` itself.
+Needs [`tshark`](https://www.wireshark.org) on your `PATH` — anything from the last
+decade. `pcaptui` says so plainly if it cannot find it, rather than failing later in
+a way that looks like a broken capture.
 
-## What it does
+---
 
-**Read captures or watch live traffic.** Files, fifos, stdin, or an interface.
-A live capture streams into the same view, and you can filter it while it runs.
+## What you get
 
-**Filter with Wireshark's display filters.** The same syntax, checked as you
-type — the filter box turns red when the expression is not valid.
+**A capture you can move around in.** A scrolling packet list, a protocol tree you
+can expand, and a hex pane that highlights the bytes of whichever field you select.
+`tcpdump` prints lines; this lets you look.
 
-**Follow TCP and UDP streams.** Reassembled, in ASCII or hex, either direction
-or both.
+**Wireshark's display filters, checked as you type.** The same syntax, with the
+filter box turning red before you press enter. A filter given on the command line is
+checked too — a typo stops the program with `tshark`'s own explanation instead of
+opening an empty window.
 
-**See conversations by protocol.** Sorted by packets or bytes, and you can turn
-any row straight into a display filter.
+**Every dissector Wireshark has, and every one it gains.** `pcaptui` has no
+protocol knowledge of its own and no opinions about protocols. It asks `tshark`.
+When Wireshark learns a new protocol, so does this — with no release here.
 
-**Search.** By display filter, by hex bytes, by text in the packet structure, or
-by text in the packet list.
+**Answers, not just packets.** Expert Information says what the dissectors think is
+wrong with the capture; Protocol Hierarchy says what is in it. Both are tables you
+can act on: press enter on a row and the packet list narrows to the packets that row
+is about.
 
-**Copy anything.** Ranges of packets, single fields, the reassembled stream —
-into the system clipboard, or out through a terminal that supports OSC 52 when
-you are on a remote machine.
+**It says when it is showing you less than everything.** A column too narrow for its
+value ends in `…` rather than quietly showing a shorter address; the title bar says
+how many packets there are and whether a filter is why the list looks short; a
+statistic that matched nothing says so in words instead of opening an empty box.
 
-### Expert Information
+---
 
-What the dissectors think is wrong with a capture: retransmissions, malformed
-packets, checksum failures, protocol violations — grouped by severity, worst
-first.
+## Analysis
 
-```
-e         # or :expert
-```
+Five views, one key each — the same key that appears beside them in the Analysis
+menu.
+
+| Key | | |
+|---|---|---|
+| `e` | Expert Information | what the dissectors think is wrong |
+| `y` | Protocol Hierarchy | what is in this capture, as a tree |
+| `v` | Conversations | who talked to whom, by packets and bytes |
+| `s` | Reassemble stream | follow the conversation this packet is in |
+| `p` | Capture file properties | size, duration, encapsulation, hashes |
 
 <p align="center">
   <img src=".github/assets/screenshot-expert.svg" alt="Expert Information, reporting a suspected retransmission" width="100%">
 </p>
 
-It is usually the fastest way to find the problem in a capture you have just
-been handed, without reading it packet by packet.
+Both Expert Information and Protocol Hierarchy respect the display filter in force,
+so you can ask them about a subset, and both name the filter at the top of the
+result.
 
-### Protocol Hierarchy
-
-Every protocol present, by packet and byte count, as a tree. Answers "what is
-actually in this file" in one screen.
-
-```
-y         # or :hierarchy
-```
-
-Both views narrow to the display filter you have applied, the way Wireshark
-does, and both say so plainly when the filter matches nothing rather than
-showing you an empty box.
-
-### Decrypting TLS
+## Decrypting TLS
 
 If you have the session keys, you see the plaintext:
 
@@ -121,29 +100,54 @@ pcaptui --tls-keylog ~/keys.log -r traffic.pcap
 ```
 
 `pcaptui` checks the key log before it starts and refuses to run if the file is
-missing or unreadable. That check matters more than it sounds: `tshark` accepts
-a key log path that does not exist, starts normally, exits zero and decrypts
-nothing — so a typo is indistinguishable from traffic whose keys you never had.
+missing or unreadable. `tshark` accepts a key log path that does not exist, starts
+normally, exits zero and decrypts nothing — so a typo would otherwise be
+indistinguishable from traffic whose keys you never had.
 
-## Configuration
+## Moving around
 
-Settings live in `pcaptui.toml`, under your platform's config directory. Run
-`:config` to see where. Everything has a working default; the file is for when
-you want something different.
+| | |
+|---|---|
+| `/` | display filter |
+| `tab` | switch panes |
+| <code>&#124;</code> `\` | pane layout, pane zoom |
+| `ctrl-f` | search — by filter, hex, text, or regex |
+| `ma` `'a` | mark a packet, jump back to it |
+| `c` | copy mode — packets, fields, or the whole stream |
+| `?` | everything else |
+
+Vim keys work throughout. So does the mouse, in most terminals.
+
+## Is this for you?
+
+**Yes, if** the capture is on a server, or is too big to move, or you already know
+Wireshark's filters and want them where the traffic is.
+
+**Probably not, if** you are on a desktop with Wireshark installed and the file is
+in front of you. Wireshark's GUI is better than any terminal can be. This exists for
+when you cannot have it.
 
 ## Documentation
 
 - [User Guide](docs/UserGuide.md) — every view, every key, every setting
-- [FAQ](docs/FAQ.md) — the questions that actually come up
-- [Contributing](docs/Contributing.md) — building, testing, releasing
-- [Brand](docs/Brand.md) — how this project looks and sounds
-- [Security policy](SECURITY.md) — what counts as a vulnerability here
+- [FAQ](docs/FAQ.md) — colours, terminals, live capture, reporting a bug
+- [Changelog](CHANGELOG.md) — what changed and why it was wrong before
+- [Contributing](docs/Contributing.md) — how to build it and what CI checks
 
 ## Built with
 
-[gowid](https://github.com/gcla/gowid) for the terminal widgets, on top of
-[tcell](https://github.com/gdamore/tcell).
+[gowid](https://github.com/gcla/gowid) and [tcell](https://github.com/gdamore/tcell)
+for the terminal interface, and [Wireshark](https://www.wireshark.org)'s `tshark`
+for every byte of the analysis.
+
+<sub>The images above are drawn by the program itself, from
+<a href="scripts/pcaps/demo.pcap"><code>scripts/pcaps/demo.pcap</code></a> and
+<a href="scripts/pcaps/telnet-cooked.pcap"><code>telnet-cooked.pcap</code></a>, and
+CI fails if they stop matching what it renders — so they cannot go stale.</sub>
 
 ## Licence
 
-MIT. Copyright (c) 2026 m1rwana12 — see [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).
+
+`pcaptui` is built on the codebase of [termshark](https://github.com/gcla/termshark)
+by Graham Clark, used under the MIT licence.
