@@ -122,37 +122,46 @@ func (t *statsParseHandler) AfterEnd(code pcap.HandlerCode, app gowid.IApp) {
 			ClosePleaseWait(app)
 		}
 
-		OpenMessageForCopy(t.report(), appView, app)
+		v := t.view()
+		if v.empty() {
+			OpenMessage(fmt.Sprintf("%s\n\n%s",
+				v.Heading, statsEmptyMessage(t.filter)), appView, app)
+			return
+		}
+
+		openStatsDialog(v, app)
 	}))
 	t.stopSpinner()
 }
 
-// report titles the output and, when tshark found nothing, says so.
+// view turns tshark's output into the dialog.
 //
 // A statistic narrowed by a filter that matches no packets prints absolutely
-// nothing - no header, no empty table. Handing that to the dialog would show
-// the user a blank box and no reason for it.
-func (t *statsParseHandler) report() string {
-	var b strings.Builder
+// nothing - no header, no empty table - so no rows is a real answer and the
+// caller says so in words rather than opening an empty box.
+func (t *statsParseHandler) view() statsView {
+	v := statsView{Heading: statsHeading(t.stat.Name, t.filter)}
 
-	b.WriteString(t.stat.Name)
-	if t.filter != "" {
-		b.WriteString(fmt.Sprintf("\nDisplay filter: %s", t.filter))
+	if strings.TrimSpace(t.data) == "" {
+		return v
 	}
-	b.WriteString("\n\n")
 
-	body := strings.TrimSpace(t.data)
-	if body == "" {
-		if t.filter != "" {
-			b.WriteString("Nothing to report for this display filter.")
-		} else {
-			b.WriteString("Nothing to report for this capture.")
+	switch t.stat.Command {
+	case stats.Expert.Command:
+		body := expertLines(stats.ParseExpert(t.data))
+		v.Header, v.Rows = body.Header, body.Rows
+	case stats.ProtoHierarchy.Command:
+		body := hierarchyLines(stats.ParseHierarchy(t.data))
+		v.Header, v.Rows = body.Header, body.Rows
+	default:
+		// A statistic this package does not know how to lay out is still worth
+		// showing; it just cannot offer a filter for any of its rows.
+		for _, line := range strings.Split(strings.TrimRight(t.data, "\n"), "\n") {
+			v.Rows = append(v.Rows, statsLine{Text: line})
 		}
-		return b.String()
 	}
 
-	b.WriteString(body)
-	return b.String()
+	return v
 }
 
 //======================================================================

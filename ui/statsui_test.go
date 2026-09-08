@@ -9,60 +9,105 @@ import (
 
 	"github.com/m1rwana12/pcaptui/pkg/stats"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 //======================================================================
 
-func TestStatsReportCarriesTitleAndBody(t *testing.T) {
+const expertData = `
+Notes (1)
+=============
+   Frequency      Group           Protocol  Summary
+           1   Sequence                TCP  This frame is a (suspected) retransmission
+`
+
+func TestStatsViewCarriesTitleAndRows(t *testing.T) {
 	h := &statsParseHandler{stat: stats.Expert}
-	h.OnStatsData("Errors (6)\n=============\n")
+	h.OnStatsData(expertData)
 
-	out := h.report()
+	v := h.view()
 
-	assert.True(t, strings.HasPrefix(out, "Expert Information"))
-	assert.Contains(t, out, "Errors (6)")
-	assert.NotContains(t, out, "Display filter:",
+	assert.True(t, strings.HasPrefix(v.Heading, "Expert Information"))
+	assert.NotContains(t, v.Heading, "display filter",
 		"no filter was set, so none should be claimed")
+	require.Len(t, v.Rows, 1)
+	assert.Contains(t, v.Rows[0].Text, "retransmission")
 }
 
-func TestStatsReportNamesTheFilterInUse(t *testing.T) {
+func TestStatsViewNamesTheFilterInUse(t *testing.T) {
 	h := &statsParseHandler{stat: stats.ProtoHierarchy, filter: "tcp.port in {23,80}"}
-	h.OnStatsData("Protocol Hierarchy Statistics\n")
+	h.OnStatsData("frame  frames:7 bytes:1027\n")
 
-	out := h.report()
+	v := h.view()
 
-	assert.Contains(t, out, "Protocol Hierarchy")
-	assert.Contains(t, out, "Display filter: tcp.port in {23,80}")
+	assert.Contains(t, v.Heading, "Protocol Hierarchy")
+	assert.Contains(t, v.Heading, "tcp.port in {23,80}")
+}
+
+// The row is not just text - it is the packets it is about, which is the whole
+// difference between this and the dialog it replaced.
+func TestAnExpertRowCarriesItsFilter(t *testing.T) {
+	h := &statsParseHandler{stat: stats.Expert}
+	h.OnStatsData(expertData)
+
+	v := h.view()
+
+	require.Len(t, v.Rows, 1)
+	assert.Equal(t,
+		`_ws.expert.message == "This frame is a (suspected) retransmission"`,
+		v.Rows[0].Filter)
+}
+
+func TestAHierarchyRowCarriesItsProtocol(t *testing.T) {
+	h := &statsParseHandler{stat: stats.ProtoHierarchy}
+	h.OnStatsData("frame            frames:7 bytes:1027\n  eth            frames:7 bytes:1027\n")
+
+	v := h.view()
+
+	require.Len(t, v.Rows, 2)
+	assert.Equal(t, "eth", v.Rows[1].Filter)
 }
 
 // tshark prints nothing at all - not even a header - when a statistic is
-// narrowed to a filter that matches no packets. Without this, the user gets an
+// narrowed to a filter that matches no packets. Without this the user gets an
 // empty dialog and no reason for it.
-func TestStatsReportExplainsAnEmptyResult(t *testing.T) {
+func TestAnEmptyResultIsAnEmptyView(t *testing.T) {
 	h := &statsParseHandler{stat: stats.Expert, filter: "udp"}
 	h.OnStatsData("")
 
-	out := h.report()
-
-	assert.Contains(t, out, "Nothing to report for this display filter")
+	assert.True(t, h.view().empty())
 }
 
-func TestStatsReportExplainsAnEmptyResultWithNoFilter(t *testing.T) {
+func TestWhitespaceOnlyOutputIsAlsoEmpty(t *testing.T) {
 	h := &statsParseHandler{stat: stats.Expert}
 	h.OnStatsData("   \n\t\n")
 
-	out := h.report()
-
-	assert.Contains(t, out, "Nothing to report for this capture")
+	assert.True(t, h.view().empty())
 }
 
-// tshark on Windows ends its lines with CRLF; the dialog renders the stray CR
-// as a glyph.
-func TestStatsReportNormalisesWindowsLineEndings(t *testing.T) {
+// tshark on Windows ends its lines with CRLF, and a stray CR renders as a
+// glyph.
+func TestStatsDataNormalisesWindowsLineEndings(t *testing.T) {
 	h := &statsParseHandler{stat: stats.Expert}
-	h.OnStatsData("Errors (6)\r\n=====\r\n")
+	h.OnStatsData(strings.ReplaceAll(expertData, "\n", "\r\n"))
 
-	assert.NotContains(t, h.report(), "\r")
+	v := h.view()
+
+	require.Len(t, v.Rows, 1)
+	assert.NotContains(t, v.Rows[0].Text, "\r")
+}
+
+// A statistic with no layout of its own is still worth showing; it just cannot
+// offer a filter for any of its rows.
+func TestAnUnknownStatisticIsShownAsPlainLines(t *testing.T) {
+	h := &statsParseHandler{stat: stats.Stat{Name: "Something Else", Command: "else"}}
+	h.OnStatsData("one\ntwo\n")
+
+	v := h.view()
+
+	require.Len(t, v.Rows, 2)
+	assert.Equal(t, "one", v.Rows[0].Text)
+	assert.False(t, v.Rows[0].actionable())
 }
 
 //======================================================================

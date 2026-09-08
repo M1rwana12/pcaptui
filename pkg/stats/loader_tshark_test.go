@@ -5,6 +5,7 @@ package stats
 
 import (
 	"bytes"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/m1rwana12/pcaptui/pkg/summary"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 //======================================================================
@@ -168,6 +170,25 @@ func TestAnExpertRowsFilterFindsItsPackets(t *testing.T) {
 
 	assert.Greater(t, checked, 0,
 		"not one expert row produced a filter that matched anything")
+}
+
+// Every name in the hierarchy has to be a filter tshark will accept, because
+// the table offers it as one. Names like _ws.malformed and data-text-lines are
+// the ones worth checking - they do not look like protocol names.
+func TestEveryHierarchyRowsFilterIsAcceptedByTshark(t *testing.T) {
+	rows := ParseHierarchy(runStat(t, ProtoHierarchy, ""))
+	require.NotEmpty(t, rows)
+
+	for _, r := range rows {
+		cmd := exec.Command("tshark", "-r", testPcap, "-Y", r.DisplayFilter(),
+			"-T", "fields", "-e", "frame.number")
+		var stderr bytes.Buffer
+		cmd.Stderr = &stderr
+		cmd.Stdout = io.Discard
+
+		assert.NoError(t, cmd.Run(),
+			"tshark refused %q: %s", r.DisplayFilter(), stderr.String())
+	}
 }
 
 func runFieldsQuery(t *testing.T, filter string, field string) string {

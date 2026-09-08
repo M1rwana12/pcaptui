@@ -4,6 +4,25 @@
 
 ### Added
 
+- **Expert Information and Protocol Hierarchy are tables you can act on.**
+  Both were text in a copy dialog. The Expert table would tell you a capture
+  contained a retransmission and leave you to find it yourself, which is the
+  opposite of what the README claims it is for.
+
+  Enter on a row now narrows the packet list to the packets that row is about,
+  and writes the filter into the filter box so you can see it and adjust it.
+  `tshark`'s expert tap reports how many times something happened and never
+  which packets, so the row becomes a question about the packets instead —
+  `_ws.expert.message == "…"`. A hierarchy row filters on its own protocol,
+  which turns "what is in this file" into "show me that".
+
+  The dialog is also a list rather than a block of text, so it scrolls. A
+  capture with more distinct expert items than the terminal has rows previously
+  produced a dialog whose bottom could not be reached.
+
+  Copy mode no longer applies inside these two dialogs. Nothing documented
+  promised it there, and the rows doing something is worth more.
+
 - **The title bar says how many packets there are**, and whether a display
   filter is why the list is short: `7 packets`, `3 packets · filtered`,
   `40,000 packets · loading`. The count was previously not stated anywhere in

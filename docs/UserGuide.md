@@ -206,12 +206,21 @@ happened, the protocol that raised it, and a summary.
 
 It is usually the quickest way into a capture somebody has just handed you.
 
+**Press enter on a row and the packet list narrows to the packets that row is
+about.** Arrow keys move between rows; the filter it builds is written into the
+filter box, so you can see it and change it afterwards. `tshark` reports how
+many times something happened and never which packets, so the row is turned
+into a question about the packets instead — `_ws.expert.message == "…"`.
+
 ## Protocol Hierarchy
 
 `y`, `:hierarchy`, or **Protocol Hierarchy** in the Analysis menu.
 
 Every protocol present in the capture, as a tree, with packet and byte counts.
 Each protocol is indented under the one carrying it.
+
+Enter on a row filters the packet list to that protocol, which turns "what is
+in this file" into "show me that" without typing anything.
 
 Both this and Expert Information respect the display filter currently applied,
 so you can ask them about a subset. The filter in force is named at the top of
