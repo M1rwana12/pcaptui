@@ -60,6 +60,12 @@ shoot() { # name, extra args...
 # runner updates Wireshark, which is noise, not a regression in this program.
 # What is checked is the part pcaptui draws: the title bar, the filter box, the
 # panes, the column layout, and the values in every column up to Info.
+#
+# The expert screenshot is the exception and is expected to drift: its whole
+# body is dissector output, so a runner picking up a new Wireshark can change
+# how many rows it has. That is not a regression in this program - regenerate
+# and commit. It is kept anyway because it is the only image showing the
+# analysis views, and drift is visible rather than silent.
 normalise() {
   cut -c1-65 "$1" | sed 's/[[:space:]]*$//'
 }
