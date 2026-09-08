@@ -610,6 +610,16 @@ func cmain() int {
 		return 1
 	}
 
+	// A display filter given on the command line is checked nowhere else.
+	// tshark rejects it and stops, and because its errors are not shown by
+	// default the result is a program with no filename in the title, an empty
+	// filter box, empty panes and an exit status of zero - with the mistyped
+	// expression not even echoed back to be corrected.
+	if err := cli.CheckDisplayFilter(tsharkBin, emptyPcap, opts.DisplayFilter); err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		return 1
+	}
+
 	// Here, tsharkBin is a fully-qualified tshark binary that exists on the fs (absent race
 	// conditions...)
 

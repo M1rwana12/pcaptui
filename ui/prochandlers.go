@@ -120,7 +120,7 @@ func (t updatePacketViews) OnError(code pcap.HandlerCode, app gowid.IApp, err er
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		RequestQuit()
 	} else {
-		if !profiles.ConfBool("main.suppress-tshark-errors", true) {
+		if !profiles.ConfBool("main.suppress-tshark-errors", false) {
 			var errstr string
 			if kverr, ok := err.(gowid.KeyValueError); ok {
 				errstr = pcaptui.KeyValueErrorString(kverr)
@@ -148,7 +148,7 @@ func (t SimpleErrors) OnError(code pcap.HandlerCode, app gowid.IApp, err error) 
 	log.Error(err)
 	// Hack to avoid picking up errors at other parts of the load
 	// cycle. There should be specific handlers for specific errors.
-	if !profiles.ConfBool("main.suppress-tshark-errors", true) {
+	if !profiles.ConfBool("main.suppress-tshark-errors", false) {
 		app.Run(gowid.RunFunction(func(app gowid.IApp) {
 			OpenError(fmt.Sprintf("%v", err), app)
 		}))
@@ -367,7 +367,7 @@ func (s SetStructWidgets) OnError(code pcap.HandlerCode, app gowid.IApp, err err
 	// Hack to avoid picking up errors at other parts of the load
 	// cycle. There should be specific handlers for specific errors.
 	if s.Ld.PdmlLoader.IsLoading() {
-		if !profiles.ConfBool("main.suppress-tshark-errors", true) {
+		if !profiles.ConfBool("main.suppress-tshark-errors", false) {
 			app.Run(gowid.RunFunction(func(app gowid.IApp) {
 				OpenLongError(fmt.Sprintf("%v", err), app)
 			}))

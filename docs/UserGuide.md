@@ -334,7 +334,7 @@ laptop; raise them if you routinely open very large captures and have the room.
 | `packet-colors` | colour the packet list using Wireshark's rules |
 | `dark-mode` | start in dark mode |
 | `term` | override the terminal type `pcaptui` assumes |
-| `suppress-tshark-errors` | keep `tshark` diagnostics out of the UI |
+| `suppress-tshark-errors` | keep `tshark` diagnostics out of the UI. Off by default: a capture tshark cannot read otherwise shows as an empty window with no explanation |
 | `always-keep-pcap` | keep the temporary file written during a live capture |
 | `wireshark-profile` | borrow colours and columns from a Wireshark profile |
 
