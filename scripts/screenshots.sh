@@ -7,8 +7,8 @@
 # produced by the command a test asserts on cannot quietly drift away from what
 # the program does.
 #
-#   scripts/screenshots.sh          regenerate
-#   scripts/screenshots.sh --check  fail if anything changed
+#   scripts/screenshots.sh          regenerate, overwriting the committed files
+#   scripts/screenshots.sh --check  compare only; never touches them
 #
 set -euo pipefail
 
@@ -37,12 +37,19 @@ if [ "$(uname -s)" != "Linux" ]; then
   echo "         artifact from a CI run to regenerate." >&2
 fi
 
-bin=$(mktemp -d)/pcaptui
+# Checking writes somewhere else entirely. A check that overwrites the files it
+# is checking leaves the working tree dirty on any machine whose rendering
+# differs - which is every machine that is not Linux.
+work=$(mktemp -d)
+dest=$OUT
+[ "$check" = 1 ] && dest=$work
+
+bin=$work/pcaptui
 go build -o "$bin" ./cmd/pcaptui
 
 shoot() { # name, extra args...
   local name=$1; shift
-  "$bin" --screenshot "$OUT/$name" --screenshot-size "$SIZE" -r "$FIXTURE" "$@" >/dev/null
+  "$bin" --screenshot "$dest/$name" --screenshot-size "$SIZE" -r "$FIXTURE" "$@" >/dev/null
 }
 
 # The comparison ignores everything from the Info column rightwards.
@@ -57,32 +64,35 @@ normalise() {
   cut -c1-65 "$1" | sed 's/[[:space:]]*$//'
 }
 
-if [ "$check" = 1 ]; then
-  tmp=$(mktemp -d)
-  for f in "$OUT"/screenshot-*.txt; do
-    [ -e "$f" ] || continue
-    normalise "$f" > "$tmp/$(basename "$f")"
-  done
-fi
-
 shoot screenshot-packets
 shoot screenshot-expert --screenshot-keys ':expert
 '
 
-if [ "$check" = 1 ]; then
-  for f in "$OUT"/screenshot-*.txt; do
-    base=$(basename "$f")
-    normalise "$f" > "$tmp/new-$base"
-    if ! diff -u "$tmp/$base" "$tmp/new-$base" > /tmp/shotdiff 2>/dev/null; then
-      echo "Screenshot $base changed:" >&2
-      head -40 /tmp/shotdiff >&2
-      echo >&2
-      echo "If the change is intended, run scripts/screenshots.sh and commit the result." >&2
-      exit 1
-    fi
-  done
-  echo "Screenshots are up to date."
-else
+if [ "$check" = 0 ]; then
   echo "Regenerated:"
   ls -1 "$OUT"/screenshot-*
+  exit 0
 fi
+
+status=0
+for new in "$work"/screenshot-*.txt; do
+  base=$(basename "$new")
+  old=$OUT/$base
+
+  if [ ! -e "$old" ]; then
+    echo "Screenshot $base is new and has not been committed." >&2
+    status=1
+    continue
+  fi
+
+  if ! diff -u <(normalise "$old") <(normalise "$new") > "$work/diff"; then
+    echo "Screenshot $base changed:" >&2
+    head -40 "$work/diff" >&2
+    echo >&2
+    echo "If the change is intended, run scripts/screenshots.sh and commit the result." >&2
+    status=1
+  fi
+done
+
+[ "$status" = 0 ] && echo "Screenshots are up to date."
+exit "$status"
