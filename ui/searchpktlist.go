@@ -111,7 +111,7 @@ Loop:
 		Loader.PsmlLoader.Lock()
 		// curPacketNumber is the packet number from the pdml <packet>24</packet>. Remember there might
 		// be a display filter in place.
-		packetIndex, ok := Loader.PacketNumberMap[curPacketNumber]
+		packetIndex, ok := Loader.PacketRow(curPacketNumber)
 		if !ok {
 			// 1-based - packet number e.g. <packet>24</packet>
 			resumeAt = &ListResult{
@@ -165,9 +165,9 @@ Loop:
 		// Can this be more sophisticated?
 		Loader.PsmlLoader.Lock()
 		// 32, 44, 45, 134, 209,...
-		curPacketNumber, ok = Loader.PacketNumberOrder[curPacketNumber]
+		curPacketNumber, ok = Loader.PacketAfter(curPacketNumber)
 		if !ok {
-			curPacketNumber = Loader.PacketNumberOrder[0]
+			curPacketNumber, _ = Loader.PacketAfter(0)
 		}
 		Loader.PsmlLoader.Unlock()
 

@@ -84,6 +84,13 @@
   capture only ever uses the handful of pairs its colour rules define. Each
   distinct pair is now parsed once and packets carry an index into it.
 
+- **The packet-number lookups cost 3.8 MB per million packets instead of
+  92.7 MB.** Two `map[int]int` held one entry per packet each: which table row
+  shows a packet number, and which packet number follows a given one. Both are
+  now answered by searching the packet numbers themselves, which the loader
+  already reads in order — measured at 92.7 MB and 159 ms of building against
+  3.8 MB and 0.9 ms.
+
 ### Fixed
 
 - **The hex pane showed bytes that were not in the packet.** `tshark -x` prints

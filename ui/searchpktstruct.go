@@ -120,7 +120,7 @@ Loop:
 		Loader.PsmlLoader.Lock()
 		// curPacketNumber is the packet number from the pdml <packet>24</packet>. Remember there might
 		// be a display filter in place.
-		packetIndex, ok := Loader.PacketNumberMap[curPacketNumber]
+		packetIndex, ok := Loader.PacketRow(curPacketNumber)
 		if !ok {
 			// 1-based - packet number e.g. <packet>24</packet>
 			resumeAt = &StructResult{
@@ -184,17 +184,17 @@ Loop:
 		// Can this be more sophisticated?
 		Loader.PsmlLoader.Lock()
 		// 32, 44, 45, 134, 209,...
-		curPacketNumber, ok = Loader.PacketNumberOrder[curPacketNumber]
+		curPacketNumber, ok = Loader.PacketAfter(curPacketNumber)
 		if !ok {
-			// PacketNumberOrder is set up by the PSML loader, so if there is no next
+			// The packet numbers come from the PSML loader, so if there is no next
 			// value, it means we're at the end of the packets and we should loop back.
-			curPacketNumber = Loader.PacketNumberOrder[0]
+			curPacketNumber, _ = Loader.PacketAfter(0)
 		}
 		Loader.PsmlLoader.Unlock()
 
 		// Go 1 past because if we loop round, we should search the original packet again
 		// in case there is a hit earlier in its structure
-		if searchCount > len(Loader.PacketNumberMap) {
+		if searchCount > Loader.NumLoadedPackets() {
 			break Loop
 		}
 	}
