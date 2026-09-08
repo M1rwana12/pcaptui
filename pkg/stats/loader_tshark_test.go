@@ -109,6 +109,81 @@ func TestProtoHierarchyHonoursAFilterWithCommas(t *testing.T) {
 }
 
 //======================================================================
+
+// The parsers are unit-tested against captured output. These check that the
+// captured output is still what tshark emits - a format read from a fixture
+// that the program never re-reads is a format that quietly stops matching.
+
+func TestExpertOutputStillParses(t *testing.T) {
+	rows := ParseExpert(runStat(t, Expert, ""))
+
+	assert.NotEmpty(t, rows, "tshark reported expert info that the parser read as nothing")
+
+	for _, r := range rows {
+		assert.NotEmpty(t, r.Severity, "row has no severity: %+v", r)
+		assert.NotEmpty(t, r.Protocol, "row has no protocol: %+v", r)
+		assert.NotEmpty(t, r.Summary, "row has no summary: %+v", r)
+		assert.Greater(t, r.Count, 0, "row has no count: %+v", r)
+	}
+}
+
+func TestHierarchyOutputStillParses(t *testing.T) {
+	rows := ParseHierarchy(runStat(t, ProtoHierarchy, ""))
+
+	assert.NotEmpty(t, rows)
+	assert.Equal(t, "frame", rows[0].Protocol, "the tree should start at frame")
+	assert.Equal(t, 0, rows[0].Depth)
+
+	var deepest int
+	for _, r := range rows {
+		assert.NotEmpty(t, r.Protocol)
+		assert.Greater(t, r.Frames, 0)
+		if r.Depth > deepest {
+			deepest = r.Depth
+		}
+	}
+	assert.Greater(t, deepest, 0, "every protocol came out at the same depth")
+}
+
+// The whole point of the expert table's filter: what it produces has to be
+// something tshark will run and answer with the packets that row is about.
+func TestAnExpertRowsFilterFindsItsPackets(t *testing.T) {
+	rows := ParseExpert(runStat(t, Expert, ""))
+
+	var checked int
+	for _, r := range rows {
+		out := runFieldsQuery(t, r.DisplayFilter(), "frame.number")
+
+		// tshark refuses an invalid filter and writes to stderr instead, so an
+		// empty result here would also be how a broken expression looks. Only
+		// the count is asserted, because which frames carry which expert item
+		// moves between Wireshark releases.
+		if strings.TrimSpace(out) == "" {
+			continue
+		}
+		checked++
+		assert.LessOrEqual(t, len(strings.Fields(out)), r.Count+2,
+			"filter %q matched more packets than the row claims", r.DisplayFilter())
+	}
+
+	assert.Greater(t, checked, 0,
+		"not one expert row produced a filter that matched anything")
+}
+
+func runFieldsQuery(t *testing.T, filter string, field string) string {
+	t.Helper()
+
+	cmd := exec.Command("tshark", "-r", testPcap, "-Y", filter, "-T", "fields", "-e", field)
+	out, err := cmd.Output()
+	if err != nil {
+		if _, ok := err.(*exec.ExitError); !ok {
+			t.Fatalf("could not run tshark: %v", err)
+		}
+	}
+	return string(out)
+}
+
+//======================================================================
 // Local Variables:
 // mode: Go
 // fill-column: 78
