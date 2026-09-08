@@ -196,9 +196,15 @@ func TestEveryHierarchyRowsFilterIsAcceptedByTshark(t *testing.T) {
 }
 
 func TestEndpointsOutputStillParses(t *testing.T) {
-	rows := ParseEndpoints(runStat(t, Endpoints, ""))
+	out := runStat(t, Endpoints, "")
+	rows := ParseEndpoints(out)
 
-	require.NotEmpty(t, rows, "tshark listed endpoints that the parser read as nothing")
+	// The raw output on failure, because the whole point of these tests is to
+	// catch a format this parser has not seen - and a bare "was empty" from a
+	// runner whose Wireshark differs from the developer's says nothing about
+	// what it actually printed.
+	require.NotEmpty(t, rows,
+		"tshark listed endpoints that the parser read as nothing. Raw output:\n%s", out)
 
 	for _, r := range rows {
 		assert.NotEmpty(t, r.Address)
@@ -213,8 +219,9 @@ func TestEndpointsOutputStillParses(t *testing.T) {
 // The table offers each address as a filter, so tshark has to accept it and
 // answer with that address's traffic.
 func TestAnEndpointRowsFilterFindsItsPackets(t *testing.T) {
-	rows := ParseEndpoints(runStat(t, Endpoints, ""))
-	require.NotEmpty(t, rows)
+	out := runStat(t, Endpoints, "")
+	rows := ParseEndpoints(out)
+	require.NotEmpty(t, rows, "raw output:\n%s", out)
 
 	for _, r := range rows {
 		out := runFieldsQuery(t, r.DisplayFilter(), "frame.number")
