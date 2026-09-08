@@ -15,6 +15,7 @@ import (
 	"github.com/gcla/gowid/widgets/styled"
 	"github.com/gcla/gowid/widgets/table"
 	"github.com/gcla/gowid/widgets/text"
+	"github.com/m1rwana12/pcaptui/widgets/elided"
 	"github.com/m1rwana12/pcaptui/widgets/expander"
 )
 
@@ -35,12 +36,25 @@ func New(m *table.SimpleModel, st gowid.ICellStyler) *Model {
 }
 
 // Provides the ith "cell" widget, upstream makes the "row"
+//
+// This is table.SimpleCellWidget with elided in place of gowid's text widget.
+// A column too narrow for its value used to just stop drawing, so 192.0.2.10
+// in an eighty-column terminal read as 192.0.2.1 - a different address, just
+// as valid, with nothing to say a digit was missing. elided ends a cut value
+// with a marker instead. It only does so for the rows expander draws in a
+// single line; the focused row is still shown in full.
 func (c *Model) CellWidget(i int, s string) gowid.IWidget {
-	w := table.SimpleCellWidget(c, i, s)
-	if w != nil {
-		w = expander.New(w)
+	var w gowid.IWidget
+	b := button.NewBare(elided.New(s))
+	if c.GetStyle().CellStyleProvided {
+		w = isselected.New(b,
+			styled.New(b, c.GetStyle().CellStyleSelected),
+			styled.New(b, c.GetStyle().CellStyleFocus),
+		)
+	} else {
+		w = styled.NewExt(b, nil, gowid.MakeStyledAs(gowid.StyleReverse))
 	}
-	return w
+	return expander.New(w)
 }
 
 func (c *Model) CellWidgets(row table.RowId) []gowid.IWidget {

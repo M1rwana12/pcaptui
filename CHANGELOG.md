@@ -23,6 +23,17 @@
   conversation carrying seven packets was reported as carrying zero, and
   sorting by packet count sorted by reverse-direction traffic.
 
+- **A column too narrow for its value showed a different value, not a cut one.**
+  The packet list simply stopped drawing at the column edge, so in an
+  eighty-column terminal `192.0.2.10` appeared as `192.0.2.1` and
+  `198.51.100.20` as `198.51.10` — both well-formed addresses, with nothing to
+  say a digit was missing. A timestamp lost its last decimals the same way.
+  Anyone reading the list at a size the columns did not fit was being shown
+  plausible wrong answers.
+
+  Values that do not fit now end in `…`. The marker costs one cell, which is
+  the cheapest thing in the row.
+
 - `f` was bound twice in the Misc menu, so Feature Request could never be
   reached. It moves to `r`.
 

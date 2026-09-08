@@ -258,6 +258,12 @@ Wireshark's built-in ones, or a custom display filter field — so
 You can also add a column straight from a packet: select a field in the protocol
 tree and choose **Apply as column**.
 
+A value too wide for its column ends in `…`. This matters more than it looks:
+without the marker, `192.0.2.10` in a narrow terminal reads as `192.0.2.1` — a
+different address, and a perfectly valid one. When you see `…`, widen the
+terminal, drop a column you are not using, or read the full value in the
+protocol tree below.
+
 ## The command line
 
 Press `:` for the command line. Tab lists and completes.

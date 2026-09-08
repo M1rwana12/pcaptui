@@ -103,12 +103,15 @@ func captureWhenSettled(app *gowid.App, screen tcell.SimulationScreen, prefix st
 // builds its completion list between keystrokes and a burst arrives before it
 // is ready for it.
 //
-// "\n" in the string means Enter.
+// "\n" in the string means Enter and "\t" means Tab, which is how a
+// screenshot reaches a pane that is not the one the program starts focused on.
 func typeKeys(app *gowid.App, screen tcell.SimulationScreen, keys string) {
 	for _, r := range keys {
 		switch r {
 		case '\n', '\r':
 			screen.InjectKey(tcell.KeyEnter, ' ', tcell.ModNone)
+		case '\t':
+			screen.InjectKey(tcell.KeyTab, '\t', tcell.ModNone)
 		default:
 			screen.InjectKey(tcell.KeyRune, r, tcell.ModNone)
 		}
