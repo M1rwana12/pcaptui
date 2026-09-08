@@ -946,14 +946,22 @@ func (w *ConvsUiWidget) OnData(data string, app gowid.IApp) {
 		line = strings.Replace(line, " kB", "kB", -1)
 		line = strings.Replace(line, " MB", "MB", -1)
 		r = strings.NewReader(line)
+		// tshark prints the columns in this order:
+		//
+		//   addrA <-> addrB   <-Frames <-Bytes   ->Frames ->Bytes   Total   Start Duration
+		//
+		// so the first pair is B->A, the second is A->B, and the third is the
+		// total. The variable names below are the ones this code has always
+		// used and they read backwards - framesto holds the <- figure - which
+		// is how the total and the B->A column came to be swapped in the table.
 		n, err = fmt.Fscanf(r, "%s <-> %s %s %s %s %s %s %s %s %s",
 			&addra,
 			&addrb,
-			&framesto,
+			&framesto, // <- , that is B->A
 			&bytesto,
-			&framesfrom,
+			&framesfrom, // -> , that is A->B
 			&bytesfrom,
-			&frames,
+			&frames, // total
 			&bytes,
 			&start,
 			&durn,
@@ -973,10 +981,12 @@ func (w *ConvsUiWidget) OnData(data string, app gowid.IApp) {
 					porta = pa[1]
 					addrb = pb[0]
 					portb = pb[1]
-					datas = append(datas, []string{addra, porta, addrb, portb, framesto, bytesto, framesfrom, bytesfrom, frames, bytes, start, durn})
+					// Columns are Pkts, Bytes, Pkts A->B, Bytes A->B, Pkts B->A, Bytes B->A:
+					// the total first, then each direction.
+					datas = append(datas, []string{addra, porta, addrb, portb, frames, bytes, framesfrom, bytesfrom, framesto, bytesto, start, durn})
 				}
 			} else {
-				datas = append(datas, []string{addra, addrb, framesto, bytesto, framesfrom, bytesfrom, frames, bytes, start, durn})
+				datas = append(datas, []string{addra, addrb, frames, bytes, framesfrom, bytesfrom, framesto, bytesto, start, durn})
 			}
 		}
 	}

@@ -3553,7 +3553,9 @@ func Build(tty string) (*gowid.App, error) {
 		},
 		menuutil.SimpleMenuItem{
 			Txt: "Feature Request?",
-			Key: gowid.MakeKey('f'),
+			// 'f' already opens the FAQ higher up this menu, and the first
+			// binding wins - so this one could never be reached.
+			Key: gowid.MakeKey('r'),
 			CB: func(app gowid.IApp, w gowid.IWidget) {
 				multiMenu1Opener.CloseMenu(generalMenu, app)
 				if !pcaptui.RunningRemotely() {
