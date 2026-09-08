@@ -315,10 +315,18 @@ func AllHidden(specs []PsmlColumnSpec) bool {
 func getPsmlColumnFormatWithoutLock(colKey string) []PsmlColumnSpec {
 	res := make([]PsmlColumnSpec, 0)
 	widths := profiles.ConfStringSlice(colKey, []string{})
-	if len(widths) == 0 || (len(widths)/3)*3 != len(widths) {
-		logrus.Warnf("Unexpected %s structure - using defaults", colKey)
+	switch {
+	case len(widths) == 0:
+		// Not set is the normal state - nobody has a column-format until they
+		// edit their columns. Warning about it made every default install log
+		// a warning at startup, which is how people learn to skip warnings.
+		logrus.Infof("No %s configured - using the default columns", colKey)
 		res = DefaultPsmlColumnSpec
-	} else {
+	case len(widths)%3 != 0:
+		// This one is a genuinely broken file: the entries come in threes.
+		logrus.Warnf("Unexpected %s structure - %d entries is not a multiple of 3, using defaults", colKey, len(widths))
+		res = DefaultPsmlColumnSpec
+	default:
 		// Cross references with those column specs that we know about from having
 		// queried tshark with tshark -G column-formats. Any that are not known
 		// are discarded. If none are left, use our safe defaults
