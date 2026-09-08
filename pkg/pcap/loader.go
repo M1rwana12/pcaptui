@@ -819,8 +819,17 @@ func (c *PdmlLoader) loadPcapSync(row int, visible bool, ps iPdmlLoaderEnv, cb i
 			// that goroutine terminate.
 			p.stage2CancelFn()
 
+			// Close before the callback, not inside it. After app.Quit() gowid
+			// refuses further callbacks and drops the function it was given, so
+			// a close() in there never runs - and the ticker goroutine waiting
+			// on this channel never returns. It is registered with Goroutinewg,
+			// so the wait at the end of main blocks forever, after the terminal
+			// has already been handed back.
+			//
+			// The PSML path above does it this way for exactly this reason.
+			close(p.Stage2FinishedChan)
+
 			ps.MainRun(gowid.RunFunction(func(app gowid.IApp) {
-				close(p.Stage2FinishedChan)
 				HandleEnd(PdmlCode, app, cb)
 
 				p.state = NotLoading

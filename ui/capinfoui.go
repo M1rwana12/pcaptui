@@ -8,6 +8,7 @@ package ui
 import (
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gcla/gowid"
@@ -51,6 +52,7 @@ func startCapinfo(app gowid.IApp) {
 type capinfoParseHandler struct {
 	tick             *time.Ticker // for updating the spinner
 	stop             chan struct{}
+	stopOnce         sync.Once
 	pleaseWaitClosed bool
 }
 
@@ -69,6 +71,9 @@ func (t *capinfoParseHandler) OnCapinfoData(data string) {
 }
 
 func (t *capinfoParseHandler) AfterCapinfoEnd(success bool) {
+	// Reached through a plain defer in the loader, so it runs even after
+	// app.Quit() has stopped gowid dispatching callbacks.
+	t.stopSpinner()
 }
 
 func (t *capinfoParseHandler) BeforeBegin(code pcap.HandlerCode, app gowid.IApp) {
@@ -109,7 +114,7 @@ func (t *capinfoParseHandler) AfterEnd(code pcap.HandlerCode, app gowid.IApp) {
 
 		OpenMessageForCopy(CapinfoData, appView, app)
 	}))
-	close(t.stop)
+	t.stopSpinner()
 }
 
 //======================================================================
@@ -139,3 +144,17 @@ func (t ManageCapinfoCache) OnClear(pcap.HandlerCode, gowid.IApp) {
 // mode: Go
 // fill-column: 110
 // End:
+
+// stopSpinner ends the please-wait spinner goroutine.
+//
+// Closing the channel from AfterEnd alone is not enough: that callback is
+// dispatched from inside app.Run, and after app.Quit() gowid drops those, so
+// the goroutine - registered with Goroutinewg - would keep the program from
+// finishing its exit.
+func (t *capinfoParseHandler) stopSpinner() {
+	t.stopOnce.Do(func() {
+		if t.stop != nil {
+			close(t.stop)
+		}
+	})
+}

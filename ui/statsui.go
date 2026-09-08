@@ -6,6 +6,7 @@ package ui
 import (
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gcla/gowid"
@@ -53,7 +54,22 @@ type statsParseHandler struct {
 
 	tick             *time.Ticker // for updating the spinner
 	stop             chan struct{}
+	stopOnce         sync.Once
 	pleaseWaitClosed bool
+}
+
+// stopSpinner ends the goroutine that animates the please-wait spinner.
+//
+// It has to be reachable from a path that runs even after app.Quit(), because
+// gowid stops dispatching callbacks then: closing the channel from AfterEnd
+// alone would leave that goroutine parked, and it is registered with
+// Goroutinewg, so the program would never finish exiting.
+func (t *statsParseHandler) stopSpinner() {
+	t.stopOnce.Do(func() {
+		if t.stop != nil {
+			close(t.stop)
+		}
+	})
 }
 
 var _ stats.IStatsCallbacks = (*statsParseHandler)(nil)
@@ -65,6 +81,9 @@ func (t *statsParseHandler) OnStatsData(data string) {
 }
 
 func (t *statsParseHandler) AfterStatsEnd(success bool) {
+	// Reached through a plain defer in the loader, so it runs whether or not
+	// the app is still accepting callbacks.
+	t.stopSpinner()
 }
 
 func (t *statsParseHandler) BeforeBegin(code pcap.HandlerCode, app gowid.IApp) {
@@ -105,7 +124,7 @@ func (t *statsParseHandler) AfterEnd(code pcap.HandlerCode, app gowid.IApp) {
 
 		OpenMessageForCopy(t.report(), appView, app)
 	}))
-	close(t.stop)
+	t.stopSpinner()
 }
 
 // report titles the output and, when tshark found nothing, says so.

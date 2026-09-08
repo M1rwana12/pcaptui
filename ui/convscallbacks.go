@@ -7,6 +7,7 @@ package ui
 
 import (
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gcla/gowid"
@@ -25,6 +26,7 @@ type convsParseHandler struct {
 	app              gowid.IApp
 	tick             *time.Ticker // for updating the spinner
 	stop             chan struct{}
+	stopOnce         sync.Once
 	ondata           IOnDataSync
 	pleaseWaitClosed bool
 }
@@ -43,6 +45,9 @@ func (t *convsParseHandler) OnData(data string) {
 }
 
 func (t *convsParseHandler) AfterDataEnd(success bool) {
+	// Reached through a plain defer in the loader, so it runs even after
+	// app.Quit() has stopped gowid dispatching callbacks.
+	t.stopSpinner()
 	if t.ondata != nil && !success {
 		t.app.Run(gowid.RunFunction(func(app gowid.IApp) {
 			t.ondata.OnCancel(app)
@@ -86,7 +91,7 @@ func (t *convsParseHandler) AfterEnd(code pcap.HandlerCode, app gowid.IApp) {
 			ClosePleaseWait(t.app)
 		}
 	}))
-	close(t.stop)
+	t.stopSpinner()
 }
 
 //======================================================================
@@ -94,3 +99,17 @@ func (t *convsParseHandler) AfterEnd(code pcap.HandlerCode, app gowid.IApp) {
 // mode: Go
 // fill-column: 110
 // End:
+
+// stopSpinner ends the please-wait spinner goroutine.
+//
+// Closing the channel from AfterEnd alone is not enough: that callback is
+// dispatched from inside app.Run, and after app.Quit() gowid drops those, so
+// the goroutine - registered with Goroutinewg - would keep the program from
+// finishing its exit.
+func (t *convsParseHandler) stopSpinner() {
+	t.stopOnce.Do(func() {
+		if t.stop != nil {
+			close(t.stop)
+		}
+	})
+}
