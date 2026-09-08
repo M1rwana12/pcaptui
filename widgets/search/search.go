@@ -114,11 +114,15 @@ type hexTerm struct {
 	bytes []byte
 }
 
-func newHexTerm(user string) hexTerm {
+func newHexTerm(user string) (hexTerm, error) {
+	b, err := hexTermToBytes(user)
+	if err != nil {
+		return hexTerm{}, err
+	}
 	return hexTerm{
 		user:  user,
-		bytes: hexTermToBytes(user),
-	}
+		bytes: b,
+	}, nil
 }
 
 func hexToByte(b byte) int {
@@ -131,19 +135,31 @@ func hexToByte(b byte) int {
 	case r >= '0' && r <= '9':
 		return int(r - '0')
 	default:
-		panic(nil)
+		return -1
 	}
 }
 
-func hexTermToBytes(s string) []byte {
-	res := make([]byte, 0, 16)
-	if (len(s)/2)*2 != len(s) {
-		panic(nil)
+// hexTermToBytes turns the search term into the bytes to look for.
+//
+// It returns an error rather than panicking on input it cannot read. The
+// validator's regexp does refuse anything but pairs of hex digits, so in
+// principle this cannot be reached - but "in principle" is doing the work
+// there, and the cost of being sure is one error path that the regex search
+// beside it already has.
+func hexTermToBytes(s string) ([]byte, error) {
+	if len(s)%2 != 0 {
+		return nil, fmt.Errorf("a hex search needs an even number of digits, and %q has %d", s, len(s))
 	}
+
+	res := make([]byte, 0, len(s)/2)
 	for i := 0; i < len(s); i += 2 {
-		res = append(res, byte(hexToByte(s[i])<<4+hexToByte(s[i+1])))
+		hi, lo := hexToByte(s[i]), hexToByte(s[i+1])
+		if hi < 0 || lo < 0 {
+			return nil, fmt.Errorf("%q is not a hex number", s[i:i+2])
+		}
+		res = append(res, byte(hi<<4+lo))
 	}
-	return res
+	return res, nil
 }
 
 func (s hexTerm) Search(data string) int {
@@ -327,7 +343,9 @@ func getValidator() filter.IValidator {
 	case "regex":
 		validator = &RegexSearchValidator{}
 	default:
-		panic(nil)
+		// getSearchType only returns keys of searchTypeMap, so this means a
+		// type was added to that map and not to this switch.
+		panic(fmt.Sprintf("unknown search type %q", s2))
 	}
 	return validator
 }
@@ -517,7 +535,12 @@ func (w *Widget) invokeSearch(app gowid.IApp) {
 	case *filter.DisplayFilterValidator:
 		searchTerm = simpleTerm(w.filt.Value())
 	case *HexSearchValidator:
-		searchTerm = newHexTerm(w.filt.Value())
+		var err error
+		searchTerm, err = newHexTerm(w.filt.Value())
+		if err != nil {
+			w.errHandler.OnError(fmt.Errorf("Could not validate: %w", err), app)
+			return
+		}
 	case *StringSearchValidator:
 		searchTerm = newStringTerm(w.filt.Value(), w.CaseSensitive())
 	case *RegexSearchValidator:
@@ -528,7 +551,7 @@ func (w *Widget) invokeSearch(app gowid.IApp) {
 			return
 		}
 	default:
-		panic(nil)
+		panic(fmt.Sprintf("search widget has a validator it does not know how to build a term from: %T", w.validator))
 	}
 
 	w.findBtn.Disable()
@@ -730,9 +753,18 @@ func buildSearchTypeMenu(btn *button.Widget, men menu.IOpener, res *Widget) *men
 
 func (w *Widget) updateSearchTargetFromConf(app gowid.IApp) {
 
-	sAlg := profiles.ConfString("main.search-type", "filter")
+	// Through getSearchType and getSearchTarget, which fall back to a known
+	// value, rather than reading the keys directly.
+	//
+	// Reading them directly is what this did, and it meant a configuration
+	// file saying main.search-type = "nonsense" made the program panic - not
+	// when searching, but in search.New during ui.Build, so it would not start
+	// at all. The message was "panic called with nil argument", which says
+	// nothing about a configuration file. Measured, not reasoned about: the
+	// same shape of failure as hiding every column.
+	sAlg := getSearchType()
 	if sAlg != "filter" && sAlg != "hex" {
-		sAlg = profiles.ConfString("main.search-target", "list")
+		sAlg = getSearchTarget()
 	}
 
 	switch sAlg {
@@ -747,7 +779,9 @@ func (w *Widget) updateSearchTargetFromConf(app gowid.IApp) {
 	case "filter":
 		w.currentAlg = w.filtAlg
 	default:
-		panic(nil)
+		// Unreachable now that both values come through the guards above; if
+		// it ever is reached, say which value did it.
+		panic(fmt.Sprintf("unknown search target %q", sAlg))
 	}
 }
 

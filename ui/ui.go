@@ -3329,6 +3329,26 @@ func Build(tty string) (*gowid.App, error) {
 	var err error
 	var app *gowid.App
 
+	// Say it once if the program cannot remember anything the user chooses.
+	// Every preference - recent files, theme, columns, profile - is one write
+	// to this file, and those writes used to discard their error, so a
+	// read-only or full configuration directory produced a program that
+	// accepted every setting and forgot all of them, silently.
+	//
+	// app is assigned further down this function; the closure reads it when
+	// it fires, the same way CopyModePredicate does. A write that fails before
+	// there is an app to draw on is still logged.
+	profiles.OnWriteError = func(path string, werr error) {
+		if app == nil {
+			return
+		}
+		app.Run(gowid.RunFunction(func(app gowid.IApp) {
+			OpenLongError(fmt.Sprintf(
+				"Settings cannot be saved, so nothing you change here will be remembered.\n\n%s\n\n%v",
+				path, werr), app)
+		}))
+	}
+
 	widgetCacheSize := profiles.ConfInt("main.ui-cache-size", 1000)
 	if widgetCacheSize < 64 {
 		widgetCacheSize = 64

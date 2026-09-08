@@ -71,6 +71,49 @@
   conversation carrying seven packets was reported as carrying zero, and
   sorting by packet count sorted by reverse-direction traffic.
 
+- **A configuration file could stop the program from starting.** `search-type`
+  or `search-target` set to anything the program did not recognise reached a
+  `panic(nil)` — from `search.New`, called during `ui.Build`, so the panic
+  happened before the interface appeared and the message was "panic called with
+  nil argument", naming neither the key nor the file.
+
+  Both values were read straight out of the configuration, bypassing the two
+  functions written a few lines above for exactly this and used everywhere
+  else. They now go through those, and every value they can return is handled.
+
+  This is the second configuration that could make the program refuse to start,
+  after hiding every column.
+
+- **Settings failed to save without saying so.** Every preference the program
+  remembers — recent files, theme, column layout, profile — is one write to the
+  configuration file, and those writes discarded their error. A configuration
+  directory that is read-only, full, or owned by someone else gave a program
+  that appeared to accept every setting and forgot all of them.
+
+  It now says so once, naming the file, and logs every failure.
+
+- **A failed `tshark -G column-formats` was cached as a success, permanently.**
+  Neither `Start` nor `Wait` was checked and the function always returned
+  success, so a run that produced nothing wrote an empty list to the cache —
+  and the cache is only rebuilt when the tshark binary is newer than it. One
+  bad run left the install unable to name a column for good: Edit Columns
+  offered nothing, and every configured column was discarded as unrecognised.
+
+  No columns is now an error rather than an empty answer, an empty cache from a
+  previous version is regenerated rather than trusted, and the failure is
+  reported on stderr instead of only in a log file.
+
+- **Three `panic(nil)` in the search left the loader's lock held.** They fired
+  when the packet number map and the packet list disagreed, which means the
+  loader changed underneath the search. Panicking before releasing the lock
+  means that if anything ever recovered the panic, the program would not crash
+  — it would hang, with every goroutine needing the loader blocked for good and
+  nothing on screen to say why. The search now stops and reports it.
+
+  The remaining `panic(nil)` calls either became errors — a hex search term
+  that cannot be read is now reported the way an invalid regex already was — or
+  now name the value that was not understood. There are none left.
+
 - **`:logs` and `:config` did not exist on Windows.** Both were compiled out
   there, along with their Misc menu entries, because the Unix versions run the
   user's pager inside a terminal widget and there is no pty to run it in. The

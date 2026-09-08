@@ -123,7 +123,19 @@ Loop:
 		}
 
 		if packetIndex >= len(Loader.PsmlData()) {
-			panic(nil)
+			// The packet number map and the packet list have disagreed, which
+			// means the loader changed them underneath this goroutine. Stop
+			// the search and say so.
+			//
+			// It used to panic here - and panic *before* releasing the lock,
+			// so if anything ever recovered it the program would not crash, it
+			// would hang: every goroutine that needs the loader would block
+			// for good, with nothing on screen to say why.
+			res.ErrorForUser = fmt.Errorf(
+				"packet %d left the packet list while searching - the capture changed underneath the search",
+				curPacketNumber)
+			Loader.PsmlLoader.Unlock()
+			break
 		}
 		Loader.PsmlLoader.Unlock()
 

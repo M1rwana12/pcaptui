@@ -116,7 +116,7 @@ func SetConfIn(v *viper.Viper, name string, val interface{}) {
 	confMutex.Lock()
 	defer confMutex.Unlock()
 	v.Set(name, val)
-	v.WriteConfig()
+	writeConfig(v)
 }
 
 func ConfStrings(name string) []string {
@@ -141,7 +141,7 @@ func deleteConf(v *viper.Viper, name string) {
 	confMutex.Lock()
 	defer confMutex.Unlock()
 	v.Set(name, "")
-	v.WriteConfig()
+	writeConfig(v)
 }
 
 func ConfInt(name string, def int) int {
@@ -237,7 +237,9 @@ func CopyToAndUse(name string) error {
 	}
 
 	vProfile.SetConfigFile(filepath.Join(dir, "pcaptui.toml"))
-	vProfile.WriteConfig()
+	if err := writeConfig(vProfile); err != nil {
+		return fmt.Errorf("could not create the profile at %s: %v", dir, err)
+	}
 
 	return Use(name)
 }

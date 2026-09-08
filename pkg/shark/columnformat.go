@@ -8,6 +8,8 @@ package shark
 import (
 	"bufio"
 	"fmt"
+	"io"
+	"os"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -168,6 +170,7 @@ type ColumnsFromTshark struct {
 var validColumns *ColumnsFromTshark
 
 var TsharkColumnsCacheOldError = fmt.Errorf("The cached tshark columns database is out of date")
+var TsharkColumnsCacheEmptyError = fmt.Errorf("The cached tshark columns database is empty")
 var ColumnsFormatError = fmt.Errorf("The supplied list of columns and names is invalid")
 
 func init() {
@@ -198,6 +201,13 @@ func InitValidColumns() error {
 		err = validColumns.InitNoCache()
 		if err != nil {
 			log.Warnf("Did not generate tshark column formats (%v)", err)
+			// Said on stderr as well as in the log. Without the column
+			// formats, Edit Columns offers nothing and every configured
+			// column is discarded as unrecognised - and the only clue was a
+			// line in a file the user has no reason to open.
+			fmt.Fprintf(os.Stderr,
+				"Could not ask tshark which columns it understands: %v\n"+
+					"Column editing will be unavailable and the default columns will be used.\n", err)
 		} else {
 			err = pcaptui.WriteGob(pcaptui.CacheFile("tsharkcolumnsv2.gob.gz"), validColumns.fields)
 			if err != nil {
@@ -233,6 +243,15 @@ func (w *ColumnsFromTshark) InitFromCache() error {
 		return err
 	}
 
+	// An empty cache is a cache written by a run of tshark that failed, back
+	// when a failure was treated as success. Regenerate rather than trust it -
+	// otherwise a single bad run leaves the install permanently unable to name
+	// a column, because the cache is only rebuilt when the tshark binary is
+	// newer than it.
+	if len(f) == 0 {
+		return TsharkColumnsCacheEmptyError
+	}
+
 	w.fields = f
 	log.Infof("Read cached tshark column formats.")
 	return nil
@@ -247,27 +266,60 @@ func (w *ColumnsFromTshark) InitNoCache() error {
 		return err
 	}
 
-	cmd.Start()
+	if err := cmd.Start(); err != nil {
+		return fmt.Errorf("could not run %s -G column-formats: %v", pcaptui.TSharkBin(), err)
+	}
 
-	w.fields = make([]PsmlColumnSpec, 0, 128)
+	fields, perr := ParseColumnFormats(out)
 
-	scanner := bufio.NewScanner(out)
+	// Wait after the reader has drained the pipe, or tshark blocks writing to
+	// a pipe nobody is emptying.
+	if err := cmd.Wait(); err != nil {
+		return fmt.Errorf("%s -G column-formats failed: %v", pcaptui.TSharkBin(), err)
+	}
+	if perr != nil {
+		return perr
+	}
+
+	w.fields = fields
+
+	return nil
+}
+
+// ParseColumnFormats reads the output of `tshark -G column-formats`.
+//
+// No columns is an error, not an empty answer. Every build of tshark since
+// 1.10 knows dozens; if this comes back empty the program did not run, or ran
+// and printed something else. It used to be treated as success and written to
+// the cache, and because the cache is only regenerated when the tshark binary
+// is newer than it, one failed run left "Edit Columns" offering nothing for
+// the life of that install - and every configured column silently discarded as
+// unrecognised.
+func ParseColumnFormats(r io.Reader) ([]PsmlColumnSpec, error) {
+	res := make([]PsmlColumnSpec, 0, 128)
+
+	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		// tshark separates the format token, the column name and - since
 		// Wireshark 4.x - the column's field name with tabs. Older releases
 		// emitted only the first two, so accept either.
 		fields := strings.Split(strings.TrimRight(scanner.Text(), "\r"), "\t")
 		if len(fields) >= 2 && strings.HasPrefix(fields[0], "%") {
-			w.fields = append(w.fields, PsmlColumnSpec{
+			res = append(res, PsmlColumnSpec{
 				Field: PsmlField{Token: fields[0]},
 				Name:  strings.TrimSpace(fields[1]),
 			})
 		}
 	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
 
-	cmd.Wait()
+	if len(res) == 0 {
+		return nil, fmt.Errorf("tshark listed no column formats at all")
+	}
 
-	return nil
+	return res, nil
 }
 
 //======================================================================
