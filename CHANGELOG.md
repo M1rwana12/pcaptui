@@ -93,6 +93,20 @@
 
 ### Fixed
 
+- **On an 8-colour terminal the hex pane never showed whether it had focus.**
+  Three of its four highlights — the cursor byte, the protocol layer and the
+  line-number gutter — were given the same colours focused and unfocused, so
+  nothing on screen said where the next keystroke would go. The layer was also
+  drawn exactly like the gutter. The cursor, layer and gutter now go plain when
+  the pane loses focus, the field stays marked so you can still see which bytes
+  it occupies, and the layer has a colour of its own. Tests now state both
+  rules for every built-in theme.
+
+- **A theme could be edited without the change reaching any build.** The themes
+  the program uses are compiled into the binary; the files under `assets/` are
+  their source, and nothing checked that the two agreed. A test now compares
+  every embedded asset against the file it came from.
+
 - **The hex pane showed bytes that were not in the packet.** `tshark -x` prints
   each line twice — once as hex, once as text — and the reader scanned the
   whole line for "two hex digits and a space". Text in the second column
