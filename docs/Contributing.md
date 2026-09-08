@@ -39,6 +39,23 @@ CI runs these on Linux, macOS and Windows, plus `govulncheck`. All three
 platforms matter: a test that quietly only worked on Linux is how a Windows bug
 survived for years here.
 
+### The images in the README
+
+`scripts/screenshots.sh` regenerates all of them; `--check` compares without
+touching the committed files, and CI runs that. Two stills and one animation:
+the animation is recorded by `--screencast`, which photographs the screen after
+each keystroke and writes the frames as one looping SVG, plus a `.txt` of every
+frame so the same gate covers it.
+
+They have to be the **Linux** rendering — `gowid` picks its frame characters
+from `runtime.GOOS`, so a Windows or macOS run produces files that can never
+match CI. Download the `screenshots-linux` artifact from any CI run instead.
+
+When that gate goes red, re-run the job before believing it. A capture load
+arrives in two halves and a screenshot taken between them looks like a
+regression; that is fixed, but a gate driven by a real program on a shared
+runner is never entirely above suspicion.
+
 ### If you change anything under `assets/`
 
 The themes are compiled into the binary by `statik`, not read from the source
