@@ -191,7 +191,7 @@ func TSharkPath() (string, *gowid.KeyValueError) {
 		if !confirmedTshark {
 			err := gowid.WithKVs(ConfigErr, map[string]interface{}{
 				"msg": fmt.Sprintf("Could not run tshark binary '%s'. The tshark binary is required to run pcaptui.\n", tsharkBin) +
-					fmt.Sprintf("Check your config file %s\n", ConfFile("toml")),
+					fmt.Sprintf("Check your config file %s\n", ConfFile("pcaptui.toml")),
 			})
 			return "", &err
 		}
@@ -253,7 +253,9 @@ func RunForStderr(prog string, args []string, env []string, stderr io.Writer) (i
 func ConfFile(file string) string {
 	stdConf := configdir.New("", "pcaptui")
 	dirs := stdConf.QueryFolders(configdir.Global)
-	return path.Join(dirs[0].Path, file)
+	// filepath, not path: this ends up in messages the user is asked to act
+	// on, and path.Join produces C:\Users\...\pcaptui/pcaptui.toml on Windows.
+	return filepath.Join(dirs[0].Path, file)
 }
 
 func CacheFile(bin string) string {

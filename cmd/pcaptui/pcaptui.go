@@ -828,6 +828,15 @@ func cmain() int {
 		ui.PacketColors = false
 	}
 	cacheSize := profiles.ConfInt("main.pcap-cache-size", 64)
+	if cacheSize <= 0 {
+		// lru.New refuses a size of zero or less, and the loader turns that
+		// into log.Fatal - which writes to the log file, so the program simply
+		// exits with status 1 and prints nothing at all. The bundle size
+		// below has been clamped for years; this was not.
+		defaultCacheSize := 64
+		log.Infof("Config specifies pcap-cache-size as %d - setting to default (%d)", cacheSize, defaultCacheSize)
+		cacheSize = defaultCacheSize
+	}
 	bundleSize := profiles.ConfInt("main.pcap-bundle-size", 1000)
 	if bundleSize <= 0 {
 		maxBundleSize := 100000

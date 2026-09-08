@@ -42,14 +42,20 @@ func parseSize(size string) (int, int, error) {
 		return 0, 0, fmt.Errorf("screenshot size %q is not of the form WxH", size)
 	}
 
+	// gowid refuses to build a line wider than 4096 cells, and tcell's
+	// simulation screen allocates width*height cells up front - so a large
+	// enough number is a panic rather than an error. Both are checked here so
+	// the message names the flag instead of the library.
+	const maxDimension = 4096
+
 	w, err := strconv.Atoi(parts[0])
-	if err != nil || w < 20 {
-		return 0, 0, fmt.Errorf("screenshot width %q must be a number of at least 20", parts[0])
+	if err != nil || w < 20 || w > maxDimension {
+		return 0, 0, fmt.Errorf("screenshot width %q must be a number between 20 and %d", parts[0], maxDimension)
 	}
 
 	h, err := strconv.Atoi(parts[1])
-	if err != nil || h < 10 {
-		return 0, 0, fmt.Errorf("screenshot height %q must be a number of at least 10", parts[1])
+	if err != nil || h < 10 || h > maxDimension {
+		return 0, 0, fmt.Errorf("screenshot height %q must be a number between 10 and %d", parts[1], maxDimension)
 	}
 
 	return w, h, nil
