@@ -76,6 +76,57 @@ func TestNoEndpointOutputIsNoRows(t *testing.T) {
 	assert.Empty(t, ParseEndpoints(""))
 }
 
+// Verbatim from the macOS CI runner, where tshark groups the digits and this
+// machine's tshark does not. It read as an empty table until the counts were
+// parsed rather than handed straight to Atoi - the failure was silent, not
+// wrong: no rows at all rather than wrong numbers.
+//
+// Note that the protocol hierarchy's byte counts came through ungrouped on the
+// same run, so this is a property of the statistic and not only of the
+// environment.
+const endpointsGrouped = `================================================================================
+IPv4 Endpoints
+Filter:<No Filter>
+                       | Packets | |  Bytes  | | Tx Packets | | Tx Bytes | | Rx Packets | | Rx Bytes |
+192.168.0.2                    92   7,748 bytes        48      3,465 bytes         44      4,283 bytes
+192.168.0.1                    92   7,748 bytes        44      4,283 bytes         48      3,465 bytes
+================================================================================
+`
+
+func TestGroupedDigitsAreRead(t *testing.T) {
+	rows := ParseEndpoints(endpointsGrouped)
+
+	require.Len(t, rows, 2)
+	assert.Equal(t, 7748, rows[0].Bytes)
+	assert.Equal(t, 3465, rows[0].TxBytes)
+	assert.Equal(t, 4283, rows[0].RxBytes)
+}
+
+// The same capture, printed both ways, has to read as the same numbers.
+func TestGroupingDoesNotChangeTheAnswer(t *testing.T) {
+	plain := ParseEndpoints(endpointsOutput)
+	grouped := ParseEndpoints(endpointsGrouped)
+
+	assert.Equal(t, plain, grouped)
+}
+
+func TestAnApostropheSeparatorIsAlsoRead(t *testing.T) {
+	n, ok := parseCount("1'234'567")
+
+	assert.True(t, ok)
+	assert.Equal(t, 1234567, n)
+}
+
+func TestSomethingThatIsNotANumberIsRefused(t *testing.T) {
+	// "1,5" is one and a half in a comma-decimal locale. Stripping separators
+	// unconditionally would read it as fifteen, and a wrong number is worse
+	// than no number - so grouping is only accepted in threes.
+	for _, s := range []string{"Packets", "|", "", "12x", "1.5", "1,5", "12,34"} {
+		_, ok := parseCount(s)
+		assert.False(t, ok, "should have refused %q", s)
+	}
+}
+
 //======================================================================
 
 // The row is the traffic that address is part of, in either direction - which

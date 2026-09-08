@@ -5,6 +5,7 @@ package stats
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -79,8 +80,8 @@ func endpointRow(line string) (EndpointRow, bool) {
 	// words, so the numbers are what tells a row from a heading.
 	var n [6]int
 	for i := 0; i < 6; i++ {
-		v, err := strconv.Atoi(fields[i+1])
-		if err != nil {
+		v, ok := parseCount(fields[i+1])
+		if !ok {
 			return EndpointRow{}, false
 		}
 		n[i] = v
@@ -96,6 +97,38 @@ func endpointRow(line string) (EndpointRow, bool) {
 		RxBytes: n[5],
 	}, true
 }
+
+// parseCount reads a count that tshark may have grouped for readability.
+//
+// Measured, not assumed: the macOS runner printed "7,748" where this machine's
+// tshark printed "7748" - and only the endpoints table did it, since the
+// protocol hierarchy's byte counts came through ungrouped on the same run. The
+// separator therefore depends on the statistic as well as the environment, and
+// a parser that only understands bare digits works for the developer and
+// silently reads nothing for somebody else.
+//
+// Comma and apostrophe are stripped, but only where they group digits in
+// threes. Stripping them unconditionally would read "1,5" - which is how a
+// comma-decimal locale writes one and a half - as fifteen, and a wrong number
+// is worse than no number.
+//
+// A space separator, which some locales use, would have split the number into
+// two fields before reaching here; if that ever appears it needs a different
+// fix, and it will announce itself as an empty table rather than as a wrong
+// number.
+func parseCount(s string) (int, bool) {
+	if grouped.MatchString(s) {
+		s = strings.NewReplacer(",", "", "'", "").Replace(s)
+	}
+
+	n, err := strconv.Atoi(s)
+	if err != nil {
+		return 0, false
+	}
+	return n, true
+}
+
+var grouped = regexp.MustCompile(`^\d{1,3}([,']\d{3})+$`)
 
 //======================================================================
 // Local Variables:

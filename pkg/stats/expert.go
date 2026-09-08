@@ -5,7 +5,6 @@ package stats
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 )
 
@@ -132,8 +131,11 @@ func expertRow(line string, cols []int, severity string) (ExpertRow, bool) {
 		return ExpertRow{}, false
 	}
 
-	n, err := strconv.Atoi(fields[0])
-	if err != nil {
+	// Through parseCount for the same reason as the other two tables: a
+	// frequency in the thousands may or may not arrive grouped, depending on
+	// which of Wireshark's printing routines produced it.
+	n, ok := parseCount(fields[0])
+	if !ok {
 		return ExpertRow{}, false
 	}
 

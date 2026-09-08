@@ -4,7 +4,6 @@
 package stats
 
 import (
-	"strconv"
 	"strings"
 )
 
@@ -90,11 +89,12 @@ func countField(fields []string, prefix string) (int, bool) {
 		if !strings.HasPrefix(f, prefix) {
 			continue
 		}
-		n, err := strconv.Atoi(strings.TrimPrefix(f, prefix))
-		if err != nil {
-			return 0, false
-		}
-		return n, true
+		// Through parseCount, which understands a grouped number. This table
+		// came through ungrouped on the macOS runner where the endpoints table
+		// did not, so it may never need it - but the two differ only because
+		// of which of Wireshark's printing routines they go through, and that
+		// is not a promise about future releases.
+		return parseCount(strings.TrimPrefix(f, prefix))
 	}
 	return 0, false
 }
