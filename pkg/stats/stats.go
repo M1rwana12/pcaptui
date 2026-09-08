@@ -19,6 +19,11 @@ type Stat struct {
 	Name string
 	// Command is the minibuffer command that opens it.
 	Command string
+	// Key is the single keypress that opens it, from the main view and from
+	// the Analysis menu alike. One letter per view is how k9s and lazygit are
+	// navigated, and a view reachable only by typing its name is a view most
+	// people never find.
+	Key rune
 	// Summary is the one-line description shown in the menu and help.
 	Summary string
 	// zbase is the -z argument without any display filter.
@@ -32,6 +37,7 @@ var (
 	Expert = Stat{
 		Name:    "Expert Information",
 		Command: "expert",
+		Key:     'e',
 		Summary: "Problems the dissectors found in this capture",
 		zbase:   "expert",
 	}
@@ -42,6 +48,7 @@ var (
 	ProtoHierarchy = Stat{
 		Name:    "Protocol Hierarchy",
 		Command: "hierarchy",
+		Key:     'y',
 		Summary: "Every protocol in this capture, by packets and bytes",
 		zbase:   "io,phs",
 	}

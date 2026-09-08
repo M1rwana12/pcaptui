@@ -182,6 +182,7 @@ var openProfileSite *menu.SiteWidget
 var currentCapture *text.Widget
 var currentCaptureWidget *columns.Widget
 var currentCaptureWidgetHolder *holder.Widget
+var packetCount *text.Widget
 
 var nullw *null.Widget // empty
 var fillSpace *fill.Widget
@@ -2223,6 +2224,10 @@ func appKeyPress(evk *tcell.EventKey, app gowid.IApp) bool {
 		focusOnMenuButton(app)
 	} else if isrune && evk.Rune() == '?' {
 		OpenTemplatedDialog(appView, "UIHelp", app)
+	} else if isrune && !keyState.PartialZCmd && !keyState.PartialmCmd &&
+		!keyState.PartialQuoteCmd && !keyState.PartialgCmd && analysisKeyPress(evk.Rune(), app) {
+		// One key per analysis view. Checked after the partial commands so a
+		// pending mS or 'p is still a mark, not a stream.
 	} else if isrune && evk.Rune() == 'Z' && keyState.PartialZCmd {
 		RequestQuit()
 	} else if isrune && evk.Rune() == 'Z' {
@@ -2496,6 +2501,7 @@ func makePacketListModel(psml iPsmlInfo, app gowid.IApp) *psmlmodel.Model {
 }
 
 func updatePacketListWithData(psml iPsmlInfo, app gowid.IApp) {
+	updatePacketCount(psml, app)
 	packetListView.colors = psml.PsmlColors() // otherwise this isn't updated
 	model := makePacketListModel(psml, app)
 	newPacketsArrived = true
@@ -3388,14 +3394,31 @@ func Build(tty string) (*gowid.App, error) {
 
 	sp := text.New("  ")
 
-	currentCaptureWidget = columns.NewFixed(
-		sp,
-		&gowid.ContainerWidget{
+	// How many packets there are was not stated anywhere in the program. It
+	// goes next to the filename rather than in a status bar of its own,
+	// because a row of the terminal costs more than the space it takes here.
+	packetCount = text.New("")
+	packetCountStyled := styled.New(
+		packetCount,
+		gowid.MakePaletteRef("current-capture"),
+	)
+
+	vbar := func() *gowid.ContainerWidget {
+		return &gowid.ContainerWidget{
 			IWidget: fill.New('|'),
 			D:       gowid.MakeRenderBox(1, 1),
-		},
+		}
+	}
+
+	currentCaptureWidget = columns.NewFixed(
+		sp,
+		vbar(),
 		sp,
 		currentCaptureStyled,
+		sp,
+		vbar(),
+		sp,
+		packetCountStyled,
 	)
 	currentCaptureWidgetHolder = holder.New(nullw)
 
@@ -3632,47 +3655,21 @@ func Build(tty string) (*gowid.App, error) {
 		multiMenu1Opener.OpenMenu(analysisMenu, openAnalysisSite, app)
 	}))
 
-	analysisMenuItems := []menuutil.SimpleMenuItem{
-		menuutil.SimpleMenuItem{
-			Txt: "Capture file properties",
-			Key: gowid.MakeKey('p'),
+	// Built from analysisViews so the letter shown beside a menu entry is the
+	// same letter that opens it from the main view. They used to differ - the
+	// menu said 'x' for Expert Information, and nothing opened it from outside
+	// the menu at all.
+	analysisMenuItems := make([]menuutil.SimpleMenuItem, 0, len(analysisViews()))
+	for _, v := range analysisViews() {
+		v := v
+		analysisMenuItems = append(analysisMenuItems, menuutil.SimpleMenuItem{
+			Txt: v.Name,
+			Key: gowid.MakeKey(v.Key),
 			CB: func(app gowid.IApp, w gowid.IWidget) {
 				multiMenu1Opener.CloseMenu(analysisMenu, app)
-				startCapinfo(app)
+				v.Open(app)
 			},
-		},
-		menuutil.SimpleMenuItem{
-			Txt: "Reassemble stream",
-			Key: gowid.MakeKey('f'),
-			CB: func(app gowid.IApp, w gowid.IWidget) {
-				multiMenu1Opener.CloseMenu(analysisMenu, app)
-				startStreamReassembly(app)
-			},
-		},
-		menuutil.SimpleMenuItem{
-			Txt: "Conversations",
-			Key: gowid.MakeKey('c'),
-			CB: func(app gowid.IApp, w gowid.IWidget) {
-				multiMenu1Opener.CloseMenu(analysisMenu, app)
-				openConvsUi(app)
-			},
-		},
-		menuutil.SimpleMenuItem{
-			Txt: "Expert Information",
-			Key: gowid.MakeKey('x'),
-			CB: func(app gowid.IApp, w gowid.IWidget) {
-				multiMenu1Opener.CloseMenu(analysisMenu, app)
-				startStats(stats.Expert, app)
-			},
-		},
-		menuutil.SimpleMenuItem{
-			Txt: "Protocol Hierarchy",
-			Key: gowid.MakeKey('h'),
-			CB: func(app gowid.IApp, w gowid.IWidget) {
-				multiMenu1Opener.CloseMenu(analysisMenu, app)
-				startStats(stats.ProtoHierarchy, app)
-			},
-		},
+		})
 	}
 
 	analysisMenuListBox, analysisMenuWidth := menuutil.MakeMenuWithHotKeys(analysisMenuItems, nil)

@@ -106,6 +106,7 @@ func (t updatePacketViews) AfterEnd(code pcap.HandlerCode, app gowid.IApp) {
 		return
 	}
 	updatePacketListWithData(t.Ld, app)
+	packetCountLoadFinished(t.Ld, app)
 	StopEmptyStructViewTimer()
 	StopEmptyHexViewTimer()
 	log.Infof("Load operation complete")

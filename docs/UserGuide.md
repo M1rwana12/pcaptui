@@ -88,6 +88,17 @@ packet, and its bytes.
 | `?` | help |
 | `q` | quit |
 
+The five analysis views each have a key, and it is the same key beside the
+entry in the Analysis menu:
+
+| Key | |
+|---|---|
+| `p` | capture file properties |
+| `s` | reassemble the stream the selected packet is in |
+| `v` | conversations |
+| `e` | expert information |
+| `y` | protocol hierarchy |
+
 Vim keys work throughout:
 
 | Key | |
@@ -165,8 +176,8 @@ copy dialog shows the text so you can select it by hand.
 
 ## Following a stream
 
-Select a TCP or UDP packet, then choose **Reassemble stream** from the Analysis
-menu, or run `:streams`.
+Press `s`, or select a TCP or UDP packet and choose **Reassemble stream** from
+the Analysis menu, or run `:streams`.
 
 The reassembled conversation is shown in ASCII, hex or raw, and you can look at
 one direction alone or both interleaved. Each chunk is labelled with the
@@ -175,7 +186,7 @@ this stream.
 
 ## Conversations
 
-`:convs`, or **Conversations** in the Analysis menu, lists the conversations in
+`v`, `:convs`, or **Conversations** in the Analysis menu, lists the conversations in
 the capture by protocol — Ethernet, IPv4, IPv6, TCP, UDP — with packet and byte
 counts in each direction.
 
@@ -186,7 +197,7 @@ destination alone.
 
 ## Expert Information
 
-`:expert`, or **Expert Information** in the Analysis menu.
+`e`, `:expert`, or **Expert Information** in the Analysis menu.
 
 This is what Wireshark's dissectors think is wrong with the capture:
 retransmissions, malformed packets, checksum failures, protocol violations —
@@ -197,7 +208,7 @@ It is usually the quickest way into a capture somebody has just handed you.
 
 ## Protocol Hierarchy
 
-`:hierarchy`, or **Protocol Hierarchy** in the Analysis menu.
+`y`, `:hierarchy`, or **Protocol Hierarchy** in the Analysis menu.
 
 Every protocol present in the capture, as a tree, with packet and byte counts.
 Each protocol is indented under the one carrying it.

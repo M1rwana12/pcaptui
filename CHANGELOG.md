@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Added
+
+- **The title bar says how many packets there are**, and whether a display
+  filter is why the list is short: `7 packets`, `3 packets · filtered`,
+  `40,000 packets · loading`. The count was previously not stated anywhere in
+  the program — nothing distinguished a capture with seven packets from a
+  filter that matched seven, and nothing said a number was still climbing.
+  Wireshark's equivalent is the most-read part of its window.
+
+- **One key per analysis view**, the same key that now appears beside the entry
+  in the Analysis menu: `p` capture file properties, `s` reassemble stream,
+  `v` conversations, `e` expert information, `y` protocol hierarchy.
+
+  None of them had a key. The menu was reachable by mouse, or by `esc` — which
+  lands on Misc, not Analysis — and otherwise you had to know to type the
+  command's full name at `:`. The `?` help named none of the five, so Expert
+  Information, which the README calls the fastest way into a capture somebody
+  just handed you, could be missed entirely. The help now lists them, generated
+  from the bindings so the two cannot drift apart.
+
 ### Fixed
 
 - **The hex pane showed bytes that were not in the packet.** `tshark -x` prints

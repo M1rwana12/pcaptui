@@ -81,6 +81,9 @@ esc - Activate menu
 z__ - Maximize/restore any modal dialog
 ?__ - Display help
 
+Analysis - one key each, also in the Analysis menu:
+
+{{.AnalysisKeys}}
 In the filter, type a wireshark display filter expression.
 
 Most terminals will support using the mouse! Try clicking the Close button.
@@ -116,14 +119,14 @@ capinfo______ - Capture file properties
 clear-filter_ - Clear the display filter and apply
 clear-packets - Clear the current pcap
 columns______ - Choose the columns to display
-config_______ - Show pcaptui's config file (Unix-only)
+config_______ - Show pcaptui's config file
 convs________ - Open conversations view
 expert_______ - Problems the dissectors found in this capture
 filter_______ - Choose a display filter from recently-used
 help_________ - Various help dialogs
 hierarchy____ - Every protocol in this capture, by packets and bytes
 load_________ - Load a pcap from the filesystem
-logs_________ - Show pcaptui's log file (Unix-only)
+logs_________ - Show pcaptui's log file
 map__________ - Map a keypress to a key sequence (see help map)
 marks________ - Show file-local and global packet marks
 menu_________ - Open the UI Misc menu
@@ -214,6 +217,9 @@ func init() {
 	TemplateData["UserGuideURL"] = pcaptui.UserGuideURL
 	TemplateData["BugURL"] = pcaptui.BugURL
 	TemplateData["FeatureURL"] = pcaptui.FeatureURL
+	// Generated from the bindings themselves - a hand-written list of keys is
+	// a list that drifts from what the keys actually do.
+	TemplateData["AnalysisKeys"] = analysisKeyHelp()
 }
 
 func WriteHelp(p *flags.Parser, w io.Writer) {

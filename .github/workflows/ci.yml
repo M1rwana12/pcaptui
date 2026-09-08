@@ -133,6 +133,14 @@ jobs:
       - name: Screenshots match the committed ones
         run: bash scripts/screenshots.sh --check
 
+      # --check renders into a temp directory so it cannot dirty the tree it is
+      # checking, which means the committed files are still the committed files
+      # at this point. Regenerate over them so the artifact below is what this
+      # runner actually drew, not a copy of what was already in the repository.
+      - name: Render this platform's version for the artifact
+        if: always()
+        run: bash scripts/screenshots.sh
+
       # gowid picks its frame characters from runtime.GOOS - light box drawing
       # on Windows, heavy everywhere else - so a screenshot taken on Windows
       # can never match one taken here. The committed files are the Linux
