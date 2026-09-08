@@ -4,7 +4,9 @@
 
 ### Added
 
-- **Overview** — `o`, or the Analysis menu. The three questions you have about a
+- **Overview** — `o`, or the Analysis menu, **and it opens by itself** when a
+  capture finishes loading. Once per capture, never during a live capture, and
+  `:set start-view packets` turns it off. The three questions you have about a
   capture somebody just handed you, on one screen: what is wrong with it, what
   is in it, who is on the wire. Each section shows its first few rows and says
   how many it left out; every row keeps the filter its own table would have

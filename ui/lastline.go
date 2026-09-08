@@ -122,6 +122,7 @@ func newSetArg(sub string) substrArg {
 			"disable-shark-fin",
 			"packet-colors",
 			"pager",
+			"start-view",
 			"nopager",
 			"suppress-tshark-errors",
 			"term",
@@ -394,6 +395,17 @@ func (d setCommand) Run(app gowid.IApp, args ...string) error {
 				profiles.SetConf("main.packet-colors", PacketColors)
 				OpenMessage(fmt.Sprintf("Packet colors are now %s", gwutil.If(b, "on", "off").(string)), appView, app)
 			}
+		case "start-view":
+			switch args[2] {
+			case StartViewOverview, StartViewPackets:
+				profiles.SetConf("main.start-view", args[2])
+				OpenMessage(fmt.Sprintf("Captures will open on the %s.",
+					gwutil.If(args[2] == StartViewOverview,
+						"overview", "packet list").(string)), appView, app)
+			default:
+				err = fmt.Errorf("start-view is %s or %s, not %q",
+					StartViewOverview, StartViewPackets, args[2])
+			}
 		case "suppress-tshark-errors":
 			if b, err = parseOnOff(args[2]); err == nil {
 				profiles.SetConf("main.suppress-tshark-errors", b)
@@ -446,6 +458,7 @@ func (d setCommand) Arguments(toks []string, app gowid.IApp) []minibuffer.IArg {
 		onOffCmds := []string{"auto-scroll", "dark-mode", "packet-colors", "suppress-tshark-errors"}
 		boolCmds := []string{"disable-shark-fin"}
 		intCmds := []string{"disk-cache-size-mb", "copy-command-timeout"}
+		viewCmds := []string{"start-view"}
 
 		pref := ""
 		if len(toks) > 1 {
@@ -458,6 +471,9 @@ func (d setCommand) Arguments(toks []string, app gowid.IApp) []minibuffer.IArg {
 			res = append(res, unhelpfulArg{})
 		} else if stringIn(toks[0], onOffCmds) {
 			res = append(res, newOnOffArg(pref))
+		} else if stringIn(toks[0], viewCmds) {
+			res = append(res, substrArg{sub: pref,
+				candidates: []string{StartViewOverview, StartViewPackets}})
 		}
 	}
 

@@ -153,6 +153,7 @@ copy-timeout__________ - wait this long before failing a copy
 dark-mode_____________ - enable or disable dark-mode
 disable-shark-fin_____ - switch off the secret shark fin
 packet-colors_________ - use colors in the packet list view
+start-view____________ - open captures on the overview or the packet list
 pager_________________ - pager (used for pcaptui's log file)
 nopager_______________ - disable the pager (use PAGER instead)
 suppress-tshark-errors - don't show tshark errors in the UI

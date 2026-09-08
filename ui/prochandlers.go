@@ -50,6 +50,8 @@ func (t updateCurrentCaptureInTitle) BeforeBegin(code pcap.HandlerCode, app gowi
 
 func (t updateCurrentCaptureInTitle) OnClear(code pcap.HandlerCode, app gowid.IApp) {
 	currentCaptureWidgetHolder.SetSubWidget(nullw, app)
+	// A different capture gets its own summary.
+	ResetStartView()
 }
 
 //======================================================================
@@ -110,6 +112,7 @@ func (t updatePacketViews) AfterEnd(code pcap.HandlerCode, app gowid.IApp) {
 	StopEmptyStructViewTimer()
 	StopEmptyHexViewTimer()
 	log.Infof("Load operation complete")
+	maybeShowOverview(app)
 }
 
 func (t updatePacketViews) OnError(code pcap.HandlerCode, app gowid.IApp, err error) {

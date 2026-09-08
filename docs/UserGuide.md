@@ -218,6 +218,20 @@ missing section.
 It is one `tshark` run, not three: `tshark` accepts several `-z` arguments and
 produces all of them from a single pass over the file.
 
+**It opens by itself** when a capture finishes loading — once per capture, not
+on every filter change, and never during a live capture, where a summary of the
+first second would be obsolete before it was read. Close it and you are in the
+packet list as before.
+
+```
+:set start-view packets      # open on the packet list instead
+:set start-view overview     # back to the summary
+```
+
+A capture opened at packet number one answers none of the questions the person
+opening it has. It is a dialog over the packet list rather than a different
+view, so one keypress dismisses it and nothing has to be navigated back out of.
+
 ## Expert Information
 
 `e`, `:expert`, or **Expert Information** in the Analysis menu.
@@ -355,7 +369,7 @@ Press `:` for the command line. Tab lists and completes.
 | `wormhole` | send the current capture |
 
 `:set` changes settings interactively — `auto-scroll`, `dark-mode`,
-`packet-colors`, `term`, `copy-timeout`, `suppress-tshark-errors`, `pager` and a
+`packet-colors`, `start-view`, `term`, `copy-timeout`, `suppress-tshark-errors`, `pager` and a
 few others. Type `:set` and press tab.
 
 ## Configuration
