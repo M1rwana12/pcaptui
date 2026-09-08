@@ -106,6 +106,48 @@ func hierarchyLines(rows []stats.HierarchyRow) statsView {
 	return v
 }
 
+// httpLines lays out the HTTP packet counter, keeping the indentation that
+// says a "404 Not Found" is one of the "4xx: Client Error" responses.
+//
+// Only the rows tshark counted are shown. Its table is a fixed skeleton of
+// every status class it knows, so a capture with three responses prints four
+// useful lines under sixteen zeroes, and the zeroes are what the eye lands on.
+func httpLines(rows []stats.TreeRow) statsView {
+	rows = stats.HTTPRows(rows)
+	if len(rows) == 0 {
+		return statsView{}
+	}
+
+	namew, cntw := len("Response"), len("Count")
+	for _, r := range rows {
+		namew = max(namew, r.Depth+len(r.Name))
+		cntw = max(cntw, len(groupDigits(r.Count)))
+	}
+
+	line := func(name, count, pct string) string {
+		return fmt.Sprintf("%-*s  %*s  %s", namew, name, cntw, count, pct)
+	}
+
+	var v statsView
+	for _, r := range rows {
+		v.Rows = append(v.Rows, statsLine{
+			Text: line(
+				strings.Repeat(" ", r.Depth)+r.Name,
+				groupDigits(r.Count),
+				r.Percent,
+			),
+			Filter: stats.HTTPFilter(r.Name),
+		})
+	}
+
+	titles := line("Response", "Count", "Percent")
+	v.Header = []string{titles, rule(titles, v.Rows)}
+
+	return v
+}
+
+//======================================================================
+
 // endpointLines lays out Endpoints, busiest first.
 //
 // tshark prints them in the order it met them, which for a two-host capture is

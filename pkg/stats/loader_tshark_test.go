@@ -44,10 +44,19 @@ func TestMain(m *testing.M) {
 
 const testPcap = "../../scripts/pcaps/telnet-cooked.pcap"
 
+// The telnet capture has no HTTP in it. The demo capture is three responses -
+// a 200, a 404 and a 500 - one of each class the HTTP table groups by, and so
+// it exercises the whole shape of that table.
+const httpPcap = "../../scripts/pcaps/demo.pcap"
+
 func runStat(t *testing.T, s Stat, filter string) string {
+	return runStatOn(t, testPcap, s, filter)
+}
+
+func runStatOn(t *testing.T, pcap string, s Stat, filter string) string {
 	t.Helper()
 
-	cmd := MakeCommands().Stats(testPcap, s.ZArg(filter))
+	cmd := MakeCommands().Stats(pcap, s.ZArg(filter))
 
 	out, err := cmd.StdoutReader()
 	assert.NoError(t, err)
@@ -235,7 +244,13 @@ func TestAnEndpointRowsFilterFindsItsPackets(t *testing.T) {
 func runFieldsQuery(t *testing.T, filter string, field string) string {
 	t.Helper()
 
-	cmd := exec.Command("tshark", "-r", testPcap, "-Y", filter, "-T", "fields", "-e", field)
+	return runFieldsQueryOn(t, testPcap, filter, field)
+}
+
+func runFieldsQueryOn(t *testing.T, pcap string, filter string, field string) string {
+	t.Helper()
+
+	cmd := exec.Command("tshark", "-r", pcap, "-Y", filter, "-T", "fields", "-e", field)
 	out, err := cmd.Output()
 	if err != nil {
 		if _, ok := err.(*exec.ExitError); !ok {
@@ -243,6 +258,56 @@ func runFieldsQuery(t *testing.T, filter string, field string) string {
 		}
 	}
 	return string(out)
+}
+
+func TestHTTPOutputStillParses(t *testing.T) {
+	out := runStatOn(t, httpPcap, HTTP, "")
+	rows := ParseTree(out)
+
+	require.NotEmpty(t, rows,
+		"tshark printed an HTTP table that the parser read as nothing. Raw output:\n%s", out)
+
+	byName := map[string]TreeRow{}
+	for _, r := range rows {
+		byName[r.Name] = r
+	}
+
+	total, ok := byName["Total HTTP Packets"]
+	require.True(t, ok, "raw output:\n%s", out)
+	assert.Equal(t, 3, total.Count)
+	assert.Equal(t, 0, total.Depth)
+
+	for _, name := range []string{"200 OK", "404 Not Found", "500 Internal Server Error"} {
+		r, ok := byName[name]
+		require.True(t, ok, "%s missing. Raw output:\n%s", name, out)
+		assert.Equal(t, 1, r.Count)
+		assert.Greater(t, r.Depth, byName["HTTP Response Packets"].Depth,
+			"%s should sit under the responses", name)
+	}
+}
+
+// Each row offers a filter, so tshark has to accept it and answer with the
+// packets that row counted.
+func TestEveryHTTPRowsFilterFindsItsPackets(t *testing.T) {
+	out := runStatOn(t, httpPcap, HTTP, "")
+	rows := HTTPRows(ParseTree(out))
+	require.NotEmpty(t, rows, "raw output:\n%s", out)
+
+	tried := 0
+	for _, r := range rows {
+		filter := HTTPFilter(r.Name)
+		if filter == "" {
+			continue
+		}
+		tried++
+
+		found := runFieldsQueryOn(t, httpPcap, filter, "frame.number")
+		assert.Equal(t, r.Count, len(strings.Fields(found)),
+			"filter %q found a different number of packets than %q claims",
+			filter, r.Name)
+	}
+
+	require.NotZero(t, tried, "no row offered a filter to check")
 }
 
 //======================================================================

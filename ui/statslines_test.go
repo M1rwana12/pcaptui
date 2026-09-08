@@ -313,6 +313,77 @@ func TestAnEmptyResultSaysWhichKindOfEmpty(t *testing.T) {
 }
 
 //======================================================================
+
+func someHTTPRows() []stats.TreeRow {
+	return []stats.TreeRow{
+		{Depth: 0, Name: "Total HTTP Packets", Count: 3, Percent: "100%"},
+		{Depth: 1, Name: "HTTP Response Packets", Count: 3, Percent: "100,00%"},
+		{Depth: 2, Name: "5xx: Server Error", Count: 1, Percent: "33,33%"},
+		{Depth: 3, Name: "500 Internal Server Error", Count: 1, Percent: "100,00%"},
+		{Depth: 2, Name: "1xx: Informational", Count: 0, Percent: "0,00%"},
+		{Depth: 1, Name: "HTTP Request Packets", Count: 0, Percent: "0,00%"},
+	}
+}
+
+// tshark's table is a skeleton of every class it knows; on a real capture most
+// of it is zeroes, and the zeroes are what the eye lands on first.
+func TestTheEmptyHTTPRowsAreNotShown(t *testing.T) {
+	v := httpLines(someHTTPRows())
+
+	require.Len(t, v.Rows, 4)
+	for _, r := range v.Rows {
+		assert.NotContains(t, r.Text, "1xx")
+		assert.NotContains(t, r.Text, "Request")
+	}
+}
+
+func TestTheHTTPTableKeepsItsShape(t *testing.T) {
+	v := httpLines(someHTTPRows())
+
+	assert.True(t, strings.HasPrefix(v.Rows[0].Text, "Total"))
+	assert.True(t, strings.HasPrefix(v.Rows[1].Text, " HTTP Response"))
+	assert.True(t, strings.HasPrefix(v.Rows[2].Text, "  5xx"))
+	assert.True(t, strings.HasPrefix(v.Rows[3].Text, "   500"))
+}
+
+func TestAStatusRowFiltersOnItsCode(t *testing.T) {
+	v := httpLines(someHTTPRows())
+
+	assert.Equal(t, "http.response.code == 500", v.Rows[3].Filter)
+	assert.True(t, v.Rows[3].actionable())
+}
+
+// The percentage is printed as tshark gave it, decimal comma and all, because
+// re-formatting it means first guessing which convention produced it.
+func TestThePercentageIsShownAsTsharkPrintedIt(t *testing.T) {
+	v := httpLines(someHTTPRows())
+
+	assert.True(t, strings.HasSuffix(strings.TrimRight(v.Rows[2].Text, " "), "33,33%"))
+}
+
+func TestTheHTTPCountsLineUpDespiteTheIndentation(t *testing.T) {
+	v := httpLines(someHTTPRows())
+
+	at := strings.Index(v.Rows[0].Text, "3")
+	require.Positive(t, at)
+	assert.Equal(t, at, strings.Index(v.Rows[1].Text, "3"))
+	assert.Equal(t, at, strings.Index(v.Rows[2].Text, "1"))
+	assert.Equal(t, at, strings.Index(v.Rows[3].Text, "1"))
+}
+
+// A capture with no HTTP in it still prints the whole skeleton, at zero. That
+// is not a table worth opening.
+func TestACaptureWithNoHTTPIsAnEmptyView(t *testing.T) {
+	rows := []stats.TreeRow{
+		{Depth: 0, Name: "Total HTTP Packets", Count: 0, Percent: "100%"},
+		{Depth: 1, Name: "HTTP Response Packets", Count: 0, Percent: "0,00%"},
+	}
+
+	assert.True(t, httpLines(rows).empty())
+	assert.True(t, httpLines(nil).empty())
+}
+
+//======================================================================
 // Local Variables:
 // mode: Go
 // fill-column: 78

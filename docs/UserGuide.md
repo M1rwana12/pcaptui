@@ -13,6 +13,7 @@
 - [Expert Information](#expert-information)
 - [Protocol Hierarchy](#protocol-hierarchy)
 - [Endpoints](#endpoints)
+- [HTTP](#http)
 - [Decrypting TLS](#decrypting-tls)
 - [Columns](#columns)
 - [The command line](#the-command-line)
@@ -283,6 +284,26 @@ wire" is one keypress from "show me only them".
 Bytes rather than packets in the two direction columns: a host sending many
 small acknowledgements and one sending few large payloads look the same by
 packet count and nothing alike by volume.
+
+## HTTP
+
+`w`, `:http`, or **HTTP** in the Analysis menu.
+
+How the HTTP responses in the capture turned out: how many succeeded, how many
+were not found, how many the server failed on — grouped by status class, with
+each code under its class.
+
+Enter on a row filters the packet list to those responses. A status code row
+gives `http.response.code == 404`; a class row gives the range it stands for.
+The rows tshark cannot express as a filter — its "Other" and "broken"
+catch-alls — are shown but not offered, because a filter that quietly means
+something else is worse than none.
+
+Only what is in the capture is listed. `tshark` prints a fixed skeleton of
+every status class it knows about, present or not, so a capture with three
+responses would otherwise be four useful lines under sixteen zeroes.
+
+`w` rather than `h`: `h` is one of the vim movement keys.
 
 ## Decrypting TLS
 

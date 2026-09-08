@@ -75,6 +75,14 @@
   just handed you, could be missed entirely. The help now lists them, generated
   from the bindings so the two cannot drift apart.
 
+- **HTTP responses, by status.** `w`, `:http`, or HTTP in the Analysis menu:
+  how many responses succeeded, how many were not found, how many the server
+  failed on, each code under its class. Enter on a row filters the packet list
+  to those responses — a code row gives `http.response.code == 404`, a class
+  row the range it stands for. Only what is in the capture is listed; tshark
+  prints a fixed skeleton of every status class it knows, so three responses
+  would otherwise arrive as four useful lines under sixteen zeroes.
+
 ### Changed
 
 - **A million packets carry 1.9 MB of colour instead of 115 MB.** Measured
