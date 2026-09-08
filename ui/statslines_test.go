@@ -136,6 +136,56 @@ func TestTheCountsLineUpDespiteTheIndentation(t *testing.T) {
 
 //======================================================================
 
+func someEndpointRows() []stats.EndpointRow {
+	return []stats.EndpointRow{
+		{Address: "10.0.0.1", Packets: 12, Bytes: 900, TxBytes: 400, RxBytes: 500},
+		{Address: "10.0.0.2", Packets: 40, Bytes: 90000, TxBytes: 89000, RxBytes: 1000},
+		{Address: "10.0.0.3", Packets: 3, Bytes: 300, TxBytes: 100, RxBytes: 200},
+	}
+}
+
+// tshark prints endpoints in the order it met them, which buries the host you
+// are looking for. The question the table answers is who is doing the most.
+func TestEndpointsAreBusiestFirst(t *testing.T) {
+	v := endpointLines(someEndpointRows())
+
+	require.Len(t, v.Rows, 3)
+	assert.True(t, strings.HasPrefix(v.Rows[0].Text, "10.0.0.2"))
+	assert.True(t, strings.HasPrefix(v.Rows[2].Text, "10.0.0.3"))
+}
+
+func TestEveryEndpointRowFiltersOnItsAddress(t *testing.T) {
+	v := endpointLines(someEndpointRows())
+
+	assert.Equal(t, "ip.addr == 10.0.0.2", v.Rows[0].Filter)
+}
+
+// 90000 is not a number anyone reads at a glance, and this table exists to be
+// glanced at.
+func TestEndpointCountsAreGrouped(t *testing.T) {
+	v := endpointLines(someEndpointRows())
+
+	assert.Contains(t, v.Rows[0].Text, "90,000")
+	assert.Contains(t, v.Rows[0].Text, "89,000")
+}
+
+func TestEndpointColumnsLineUp(t *testing.T) {
+	v := endpointLines(someEndpointRows())
+
+	at := strings.Index(v.Rows[0].Text, "90,000")
+	require.Positive(t, at)
+	for i, r := range v.Rows {
+		assert.Equal(t, len([]rune(v.Rows[0].Text)), len([]rune(r.Text)),
+			"row %d is a different width", i)
+	}
+}
+
+func TestNoEndpointsIsAnEmptyView(t *testing.T) {
+	assert.True(t, endpointLines(nil).empty())
+}
+
+//======================================================================
+
 // Both statistics honour the display filter. A reader who has forgotten what
 // is in the filter box would otherwise take a subset for the whole capture.
 func TestTheHeadingNamesTheFilterInForce(t *testing.T) {

@@ -6,6 +6,7 @@ package ui
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/m1rwana12/pcaptui/pkg/stats"
@@ -100,6 +101,58 @@ func hierarchyLines(rows []stats.HierarchyRow) statsView {
 	}
 
 	titles := line("Protocol", "Frames", "Bytes")
+	v.Header = []string{titles, rule(titles, v.Rows)}
+
+	return v
+}
+
+// endpointLines lays out Endpoints, busiest first.
+//
+// tshark prints them in the order it met them, which for a two-host capture is
+// no order at all and for a busy one buries the host you are looking for. The
+// question this table answers is "who is doing the most", so it is sorted by
+// that.
+func endpointLines(rows []stats.EndpointRow) statsView {
+	if len(rows) == 0 {
+		return statsView{}
+	}
+
+	sorted := make([]stats.EndpointRow, len(rows))
+	copy(sorted, rows)
+	sort.SliceStable(sorted, func(i, j int) bool {
+		return sorted[i].Bytes > sorted[j].Bytes
+	})
+
+	addrw := len("Address")
+	pktw, bytew := len("Packets"), len("Bytes")
+	txw, rxw := len("Sent"), len("Received")
+	for _, r := range sorted {
+		addrw = max(addrw, len(r.Address))
+		pktw = max(pktw, len(groupDigits(r.Packets)))
+		bytew = max(bytew, len(groupDigits(r.Bytes)))
+		txw = max(txw, len(groupDigits(r.TxBytes)))
+		rxw = max(rxw, len(groupDigits(r.RxBytes)))
+	}
+
+	line := func(addr, pkts, bytes, tx, rx string) string {
+		return fmt.Sprintf("%-*s  %*s  %*s  %*s  %*s",
+			addrw, addr, pktw, pkts, bytew, bytes, txw, tx, rxw, rx)
+	}
+
+	var v statsView
+	for _, r := range sorted {
+		v.Rows = append(v.Rows, statsLine{
+			Text: line(r.Address,
+				groupDigits(r.Packets), groupDigits(r.Bytes),
+				groupDigits(r.TxBytes), groupDigits(r.RxBytes)),
+			Filter: r.DisplayFilter(),
+		})
+	}
+
+	// Bytes rather than packets in the two direction columns: a host sending
+	// many small acknowledgements and one sending few large payloads look the
+	// same by packet count and nothing alike by volume.
+	titles := line("Address", "Packets", "Bytes", "Sent", "Received")
 	v.Header = []string{titles, rule(titles, v.Rows)}
 
 	return v

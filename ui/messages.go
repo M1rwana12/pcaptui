@@ -124,6 +124,7 @@ convs________ - Open conversations view
 expert_______ - Problems the dissectors found in this capture
 filter_______ - Choose a display filter from recently-used
 help_________ - Various help dialogs
+endpoints____ - Who is on the wire, by packets and bytes
 hierarchy____ - Every protocol in this capture, by packets and bytes
 load_________ - Load a pcap from the filesystem
 logs_________ - Show pcaptui's log file

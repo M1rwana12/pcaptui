@@ -71,13 +71,14 @@ statistic that matched nothing says so in words instead of opening an empty box.
 
 ## Analysis
 
-Five views, one key each — the same key that appears beside them in the Analysis
+Six views, one key each — the same key that appears beside them in the Analysis
 menu.
 
 | Key | | |
 |---|---|---|
 | `e` | Expert Information | what the dissectors think is wrong |
 | `y` | Protocol Hierarchy | what is in this capture, as a tree |
+| `t` | Endpoints | who is on the wire, busiest first |
 | `v` | Conversations | who talked to whom, by packets and bytes |
 | `s` | Reassemble stream | follow the conversation this packet is in |
 | `p` | Capture file properties | size, duration, encapsulation, hashes |

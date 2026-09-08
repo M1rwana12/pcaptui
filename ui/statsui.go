@@ -153,6 +153,9 @@ func (t *statsParseHandler) view() statsView {
 	case stats.ProtoHierarchy.Command:
 		body := hierarchyLines(stats.ParseHierarchy(t.data))
 		v.Header, v.Rows = body.Header, body.Rows
+	case stats.Endpoints.Command:
+		body := endpointLines(stats.ParseEndpoints(t.data))
+		v.Header, v.Rows = body.Header, body.Rows
 	default:
 		// A statistic this package does not know how to lay out is still worth
 		// showing; it just cannot offer a filter for any of its rows.

@@ -195,6 +195,36 @@ func TestEveryHierarchyRowsFilterIsAcceptedByTshark(t *testing.T) {
 	}
 }
 
+func TestEndpointsOutputStillParses(t *testing.T) {
+	rows := ParseEndpoints(runStat(t, Endpoints, ""))
+
+	require.NotEmpty(t, rows, "tshark listed endpoints that the parser read as nothing")
+
+	for _, r := range rows {
+		assert.NotEmpty(t, r.Address)
+		assert.Greater(t, r.Packets, 0)
+		assert.Equal(t, r.Packets, r.TxPkts+r.RxPkts,
+			"sent plus received should be the total for %s", r.Address)
+		assert.Equal(t, r.Bytes, r.TxBytes+r.RxBytes,
+			"sent plus received bytes should be the total for %s", r.Address)
+	}
+}
+
+// The table offers each address as a filter, so tshark has to accept it and
+// answer with that address's traffic.
+func TestAnEndpointRowsFilterFindsItsPackets(t *testing.T) {
+	rows := ParseEndpoints(runStat(t, Endpoints, ""))
+	require.NotEmpty(t, rows)
+
+	for _, r := range rows {
+		out := runFieldsQuery(t, r.DisplayFilter(), "frame.number")
+
+		assert.Equal(t, r.Packets, len(strings.Fields(out)),
+			"filter %q found a different number of packets than the row claims",
+			r.DisplayFilter())
+	}
+}
+
 func runFieldsQuery(t *testing.T, filter string, field string) string {
 	t.Helper()
 

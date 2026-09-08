@@ -52,10 +52,24 @@ var (
 		Summary: "Every protocol in this capture, by packets and bytes",
 		zbase:   "io,phs",
 	}
+
+	// Endpoints is who is on the wire and how much each of them sent and
+	// received. Wireshark shows it under Statistics > Endpoints.
+	//
+	// IPv4 rather than every endpoint type: an address is the thing people
+	// look for by name, and it is the one a display filter can be built from
+	// without knowing which layer to ask about.
+	Endpoints = Stat{
+		Name:    "Endpoints",
+		Command: "endpoints",
+		Key:     't',
+		Summary: "Who is on the wire, by packets and bytes",
+		zbase:   "endpoints,ip",
+	}
 )
 
 // All is every statistic pcaptui offers, in the order they are presented.
-var All = []Stat{Expert, ProtoHierarchy}
+var All = []Stat{Expert, ProtoHierarchy, Endpoints}
 
 // Lookup finds a statistic by its minibuffer command.
 func Lookup(command string) (Stat, bool) {

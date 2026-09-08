@@ -4,6 +4,15 @@
 
 ### Added
 
+- **Endpoints** — `t`, or the Analysis menu. Every IPv4 address in the capture
+  with what it accounts for and how much of that it sent versus received,
+  busiest first, because the question it answers is who is doing the most;
+  `tshark` prints them in the order it met them, which buries the host you are
+  looking for. Enter on a row filters to `ip.addr == …`.
+
+  Adding it needed one `Stat` entry and a parser: the key, the menu entry and
+  the `?` help all come from the same list, so none of them had to be told.
+
 - **Expert Information and Protocol Hierarchy are tables you can act on.**
   Both were text in a copy dialog. The Expert table would tell you a capture
   contained a retransmission and leave you to find it yourself, which is the
@@ -41,7 +50,8 @@
 
 - **One key per analysis view**, the same key that now appears beside the entry
   in the Analysis menu: `p` capture file properties, `s` reassemble stream,
-  `v` conversations, `e` expert information, `y` protocol hierarchy.
+  `v` conversations, `e` expert information, `y` protocol hierarchy. `t`
+  endpoints joined them later.
 
   None of them had a key. The menu was reachable by mouse, or by `esc` — which
   lands on Misc, not Analysis — and otherwise you had to know to type the

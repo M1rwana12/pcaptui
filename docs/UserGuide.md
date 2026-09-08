@@ -11,6 +11,7 @@
 - [Conversations](#conversations)
 - [Expert Information](#expert-information)
 - [Protocol Hierarchy](#protocol-hierarchy)
+- [Endpoints](#endpoints)
 - [Decrypting TLS](#decrypting-tls)
 - [Columns](#columns)
 - [The command line](#the-command-line)
@@ -88,8 +89,8 @@ packet, and its bytes.
 | `?` | help |
 | `q` | quit |
 
-The five analysis views each have a key, and it is the same key beside the
-entry in the Analysis menu:
+The analysis views each have a key, and it is the same key beside the entry in
+the Analysis menu:
 
 | Key | |
 |---|---|
@@ -98,6 +99,7 @@ entry in the Analysis menu:
 | `v` | conversations |
 | `e` | expert information |
 | `y` | protocol hierarchy |
+| `t` | endpoints — who is on the wire |
 
 Vim keys work throughout:
 
@@ -230,6 +232,22 @@ is a real answer, not a blank window.
 Both are produced by running `tshark` over the file, so each takes a pass over
 the capture. They are not cached, because the answer depends on the filter as
 well as the file.
+
+## Endpoints
+
+`t`, `:endpoints`, or **Endpoints** in the Analysis menu.
+
+Every IPv4 address in the capture, with how many packets and bytes it accounts
+for and how much of that it sent versus received — busiest first, because the
+question this answers is who is doing the most. `tshark` prints them in the
+order it met them, which buries the host you are looking for.
+
+Enter on a row filters the packet list to `ip.addr == …`, so "who is on the
+wire" is one keypress from "show me only them".
+
+Bytes rather than packets in the two direction columns: a host sending many
+small acknowledgements and one sending few large payloads look the same by
+packet count and nothing alike by volume.
 
 ## Decrypting TLS
 
