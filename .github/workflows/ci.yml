@@ -53,15 +53,8 @@ jobs:
       - name: Build
         run: go build ./...
 
-      # -composites=false suppresses one check: unkeyed fields in structs
-      # from other packages. There are 34 such literals, all of them gowid
-      # types, and they are a real fragility - if gowid ever reorders a
-      # field they break silently. They are not fixed yet, and turning the
-      # check off here is a deliberate, temporary choice rather than a
-      # claim that the code is clean. Re-enable it once they are keyed:
-      #   go vet -composites=true ./...  lists every remaining one.
       - name: Vet
-        run: go vet -composites=false ./...
+        run: go vet ./...
 
       - name: Test
         run: go test ./...

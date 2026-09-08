@@ -63,8 +63,8 @@ func openConfigUi(app gowid.IApp) {
 
 func openFileUi(file string, delete bool, opt fileviewer.Options, app gowid.IApp) {
 	logsUi, err := fileviewer.New(file,
-		gowid.WidgetCallback{"cb",
-			func(app gowid.IApp, w gowid.IWidget) {
+		gowid.WidgetCallback{Name: "cb",
+			WidgetChangedFunction: func(app gowid.IApp, w gowid.IWidget) {
 				t := w.(*terminal.Widget)
 				ecode := t.Cmd.ProcessState.ExitCode()
 				// -1 for signals - don't show an error for that
