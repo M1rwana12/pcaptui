@@ -1488,16 +1488,14 @@ func lastLineMode(app gowid.IApp) {
 		return nil
 	}))
 
-	if runtime.GOOS != "windows" {
-		MiniBuffer.Register("logs", minibufferFn(func(gowid.IApp, ...string) error {
-			openLogsUi(app)
-			return nil
-		}))
-		MiniBuffer.Register("config", minibufferFn(func(gowid.IApp, ...string) error {
-			openConfigUi(app)
-			return nil
-		}))
-	}
+	MiniBuffer.Register("logs", minibufferFn(func(gowid.IApp, ...string) error {
+		openLogsUi(app)
+		return nil
+	}))
+	MiniBuffer.Register("config", minibufferFn(func(gowid.IApp, ...string) error {
+		openConfigUi(app)
+		return nil
+	}))
 
 	MiniBuffer.Register("set", setCommand{})
 
@@ -3489,23 +3487,21 @@ func Build(tty string) (*gowid.App, error) {
 			},
 		}}...)
 
-	if runtime.GOOS != "windows" {
-		generalMenuItems = append(generalMenuItems, menuutil.SimpleMenuItem{
-			Txt: "Show Log",
-			Key: gowid.MakeKey('l'),
-			CB: func(app gowid.IApp, w gowid.IWidget) {
-				multiMenu1Opener.CloseMenu(generalMenu, app)
-				openLogsUi(app)
-			},
-		})
-		generalMenuItems = append(generalMenuItems, menuutil.SimpleMenuItem{
-			Txt: "Show Config",
-			CB: func(app gowid.IApp, w gowid.IWidget) {
-				multiMenu1Opener.CloseMenu(generalMenu, app)
-				openConfigUi(app)
-			},
-		})
-	}
+	generalMenuItems = append(generalMenuItems, menuutil.SimpleMenuItem{
+		Txt: "Show Log",
+		Key: gowid.MakeKey('l'),
+		CB: func(app gowid.IApp, w gowid.IWidget) {
+			multiMenu1Opener.CloseMenu(generalMenu, app)
+			openLogsUi(app)
+		},
+	})
+	generalMenuItems = append(generalMenuItems, menuutil.SimpleMenuItem{
+		Txt: "Show Config",
+		CB: func(app gowid.IApp, w gowid.IWidget) {
+			multiMenu1Opener.CloseMenu(generalMenu, app)
+			openConfigUi(app)
+		},
+	})
 
 	generalMenuItems = append(generalMenuItems, []menuutil.SimpleMenuItem{
 		menuutil.MakeMenuDivider(),

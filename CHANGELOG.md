@@ -23,6 +23,17 @@
   conversation carrying seven packets was reported as carrying zero, and
   sorting by packet count sorted by reverse-direction traffic.
 
+- **`:logs` and `:config` did not exist on Windows.** Both were compiled out
+  there, along with their Misc menu entries, because the Unix versions run the
+  user's pager inside a terminal widget and there is no pty to run it in. The
+  README, the FAQ and the User Guide all tell the reader to run `:config` — so
+  on one of the three supported platforms, three documents sent people to a
+  command that answered "no such command", and a bug report could not include
+  the log because there was no way to find it.
+
+  Windows now reads the file and shows it in a scrollable dialog, headed by the
+  path. Long logs show their end and say how many lines were left out.
+
 - **A column too narrow for its value showed a different value, not a cut one.**
   The packet list simply stopped drawing at the column edge, so in an
   eighty-column terminal `192.0.2.10` appeared as `192.0.2.1` and

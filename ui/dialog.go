@@ -197,6 +197,30 @@ func OpenTemplatedDialogExt(container gowid.ISettableComposite, tmplName string,
 	return YesNo
 }
 
+// OpenScrollableText shows text in a dialog that scrolls, for content too long
+// to fit on the screen. OpenMessage grows the dialog to the size of its text,
+// so a log file would push its own close button off the bottom.
+func OpenScrollableText(msgt string, container gowid.ISettableComposite, width gowid.IWidgetDimension, height gowid.IWidgetDimension, app gowid.IApp) *dialog.Widget {
+	YesNo = dialog.New(framed.NewSpace(
+		withscrollbar.New(
+			scrollabletext.New(msgt),
+			withscrollbar.Options{
+				HideIfContentFits: true,
+			},
+		),
+	),
+		dialog.Options{
+			Buttons:         dialog.CloseOnly,
+			NoShadow:        true,
+			BackgroundStyle: gowid.MakePaletteRef("dialog"),
+			BorderStyle:     gowid.MakePaletteRef("dialog"),
+			ButtonStyle:     gowid.MakePaletteRef("dialog-button"),
+		},
+	)
+	dialog.OpenExt(YesNo, container, width, height, app)
+	return YesNo
+}
+
 func OpenPleaseWait(container gowid.ISettableComposite, app gowid.IApp) {
 	PleaseWait.Open(container, fixed, app)
 }
