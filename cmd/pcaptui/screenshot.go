@@ -15,6 +15,7 @@ import (
 	"github.com/gcla/gowid/vim"
 	"github.com/gdamore/tcell/v2"
 	"github.com/m1rwana12/pcaptui/internal/screenshot"
+	"github.com/m1rwana12/pcaptui/ui"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -69,6 +70,25 @@ const (
 	shotStableFor = 3 // consecutive identical polls
 	shotGiveUp    = 25 * time.Second
 )
+
+// stillLoading reports whether either half of a capture load is still running.
+//
+// A screen that has stopped changing is not the same as a capture that has
+// finished loading. The packet list arrives first, from PSML, and the protocol
+// tree and the bytes arrive second, from PDML - and between the two the screen
+// can sit perfectly still for longer than the stability window. On a busy CI
+// runner it did: the same commit produced a screenshot with both lower panes
+// blank, and passed when the job was re-run. A gate that fails at random is a
+// gate people learn to ignore.
+//
+// So the load itself is asked, and the picture only has to be still after it
+// says it is done.
+func stillLoading() bool {
+	if ui.Loader == nil {
+		return false
+	}
+	return ui.Loader.PsmlLoader.IsLoading() || ui.Loader.PdmlLoader.IsLoading()
+}
 
 // captureWhenSettled writes the screen once it stops changing, then quits.
 //
@@ -176,7 +196,7 @@ func settle(app *gowid.App, screen tcell.SimulationScreen, differentFrom string)
 			moved = true
 		}
 
-		if now == last && strings.TrimSpace(now) != "" {
+		if now == last && strings.TrimSpace(now) != "" && !stillLoading() {
 			same++
 		} else {
 			same = 0
