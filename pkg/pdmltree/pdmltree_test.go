@@ -205,6 +205,25 @@ func TestPdml1(t *testing.T) {
 	assert.Equal(t, 13, len(tree.Children_[0].Children_))
 }
 
+// The stream index is what turns "follow this stream" into a display filter.
+// It is read from an XPath document that DecodePacket no longer builds - it is
+// rebuilt from the packet's own Content when asked - so this is the test that
+// the rebuilt document is still the document that was being queried.
+func TestTheStreamIndexIsStillFound(t *testing.T) {
+	tree := DecodePacket([]byte(p1))
+
+	idx := tree.TCPStreamIndex()
+
+	assert.False(t, idx.IsNone(), "the packet has a tcp.stream field")
+	assert.Equal(t, 0, idx.Val())
+}
+
+func TestAPacketWithNoStreamSaysSo(t *testing.T) {
+	tree := DecodePacket([]byte(p1))
+
+	assert.True(t, tree.UDPStreamIndex().IsNone(), "this packet is TCP, not UDP")
+}
+
 //======================================================================
 // Local Variables:
 // mode: Go
