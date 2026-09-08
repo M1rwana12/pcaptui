@@ -65,8 +65,7 @@ normalise() {
 }
 
 shoot screenshot-packets
-shoot screenshot-expert --screenshot-keys ':expert
-'
+shoot screenshot-expert --screenshot-keys ':expert<enter>'
 
 if [ "$check" = 0 ]; then
   echo "Regenerated:"

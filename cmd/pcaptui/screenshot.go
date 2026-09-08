@@ -111,15 +111,35 @@ func captureWhenSettled(app *gowid.App, screen tcell.SimulationScreen, prefix st
 // builds its completion list between keystrokes and a burst arrives before it
 // is ready for it.
 func typeKeys(app *gowid.App, screen tcell.SimulationScreen, keys string) {
-	for _, kp := range vim.VimStringToKeys(keys) {
-		// vim.KeyPress is a defined type over gowid.Key, so it carries none of
-		// its methods; the conversion is how the fields are read.
-		k := gowid.Key(kp)
+	for _, k := range parseKeys(keys) {
 		screen.InjectKey(k.Key(), k.Rune(), k.Modifiers())
 
 		app.Run(gowid.RunFunction(func(gowid.IApp) {}))
 		time.Sleep(shotPollEvery)
 	}
+}
+
+// parseKeys turns the flag's value into keypresses.
+//
+// A literal newline or tab in the argument means the named key, because that
+// is how a shell writes one and how this flag was used before it understood
+// names. The vim parser drops both silently - which is how a screenshot came
+// out showing ":expert" typed into the command line but never run.
+func parseKeys(keys string) []gowid.Key {
+	keys = strings.NewReplacer(
+		"\r\n", "<enter>",
+		"\n", "<enter>",
+		"\r", "<enter>",
+		"\t", "<tab>",
+	).Replace(keys)
+
+	res := make([]gowid.Key, 0, len(keys))
+	for _, kp := range vim.VimStringToKeys(keys) {
+		// vim.KeyPress is a defined type over gowid.Key, so it carries none of
+		// its methods; the conversion is how the fields are read.
+		res = append(res, gowid.Key(kp))
+	}
+	return res
 }
 
 // settle polls until the screen has stopped changing, and returns what it

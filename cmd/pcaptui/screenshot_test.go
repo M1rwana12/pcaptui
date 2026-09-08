@@ -6,7 +6,9 @@ package main
 import (
 	"testing"
 
+	"github.com/gdamore/tcell/v2"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 //======================================================================
@@ -51,6 +53,45 @@ func TestParseSizeSaysWhatWasWrong(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "4097")
 	assert.Contains(t, err.Error(), "4096")
+}
+
+//======================================================================
+
+// A newline in the flag value has to mean Enter. The shell writes one when a
+// script quotes a multi-line argument, which is how scripts/screenshots.sh
+// asked for :expert - and gowid's vim parser drops it, so the screenshot came
+// out showing the command typed into the command line but never run.
+func TestARawNewlineMeansEnter(t *testing.T) {
+	keys := parseKeys(":expert\n")
+
+	require.Len(t, keys, 8)
+	assert.Equal(t, tcell.KeyEnter, keys[7].Key())
+}
+
+func TestARawTabMeansTab(t *testing.T) {
+	keys := parseKeys("\t")
+
+	require.Len(t, keys, 1)
+	assert.Equal(t, tcell.KeyTab, keys[0].Key())
+}
+
+func TestNamedKeysAreUnderstood(t *testing.T) {
+	keys := parseKeys("<esc><down>q")
+
+	require.Len(t, keys, 3)
+	assert.Equal(t, tcell.KeyEscape, keys[0].Key())
+	assert.Equal(t, tcell.KeyDown, keys[1].Key())
+	assert.Equal(t, tcell.KeyRune, keys[2].Key())
+	assert.Equal(t, 'q', keys[2].Rune())
+}
+
+func TestPrintableCharactersStandForThemselves(t *testing.T) {
+	keys := parseKeys("http")
+
+	require.Len(t, keys, 4)
+	for i, r := range "http" {
+		assert.Equal(t, r, keys[i].Rune())
+	}
 }
 
 //======================================================================
