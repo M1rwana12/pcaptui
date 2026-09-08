@@ -4,6 +4,28 @@
 
 ### Fixed
 
+- **The hex pane showed bytes that were not in the packet.** `tshark -x` prints
+  each line twice — once as hex, once as text — and the reader scanned the
+  whole line for "two hex digits and a space". Text in the second column
+  matched too. A line whose text begins `00 OK` yielded a seventeenth byte on a
+  sixteen-byte line, and everything after it in that packet was shifted by one,
+  including the layer highlighting derived from the protocol tree.
+
+  It struck exactly the protocols people open a hex pane to read: three of the
+  seven packets in this project's own demo capture were affected, and ten of
+  the ninety-two in the sample telnet capture.
+
+  The hex column is now read by position rather than by pattern.
+
+- **The conversations table showed one direction's figures under the totals.**
+  tshark prints `<-`, `->` and then the total; the row was emitted in that
+  order against headers reading Pkts, Bytes, Pkts A→B, …, Pkts B→A. A
+  conversation carrying seven packets was reported as carrying zero, and
+  sorting by packet count sorted by reverse-direction traffic.
+
+- `f` was bound twice in the Misc menu, so Feature Request could never be
+  reached. It moves to `r`.
+
 - **Hiding every column stopped the program from starting.** With no visible
   column, gowid renders each child of the packet list as Max, finds no maximum
   height among them and panics — before the interface appears, so there was no

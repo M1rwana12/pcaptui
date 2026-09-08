@@ -1223,7 +1223,6 @@ func (c *PdmlLoader) loadPcapSync(row int, visible bool, ps iPdmlLoaderEnv, cb i
 			packets := make([][]byte, 0, c.opt.PacketsPerLoad)
 			issuedKill := false
 			readAllRequiredPcap := false
-			re := regexp.MustCompile(`([0-9a-f][0-9a-f] )`)
 			rd := bufio.NewReader(pcapOut)
 			packet := make([]byte, 0)
 
@@ -1240,9 +1239,9 @@ func (c *PdmlLoader) loadPcapSync(row int, visible bool, ps iPdmlLoaderEnv, cb i
 					break
 				}
 
-				parseResults := re.FindAllStringSubmatch(string(line), -1)
+				lineBytes, isHexLine := HexDumpLine(line)
 
-				if len(parseResults) < 1 {
+				if !isHexLine {
 					packets = append(packets, packet)
 					packet = make([]byte, 0)
 
@@ -1256,18 +1255,7 @@ func (c *PdmlLoader) loadPcapSync(row int, visible bool, ps iPdmlLoaderEnv, cb i
 						pcapCancelFn()
 					}
 				} else {
-					// Ignore line number
-					for _, parsedByte := range parseResults[1:] {
-						b, err := strconv.ParseUint(string(parsedByte[0][0:2]), 16, 8)
-						if err != nil {
-							err = fmt.Errorf("Could not read PCAP packet: %v", err)
-							if !issuedKill {
-								HandleError(PdmlCode, app, err, cb)
-							}
-							break
-						}
-						packet = append(packet, byte(b))
-					}
+					packet = append(packet, lineBytes...)
 				}
 			}
 
