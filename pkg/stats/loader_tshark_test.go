@@ -132,9 +132,13 @@ func TestExpertOutputStillParses(t *testing.T) {
 func TestHierarchyOutputStillParses(t *testing.T) {
 	rows := ParseHierarchy(runStat(t, ProtoHierarchy, ""))
 
-	assert.NotEmpty(t, rows)
-	assert.Equal(t, "frame", rows[0].Protocol, "the tree should start at frame")
-	assert.Equal(t, 0, rows[0].Depth)
+	require.NotEmpty(t, rows)
+
+	// Which protocol is at the root is not asserted. Wireshark 4.6 prints a
+	// "frame" row above "eth" and the version on the Ubuntu runner does not,
+	// and either is a correct hierarchy. What has to hold is that the tree
+	// starts at the left and gets deeper.
+	assert.Equal(t, 0, rows[0].Depth, "the first row should be the root")
 
 	var deepest int
 	for _, r := range rows {
