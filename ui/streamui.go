@@ -79,15 +79,27 @@ func streamKeyPress(evk *tcell.EventKey, app gowid.IApp) bool {
 
 func startStreamReassembly(app gowid.IApp) {
 	var model *pdmltree.Model
+	haveSelectedPacket := false
+
 	if packetListView != nil {
 		if fxy, err := packetListView.FocusXY(); err == nil {
+			haveSelectedPacket = true
 			rid, _ := packetListView.Model().RowIdentifier(fxy.Row)
 			row := int(rid)
 			model = getCurrentStructModel(row)
 		}
 	}
+
 	if model == nil {
-		OpenError("No packets available.", app)
+		// Two different failures used to share one message. There is a packet
+		// selected and its detail simply has not been fetched yet - saying "no
+		// packets available" over a full packet list names the wrong cause and
+		// suggests the capture is empty.
+		if haveSelectedPacket {
+			OpenError("The details for this packet have not loaded yet. Try again in a moment.", app)
+		} else {
+			OpenError("No packets available.", app)
+		}
 		return
 	}
 
