@@ -130,7 +130,7 @@ func (c *Loader) loadStatsAsync(pcapf string, zarg string, app gowid.IApp, cb IS
 						// tshark exits non-zero for an invalid display filter,
 						// and its stderr says which field is wrong. That text
 						// is the whole value of the error to the user.
-						pcap.HandleError(pcap.StatsCode, app, pcap.MakeUsefulError(c.statsCmd, err), cb)
+						pcap.HandleError(pcap.StatsCode, app, pcap.MakeUsefulError(cmd, err), cb)
 					}
 				}
 

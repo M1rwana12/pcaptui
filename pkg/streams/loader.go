@@ -155,7 +155,7 @@ func (c *Loader) loadStreamReassemblyAsync(pcapf string, proto string, idx int, 
 				state = pcap.Terminated
 				if !c.SuppressErrors && err != nil {
 					if _, ok := err.(*exec.ExitError); ok {
-						pcap.HandleError(pcap.StreamCode, app, pcap.MakeUsefulError(c.streamCmd, err), cb)
+						pcap.HandleError(pcap.StreamCode, app, pcap.MakeUsefulError(origCmd, err), cb)
 					}
 				}
 
@@ -217,10 +217,27 @@ func (c *Loader) loadStreamReassemblyAsync(pcapf string, proto string, idx int, 
 	ops = append(ops, GlobalStore("context", c.streamCtx))
 	ops = append(ops, GlobalStore("callbacks", cb))
 	func() {
-		_, err := ParseReader("", streamOut, ops...)
-		if err != nil {
-			log.Warnf("Stream parser reported error: %v", err)
+		_, perr := ParseReader("", streamOut, ops...)
+		if perr == nil {
+			return
 		}
+
+		// Cancelling the context closes the reader mid-parse, so a parse error
+		// after a cancellation is this program stopping the stream, not the
+		// stream being unreadable. Only the second is worth a dialog.
+		if c.streamCtx.Err() != nil {
+			log.Infof("Stream parse stopped because the stream was cancelled: %v", perr)
+			return
+		}
+
+		// Otherwise the reassembly stopped part way through, and what is on
+		// screen is a fragment of the conversation presented as the whole of
+		// it. This used to be a line in the log and nothing else - a truncated
+		// stream looks exactly like a short one.
+		log.Warnf("Stream parser reported error: %v", perr)
+		pcap.HandleError(pcap.StreamCode, app, fmt.Errorf(
+			"The reassembled stream is incomplete - tshark's output could not be read to the end: %v",
+			perr), cb)
 	}()
 
 	c.streamCancelFn()
@@ -252,12 +269,15 @@ func (c *Loader) startStreamIndexerAsync(pcapf string, proto string, idx int, ap
 
 	pcaptui.TrackedGo(func() {
 		var err error
+		// Taken once, like the other four loaders do, so this goroutine is not
+		// reading a field the next load overwrites.
+		cmd := c.indexerCmd
 		cancelledChan := c.indexerCtx.Done()
 		procChan := procChan
 		state := pcap.NotStarted
 
 		kill := func() {
-			err = pcaptui.KillIfPossible(c.indexerCmd)
+			err = pcaptui.KillIfPossible(cmd)
 			if err != nil {
 				log.Infof("Did not kill indexer process: %v", err)
 			}
@@ -270,7 +290,7 @@ func (c *Loader) startStreamIndexerAsync(pcapf string, proto string, idx int, ap
 				state = pcap.Terminated
 				if !c.SuppressErrors && err != nil {
 					if _, ok := err.(*exec.ExitError); ok {
-						pcap.HandleError(pcap.StreamCode, app, pcap.MakeUsefulError(c.indexerCmd, err), cb)
+						pcap.HandleError(pcap.StreamCode, app, pcap.MakeUsefulError(cmd, err), cb)
 					}
 				}
 				streamOut.Close()

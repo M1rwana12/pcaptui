@@ -134,7 +134,7 @@ func (c *Loader) loadConvAsync(pcapf string, convs []string, filter string, abs 
 				state = pcap.Terminated
 				if !c.SuppressErrors && err != nil {
 					if _, ok := err.(*exec.ExitError); ok {
-						pcap.HandleError(pcap.ConvCode, app, pcap.MakeUsefulError(c.convsCmd, err), cb)
+						pcap.HandleError(pcap.ConvCode, app, pcap.MakeUsefulError(cmd, err), cb)
 					}
 				}
 

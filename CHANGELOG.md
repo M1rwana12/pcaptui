@@ -71,6 +71,17 @@
   conversation carrying seven packets was reported as carrying zero, and
   sorting by packet count sorted by reverse-direction traffic.
 
+- **A stream that could not be reassembled to the end looked like a short
+  one.** The parser's error went to the log and nowhere else, so a truncated
+  conversation was presented as the whole conversation. It is now reported —
+  except when the stream was cancelled, because closing the reader mid-parse is
+  this program stopping, not the stream being unreadable.
+
+- **Five goroutines read a `tshark` command field their next load overwrites.**
+  Four of them already took a private copy at the top for exactly that reason
+  and then read the shared field anyway when building an error message; the
+  fifth took no copy at all. They all use the copy now.
+
 - **A configuration file could stop the program from starting.** `search-type`
   or `search-target` set to anything the program did not recognise reached a
   `panic(nil)` — from `search.New`, called during `ui.Build`, so the panic
