@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/m1rwana12/pcaptui/pkg/capinfo"
 	"github.com/m1rwana12/pcaptui/pkg/stats"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -218,7 +219,7 @@ Errors (6)
 `
 
 func TestTheOverviewAnswersAllThreeQuestions(t *testing.T) {
-	v := overviewLines(overviewOutput)
+	v := overviewLines(overviewOutput, capinfo.Info{})
 
 	text := strings.Join(rowTexts(v), "\n")
 	assert.Contains(t, text, "What is wrong")
@@ -228,7 +229,7 @@ func TestTheOverviewAnswersAllThreeQuestions(t *testing.T) {
 
 // Problems first: that is what somebody handed a capture is looking for.
 func TestTheOverviewLeadsWithProblems(t *testing.T) {
-	v := overviewLines(overviewOutput)
+	v := overviewLines(overviewOutput, capinfo.Info{})
 
 	assert.Equal(t, "What is wrong", v.Rows[0].Text)
 }
@@ -237,7 +238,7 @@ func TestTheOverviewLeadsWithProblems(t *testing.T) {
 // and leave the others alone. An expert line has seven fields once the word
 // "bytes" is dropped often enough to be a real risk of inventing an endpoint.
 func TestEachSectionTakesOnlyItsOwnRows(t *testing.T) {
-	v := overviewLines(overviewOutput)
+	v := overviewLines(overviewOutput, capinfo.Info{})
 	text := strings.Join(rowTexts(v), "\n")
 
 	assert.Contains(t, text, "IPv4 total length exceeds")
@@ -258,7 +259,7 @@ func TestEachSectionTakesOnlyItsOwnRows(t *testing.T) {
 // A summary that cannot be acted on is a dead end; every row keeps the filter
 // its own table would have given it.
 func TestOverviewRowsStillCarryTheirFilters(t *testing.T) {
-	v := overviewLines(overviewOutput)
+	v := overviewLines(overviewOutput, capinfo.Info{})
 
 	var actionable int
 	for _, r := range v.Rows {
@@ -272,7 +273,7 @@ func TestOverviewRowsStillCarryTheirFilters(t *testing.T) {
 }
 
 func TestASectionSaysHowManyItLeftOut(t *testing.T) {
-	v := overviewLines(overviewOutput)
+	v := overviewLines(overviewOutput, capinfo.Info{})
 
 	assert.Contains(t, strings.Join(rowTexts(v), "\n"), "and 2 more",
 		"six hierarchy rows shown four at a time should say so")
@@ -283,7 +284,7 @@ func TestASectionSaysHowManyItLeftOut(t *testing.T) {
 func TestAnEmptySectionSaysSoInWords(t *testing.T) {
 	onlyEndpoints := `192.168.0.2  92  7748 bytes  48  3465 bytes  44  4283 bytes
 `
-	v := overviewLines(onlyEndpoints)
+	v := overviewLines(onlyEndpoints, capinfo.Info{})
 	text := strings.Join(rowTexts(v), "\n")
 
 	assert.Contains(t, text, "Nothing the dissectors object to")
@@ -549,6 +550,87 @@ func TestEveryTableGroupsItsDigits(t *testing.T) {
 	require.Len(t, hier.Rows, 1)
 	assert.Contains(t, hier.Rows[0].Text, "376,832")
 	assert.Contains(t, hier.Rows[0].Text, "44,483,480")
+}
+
+//======================================================================
+
+func someFileFacts() capinfo.Info {
+	return capinfo.Info{
+		Packets:  "92",
+		Size:     "9244 bytes",
+		Duration: "39,571274 seconds",
+		Earliest: "1999-11-28 04:12:38,387203",
+		SnapLen:  "file hdr: 1514 bytes",
+	}
+}
+
+// The three statistics answer what is wrong, what is in it and who is on the
+// wire. None of them answers when - and "this is a forty-second slice from
+// 1999, not the hour you asked for" is often the whole answer.
+func TestTheOverviewSaysWhatTheFileIs(t *testing.T) {
+	v := overviewLines(overviewOutput, someFileFacts())
+
+	var text string
+	for _, r := range v.Rows {
+		text += r.Text + "\n"
+	}
+
+	assert.Contains(t, text, "What this file is")
+	assert.Contains(t, text, "1999-11-28 04:12:38,387203")
+	assert.Contains(t, text, "39,571274 seconds")
+	assert.Contains(t, text, "file hdr: 1514 bytes")
+}
+
+// It comes first because it is the cheapest and the most general: capinfos
+// took 0.27 s on a capture whose -z pass took 9 to 11 s.
+func TestTheFileComesBeforeTheStatistics(t *testing.T) {
+	v := overviewLines(overviewOutput, someFileFacts())
+
+	require.NotEmpty(t, v.Rows)
+	assert.Equal(t, "What this file is", v.Rows[0].Text)
+}
+
+// capinfos missing or failing is not a reason to say nothing about the rest.
+func TestWithNoFileFactsTheSectionIsNotDrawn(t *testing.T) {
+	v := overviewLines(overviewOutput, capinfo.Info{})
+
+	require.NotEmpty(t, v.Rows)
+	assert.Equal(t, "What is wrong", v.Rows[0].Text)
+	for _, r := range v.Rows {
+		assert.NotContains(t, r.Text, "What this file is")
+	}
+}
+
+// capinfos writes "file hdr: (not set)" when there is no snapshot length, and
+// a line saying a limit is not set is a line spent on nothing.
+func TestASnapshotLimitThatIsNotSetIsNotShown(t *testing.T) {
+	info := someFileFacts()
+	info.SnapLen = "file hdr: (not set)"
+
+	lines := fileFactsLines(info)
+
+	require.NotEmpty(t, lines)
+	for _, l := range lines {
+		assert.NotContains(t, l.Text, "Packet limit")
+	}
+}
+
+// A fact capinfos did not report is left out rather than shown blank: an empty
+// value reads as something looked up and found missing.
+func TestAFactThatIsNotThereIsNotAnEmptyLine(t *testing.T) {
+	lines := fileFactsLines(capinfo.Info{Packets: "92"})
+
+	require.Len(t, lines, 1)
+	assert.Contains(t, lines[0].Text, "Packets")
+	assert.Contains(t, lines[0].Text, "92")
+}
+
+// These say what the file is, not which packets to look at, so none of them
+// pretends to be selectable.
+func TestTheFileFactsAreNotSelectable(t *testing.T) {
+	for _, l := range fileFactsLines(someFileFacts()) {
+		assert.False(t, l.actionable())
+	}
 }
 
 //======================================================================

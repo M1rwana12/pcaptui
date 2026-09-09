@@ -11,6 +11,7 @@ import (
 
 	"github.com/gcla/gowid"
 	"github.com/m1rwana12/pcaptui"
+	"github.com/m1rwana12/pcaptui/pkg/capinfo"
 	"github.com/m1rwana12/pcaptui/pkg/pcap"
 	"github.com/m1rwana12/pcaptui/pkg/stats"
 	log "github.com/sirupsen/logrus"
@@ -46,7 +47,33 @@ func startStats(stat stats.Stat, app gowid.IApp) {
 		log.Infof("Cancelled %s", stat.Name)
 	})
 
-	loader.StartLoad(Loader.PcapPdml, stat.ZArgs(filter), app, h)
+	pcapfile := Loader.PcapPdml
+	zargs := stat.ZArgs(filter)
+
+	if stat.Command != stats.Overview.Command {
+		loader.StartLoad(pcapfile, zargs, app, h)
+		return
+	}
+
+	// The overview also says what the file is, and capinfos answers that for a
+	// fraction of what the -z pass costs - 0.27 s against 9 to 11 s on a 44 MB
+	// capture. Asked first, off the goroutine that draws, so that the dialog
+	// opens with all four sections rather than growing one later.
+	//
+	// A capinfos that fails is not worth stopping for: the three statistics
+	// are still the answer to three of the four questions, and the section is
+	// simply not drawn.
+	pcaptui.TrackedGo(func() {
+		info, err := capinfo.Read(pcapfile)
+		if err != nil {
+			log.Warnf("Could not read the file's own properties: %v", err)
+		}
+
+		app.Run(gowid.RunFunction(func(app gowid.IApp) {
+			h.facts = info
+			loader.StartLoad(pcapfile, zargs, app, h)
+		}))
+	}, Goroutinewg)
 }
 
 //======================================================================
@@ -56,6 +83,11 @@ type statsParseHandler struct {
 	filter string
 
 	data string
+
+	// facts is what capinfos said about the file, fetched before the pass
+	// starts because it costs a fraction of what the pass does and answers the
+	// one question the three statistics do not: when.
+	facts capinfo.Info
 
 	wait *statsWait
 
@@ -199,7 +231,7 @@ func (t *statsParseHandler) view() statsView {
 
 	switch t.stat.Command {
 	case stats.Overview.Command:
-		body := overviewLines(t.data)
+		body := overviewLines(t.data, t.facts)
 		v.Header, v.Rows = body.Header, body.Rows
 	case stats.Expert.Command:
 		body := expertLines(stats.ParseExpert(t.data), stats.ExpertTotals(t.data))

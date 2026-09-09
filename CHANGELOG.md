@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added
+
+- **The Overview says what the file is.** When it was captured, how long it
+  covers, how many packets, how large, and whether a snapshot length cut the
+  packets short. None of the three statistics answers *when*, and "this is a
+  forty-second slice from 1999, not the hour you asked for" is often the whole
+  answer — it used to be behind a separate key on a separate screen. It costs
+  almost nothing next to the rest: `capinfos` took 0.27 s on a 44 MB capture
+  where the statistics pass over the same file took 9.1 to 11.6 s.
+
 ### Changed
 
 - **A statistic can be cancelled.** Every `-z` view is one pass over the whole

@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/m1rwana12/pcaptui/pkg/capinfo"
 	"github.com/m1rwana12/pcaptui/pkg/stats"
 )
 
@@ -310,23 +311,35 @@ func endpointLines(rows []stats.EndpointRow) statsView {
 // when the whole thing is wanted.
 const overviewLimit = 4
 
-// overviewLines is the three statistics as one screen.
+// overviewLines is what the capture is, plus the three statistics, as one
+// screen.
 //
-// Order is the order the questions get asked: what is wrong with this capture,
-// what is in it, who is on the wire. Problems first because that is what
-// someone handed a capture is looking for, and because a capture with none is
-// itself worth knowing in one line.
+// Order is the order the questions get asked: what is this file, what is wrong
+// with it, what is in it, who is on the wire. Problems before contents because
+// that is what someone handed a capture is looking for, and because a capture
+// with none is itself worth knowing in one line.
+//
+// The file's own facts come first and are the cheapest of the four by a long
+// way - capinfos took 0.27 s on a 44 MB capture where the -z pass over the
+// same file took 9.1 to 11.6 s. They are also the only ones that answer
+// "when": "this is a forty-second slice from 1999, not the hour you asked
+// for" is often the whole answer, and it used to be behind a separate key on
+// a separate screen.
 //
 // Every row keeps the filter its own table would have given it, so the summary
 // is not a dead end - enter still lands on the packets.
-func overviewLines(out string) statsView {
+func overviewLines(out string, info capinfo.Info) statsView {
 	var v statsView
 
-	add := func(title string, body statsView, empty string) {
+	section := func(title string) {
 		if len(v.Rows) > 0 {
 			v.Rows = append(v.Rows, statsLine{})
 		}
 		v.Rows = append(v.Rows, statsLine{Text: title}, statsLine{Text: rule(title, nil)})
+	}
+
+	add := func(title string, body statsView, empty string) {
+		section(title)
 
 		if len(body.Rows) == 0 {
 			v.Rows = append(v.Rows, statsLine{Text: "  " + empty})
@@ -347,6 +360,15 @@ func overviewLines(out string) statsView {
 		}
 	}
 
+	// Not through add: this is a fixed handful of facts rather than the head of
+	// a table, so there is nothing to cut and nothing to say "and N more"
+	// about. It is skipped entirely when capinfos said nothing, which is what a
+	// missing or failed capinfos looks like from here.
+	if facts := fileFactsLines(info); len(facts) > 0 {
+		section("What this file is")
+		v.Rows = append(v.Rows, facts...)
+	}
+
 	add("What is wrong", expertLines(stats.ParseExpert(out), nil),
 		"Nothing the dissectors object to.")
 	add("What is in it", hierarchyLines(stats.ParseHierarchy(out)),
@@ -355,6 +377,48 @@ func overviewLines(out string) statsView {
 		"No addresses on the wire.")
 
 	return v
+}
+
+// fileFactsLines is the file's own properties, laid out as label and value.
+//
+// Five of the twenty-odd capinfos prints. The rest - the hashes, the bit rate,
+// the average packet size - answer questions nobody has yet when they open a
+// capture, and `p` still shows all of them.
+//
+// The snapshot length is only shown when there is one. capinfos writes
+// "file hdr: (not set)" otherwise, and a line saying a limit is not set is a
+// line spent on nothing.
+func fileFactsLines(info capinfo.Info) []statsLine {
+	type fact struct{ label, value string }
+
+	facts := []fact{
+		{"Captured", info.Earliest},
+		{"Duration", info.Duration},
+		{"Packets", info.Packets},
+		{"Size", info.Size},
+	}
+	if info.SnapLen != "" && !strings.Contains(info.SnapLen, "not set") {
+		facts = append(facts, fact{"Packet limit", info.SnapLen})
+	}
+
+	width := 0
+	for _, f := range facts {
+		if f.value != "" {
+			width = max(width, len(f.label))
+		}
+	}
+
+	res := make([]statsLine, 0, len(facts))
+	for _, f := range facts {
+		if f.value == "" {
+			continue
+		}
+		res = append(res, statsLine{
+			Text: fmt.Sprintf("  %-*s  %s", width, f.label, f.value),
+		})
+	}
+
+	return res
 }
 
 // rule draws the line under the column titles, as wide as the widest thing it

@@ -207,10 +207,17 @@ destination alone.
 
 `o`, `:overview`, or **Overview** in the Analysis menu.
 
-The three questions you have about a capture somebody just handed you, on one
-screen: **what is wrong with it**, **what is in it**, and **who is on the
-wire**. Each section shows its first few rows and says how many it left out;
-the full table for any of them is one key away.
+The questions you have about a capture somebody just handed you, on one
+screen: **what this file is**, **what is wrong with it**, **what is in it**,
+and **who is on the wire**. Each of the last three shows its first few rows and
+says how many it left out; the full table for any of them is one key away.
+
+The file's own facts come first — when it was captured, how long it covers, how
+many packets and how large, and whether the packets were cut short by a
+snapshot length. None of the statistics answers *when*, and "this is a
+forty-second slice, not the hour you asked for" is often the whole answer. They
+also cost almost nothing next to the rest: `capinfos` reads them in a fraction
+of the time the statistics pass takes over the same file.
 
 Every row keeps the filter its own table would have given it, so the summary is
 not a dead end — enter still narrows the packet list to those packets.
