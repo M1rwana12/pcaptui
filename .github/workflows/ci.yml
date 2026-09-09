@@ -33,7 +33,14 @@ jobs:
       - name: Install tshark (Linux)
         if: runner.os == 'Linux'
         run: |
-          sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq
+          # Best effort: the runner image carries third-party lists we do not
+          # need - Google Chrome's among them - and one of those serving a bad
+          # index made apt-get exit non-zero and, under `bash -e`, killed this
+          # step before the install ran. apt itself said "ignored, or old ones
+          # used instead". The install below is the real gate: if the archive
+          # tshark comes from is genuinely unreachable, it fails there and says
+          # so.
+          sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq || echo "apt-get update reported errors; continuing to the install"
           echo "wireshark-common wireshark-common/install-setuid boolean false" | sudo debconf-set-selections
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tshark
 
@@ -97,7 +104,14 @@ jobs:
 
       - name: Install tshark
         run: |
-          sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq
+          # Best effort: the runner image carries third-party lists we do not
+          # need - Google Chrome's among them - and one of those serving a bad
+          # index made apt-get exit non-zero and, under `bash -e`, killed this
+          # step before the install ran. apt itself said "ignored, or old ones
+          # used instead". The install below is the real gate: if the archive
+          # tshark comes from is genuinely unreachable, it fails there and says
+          # so.
+          sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq || echo "apt-get update reported errors; continuing to the install"
           echo "wireshark-common wireshark-common/install-setuid boolean false" | sudo debconf-set-selections
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tshark
 
@@ -119,7 +133,14 @@ jobs:
 
       - name: Install tshark
         run: |
-          sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq
+          # Best effort: the runner image carries third-party lists we do not
+          # need - Google Chrome's among them - and one of those serving a bad
+          # index made apt-get exit non-zero and, under `bash -e`, killed this
+          # step before the install ran. apt itself said "ignored, or old ones
+          # used instead". The install below is the real gate: if the archive
+          # tshark comes from is genuinely unreachable, it fails there and says
+          # so.
+          sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq || echo "apt-get update reported errors; continuing to the install"
           echo "wireshark-common wireshark-common/install-setuid boolean false" | sudo debconf-set-selections
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tshark
 
