@@ -32,15 +32,15 @@
     <rect x="74.80" y="160.00" width="982.80" height="18.00" fill="#FFFF00"/>
     <rect x="1057.60" y="160.00" width="50.40" height="18.00" fill="#D7FFD7"/>
     <rect x="16.00" y="178.00" width="58.80" height="18.00" fill="#D7FFD7"/>
-    <rect x="74.80" y="178.00" width="16.80" height="18.00" fill="#FFFF00"/>
-    <rect x="91.60" y="178.00" width="949.20" height="18.00" fill="#000000"/>
-    <rect x="1040.80" y="178.00" width="16.80" height="18.00" fill="#FFFF00"/>
+    <rect x="74.80" y="178.00" width="982.80" height="18.00" fill="#FFFF00"/>
     <rect x="1057.60" y="178.00" width="50.40" height="18.00" fill="#D7FFD7"/>
     <rect x="16.00" y="196.00" width="58.80" height="18.00" fill="#D7FFD7"/>
     <rect x="74.80" y="196.00" width="982.80" height="18.00" fill="#FFFF00"/>
     <rect x="1057.60" y="196.00" width="50.40" height="18.00" fill="#D7FFD7"/>
     <rect x="16.00" y="214.00" width="58.80" height="18.00" fill="#262626"/>
-    <rect x="74.80" y="214.00" width="982.80" height="18.00" fill="#FFFF00"/>
+    <rect x="74.80" y="214.00" width="16.80" height="18.00" fill="#FFFF00"/>
+    <rect x="91.60" y="214.00" width="949.20" height="18.00" fill="#000000"/>
+    <rect x="1040.80" y="214.00" width="16.80" height="18.00" fill="#FFFF00"/>
     <rect x="1057.60" y="214.00" width="50.40" height="18.00" fill="#262626"/>
     <rect x="16.00" y="232.00" width="58.80" height="18.00" fill="#000000"/>
     <rect x="74.80" y="232.00" width="982.80" height="18.00" fill="#FFFF00"/>
@@ -120,25 +120,25 @@
     <text x="16.00" y="136.96" fill="#262626" xml:space="preserve"> 2</text>
     <text x="74.80" y="136.96" fill="#000000" xml:space="preserve">▌                                                                                                                   ▐</text>
     <text x="16.00" y="154.96" fill="#262626" xml:space="preserve"> 3</text>
-    <text x="74.80" y="154.96" fill="#000000" xml:space="preserve">▌ Severity  Group     Protocol  Count  Summary                                                                      ▐</text>
+    <text x="74.80" y="154.96" fill="#000000" xml:space="preserve">▌ 1 note · 3 chats                                                                                                  ▐</text>
     <text x="16.00" y="172.96" fill="#262626" xml:space="preserve"> 4</text>
-    <text x="74.80" y="172.96" fill="#000000" xml:space="preserve">▌ ───────────────────────────────────────────────────────────────────────────────                                   ▐</text>
+    <text x="74.80" y="172.96" fill="#000000" xml:space="preserve">▌                                                                                                                   ▐</text>
     <text x="16.00" y="190.96" fill="#262626" xml:space="preserve"> 5</text>
-    <text x="74.80" y="190.96" fill="#000000" xml:space="preserve">▌</text>
-    <text x="91.60" y="190.96" fill="#FFFF00" xml:space="preserve">Note      Sequence  TCP           1  This frame is a (suspected) retransmission</text>
-    <text x="1040.80" y="190.96" fill="#000000" xml:space="preserve"> ▐</text>
+    <text x="74.80" y="190.96" fill="#000000" xml:space="preserve">▌ Severity  Group     Protocol  Count  Summary                                                                      ▐</text>
     <text x="1057.60" y="190.96" fill="#262626" xml:space="preserve">U]</text>
     <text x="16.00" y="208.96" fill="#262626" xml:space="preserve"> 6</text>
-    <text x="74.80" y="208.96" fill="#000000" xml:space="preserve">▌ Chat      Sequence  HTTP          1  HTTP/1.1 200 OK\r\n                                                          ▐</text>
+    <text x="74.80" y="208.96" fill="#000000" xml:space="preserve">▌ ───────────────────────────────────────────────────────────────────────────────                                   ▐</text>
     <text x="16.00" y="226.96" fill="#FF8787" xml:space="preserve"> 7</text>
-    <text x="74.80" y="226.96" fill="#000000" xml:space="preserve">▌ Chat      Sequence  HTTP          1  HTTP/1.1 404 Not Found\r\n                                                   ▐</text>
+    <text x="74.80" y="226.96" fill="#000000" xml:space="preserve">▌</text>
+    <text x="91.60" y="226.96" fill="#FFFF00" xml:space="preserve">Note      Sequence  TCP           1  This frame is a (suspected) retransmission</text>
+    <text x="1040.80" y="226.96" fill="#000000" xml:space="preserve"> ▐</text>
     <text x="1057.60" y="226.96" fill="#FF8787" xml:space="preserve">=83</text>
-    <text x="74.80" y="244.96" fill="#000000" xml:space="preserve">▌ Chat      Sequence  HTTP          1  HTTP/1.1 500 Internal Server Error\r\n                                       ▐</text>
+    <text x="74.80" y="244.96" fill="#000000" xml:space="preserve">▌ Chat      Sequence  HTTP          1  HTTP/1.1 200 OK\r\n                                                          ▐</text>
     <text x="16.00" y="262.96" fill="#FFFFFF" xml:space="preserve">━━━━━━━</text>
-    <text x="74.80" y="262.96" fill="#000000" xml:space="preserve">▌                                                                                                                   ▐</text>
+    <text x="74.80" y="262.96" fill="#000000" xml:space="preserve">▌ Chat      Sequence  HTTP          1  HTTP/1.1 404 Not Found\r\n                                                   ▐</text>
     <text x="1057.60" y="262.96" fill="#FFFFFF" xml:space="preserve">━━━━━━</text>
     <text x="16.00" y="280.96" fill="#000000" xml:space="preserve">[+] Fra</text>
-    <text x="74.80" y="280.96" fill="#000000" xml:space="preserve">▌                                                                                                                   ▐</text>
+    <text x="74.80" y="280.96" fill="#000000" xml:space="preserve">▌ Chat      Sequence  HTTP          1  HTTP/1.1 500 Internal Server Error\r\n                                       ▐</text>
     <text x="16.00" y="298.96" fill="#FFFFFF" xml:space="preserve">[+] Eth</text>
     <text x="74.80" y="298.96" fill="#000000" xml:space="preserve">▌                                                                                                                   ▐</text>
     <text x="16.00" y="316.96" fill="#FFFFFF" xml:space="preserve">[+] Int</text>

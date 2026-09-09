@@ -5,14 +5,14 @@ pcaptui v1.1.0  |  demo.pcap  |  7 packets                                      
  No. - ▌                                                                                                                   ▐
  1     ▌ Expert Information                                                                                                ▐]
  2     ▌                                                                                                                   ▐
- 3     ▌ Severity  Group     Protocol  Count  Summary                                                                      ▐
- 4     ▌ ───────────────────────────────────────────────────────────────────────────────                                   ▐
- 5     ▌ Note      Sequence  TCP           1  This frame is a (suspected) retransmission                                   ▐U]
- 6     ▌ Chat      Sequence  HTTP          1  HTTP/1.1 200 OK\r\n                                                          ▐
- 7     ▌ Chat      Sequence  HTTP          1  HTTP/1.1 404 Not Found\r\n                                                   ▐=83
-       ▌ Chat      Sequence  HTTP          1  HTTP/1.1 500 Internal Server Error\r\n                                       ▐
-━━━━━━━▌                                                                                                                   ▐━━━━━━
-[+] Fra▌                                                                                                                   ▐
+ 3     ▌ 1 note · 3 chats                                                                                                  ▐
+ 4     ▌                                                                                                                   ▐
+ 5     ▌ Severity  Group     Protocol  Count  Summary                                                                      ▐U]
+ 6     ▌ ───────────────────────────────────────────────────────────────────────────────                                   ▐
+ 7     ▌ Note      Sequence  TCP           1  This frame is a (suspected) retransmission                                   ▐=83
+       ▌ Chat      Sequence  HTTP          1  HTTP/1.1 200 OK\r\n                                                          ▐
+━━━━━━━▌ Chat      Sequence  HTTP          1  HTTP/1.1 404 Not Found\r\n                                                   ▐━━━━━━
+[+] Fra▌ Chat      Sequence  HTTP          1  HTTP/1.1 500 Internal Server Error\r\n                                       ▐
 [+] Eth▌                                                                                                                   ▐
 [+] Int▌                                                                                                                   ▐
 [+] Tra▌                                                                                                                   ▐

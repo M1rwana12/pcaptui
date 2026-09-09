@@ -37,10 +37,10 @@ pcaptui v1.1.0  |  telnet-cooked.pcap  |  92 packets                            
  2    ▌                                                                                                 ▐0 …
  3    ▌ Protocol               Frames  Bytes                                                            ▐al…
  4    ▌ ────────────────────────────────────                                                            ▐
- 5    ▌ eth                        92  7748                                                             ▐
- 6    ▌   ip                       92  7748                                                             ▐va… ▼
-━━━━━━▌     tcp                    92  7748                                                             ▐━━━━━
-[+] Fr▌       telnet               46  4670                                                             ▐
+ 5    ▌ eth                        92  7,748                                                            ▐
+ 6    ▌   ip                       92  7,748                                                            ▐va… ▼
+━━━━━━▌     tcp                    92  7,748                                                            ▐━━━━━
+[+] Fr▌       telnet               46  4,670                                                            ▐
 [+] Et▌         _ws.malformed       1  67                                                               ▐a0:97
 [+] In▌                                                                                                 ▐
 [+] Tr▌                                                                                                 ▐
@@ -93,20 +93,20 @@ pcaptui v1.1.0  |  telnet-cooked.pcap  |  92 packets                            
  No.  ▌                                                                                                 ▐    ▲
  1    ▌ Expert Information                                                                              ▐SA… █
  2    ▌                                                                                                 ▐0 …
- 3    ▌ Severity  Group      Protocol  Count  Summary                                                   ▐al…
- 4    ▌ ─────────────────────────────────────────────────────────────────────────────────────────────── ▐
- 5    ▌ ─                                                                                               ▐
- 6    ▌ Error     Protocol   IPv4          5  IPv4 total length exceeds packet length (52 bytes)        ▐va… ▼
-━━━━━━▌ Error     Malformed  TELNET        1  Malformed Packet (Exception occurred)                     ▐━━━━━
-[+] Fr▌ Note      Protocol   TCP           1  The SYN packet does not contain a SACK PERM option        ▐
-[+] Et▌ Note      Sequence   TCP           1  This frame is a (suspected) retransmission                ▐a0:97
-[+] In▌ Note      Sequence   TCP           1  This frame initiates the connection closing               ▐
-[+] Tr▌ Note      Sequence   TCP           1  This frame undergoes the connection closing               ▐
+ 3    ▌ 6 errors · 4 notes · 4 chats                                                                    ▐al…
+ 4    ▌                                                                                                 ▐
+ 5    ▌ Severity  Group      Protocol  Count  Summary                                                   ▐
+ 6    ▌ ─────────────────────────────────────────────────────────────────────────────────────────────── ▐va… ▼
+━━━━━━▌ ─                                                                                               ▐━━━━━
+[+] Fr▌ Error     Protocol   IPv4          5  IPv4 total length exceeds packet length (52 bytes)        ▐
+[+] Et▌ Error     Malformed  TELNET        1  Malformed Packet (Exception occurred)                     ▐a0:97
+[+] In▌ Note      Protocol   TCP           1  The SYN packet does not contain a SACK PERM option        ▐
+[+] Tr▌ Note      Sequence   TCP           1  This frame is a (suspected) retransmission                ▐
+      ▌ Note      Sequence   TCP           1  This frame initiates the connection closing               ▐
+      ▌ Note      Sequence   TCP           1  This frame undergoes the connection closing               ▐
       ▌ Chat      Sequence   TCP           1  Connection establish request (SYN): server port 23        ▐
-      ▌ Chat      Sequence   TCP           1  Connection establish acknowledge (SYN+ACK): server port 2 ▐
-      ▌ 3                                                                                               ▐
-━━━━━━▌ Chat      Sequence   TCP           2  Connection finish (FIN)                                   ▐━━━━━
- 0000 ▌                                                                                                 ▐
+━━━━━━▌ Chat      Sequence   TCP           1  Connection establish acknowledge (SYN+ACK): server port 2 ▐━━━━━
+ 0000 ▌ 3                                                                                               ▐
  0010 ▌                                                                                                 ▐
  0020 ▌▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▐
  0030 ▌                                             <Close>                                             ▐

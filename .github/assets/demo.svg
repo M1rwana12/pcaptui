@@ -214,17 +214,17 @@
       <text x="66.40" y="172.96" fill="#000000" xml:space="preserve">▌ ────────────────────────────────────                                                            ▐</text>
       <text x="16.00" y="190.96" fill="#262626" xml:space="preserve"> 5</text>
       <text x="66.40" y="190.96" fill="#000000" xml:space="preserve">▌</text>
-      <text x="83.20" y="190.96" fill="#FFFF00" xml:space="preserve">eth                        92  7748</text>
+      <text x="83.20" y="190.96" fill="#FFFF00" xml:space="preserve">eth                        92  7,748</text>
       <text x="881.20" y="190.96" fill="#000000" xml:space="preserve"> ▐</text>
       <text x="16.00" y="208.96" fill="#262626" xml:space="preserve"> 6</text>
-      <text x="66.40" y="208.96" fill="#000000" xml:space="preserve">▌   ip                       92  7748                                                             ▐</text>
+      <text x="66.40" y="208.96" fill="#000000" xml:space="preserve">▌   ip                       92  7,748                                                            ▐</text>
       <text x="898.00" y="208.96" fill="#262626" xml:space="preserve">va…</text>
       <text x="931.60" y="208.96" fill="#FFFFFF" xml:space="preserve">▼</text>
       <text x="16.00" y="226.96" fill="#FFFFFF" xml:space="preserve">━━━━━━</text>
-      <text x="66.40" y="226.96" fill="#000000" xml:space="preserve">▌     tcp                    92  7748                                                             ▐</text>
+      <text x="66.40" y="226.96" fill="#000000" xml:space="preserve">▌     tcp                    92  7,748                                                            ▐</text>
       <text x="898.00" y="226.96" fill="#FFFFFF" xml:space="preserve">━━━━━</text>
       <text x="16.00" y="244.96" fill="#000000" xml:space="preserve">[+] Fr</text>
-      <text x="66.40" y="244.96" fill="#000000" xml:space="preserve">▌       telnet               46  4670                                                             ▐</text>
+      <text x="66.40" y="244.96" fill="#000000" xml:space="preserve">▌       telnet               46  4,670                                                            ▐</text>
       <text x="16.00" y="262.96" fill="#FFFFFF" xml:space="preserve">[+] Et</text>
       <text x="66.40" y="262.96" fill="#000000" xml:space="preserve">▌         _ws.malformed       1  67                                                               ▐</text>
       <text x="898.00" y="262.96" fill="#FFFFFF" xml:space="preserve">a0:97</text>
@@ -383,16 +383,16 @@
       <rect x="898.00" y="178.00" width="33.60" height="18.00" fill="#D7D7FF"/>
       <rect x="931.60" y="178.00" width="8.40" height="18.00" fill="#000000"/>
       <rect x="16.00" y="196.00" width="50.40" height="18.00" fill="#D7D7FF"/>
-      <rect x="66.40" y="196.00" width="16.80" height="18.00" fill="#FFFF00"/>
-      <rect x="83.20" y="196.00" width="798.00" height="18.00" fill="#000000"/>
-      <rect x="881.20" y="196.00" width="16.80" height="18.00" fill="#FFFF00"/>
+      <rect x="66.40" y="196.00" width="831.60" height="18.00" fill="#FFFF00"/>
       <rect x="898.00" y="196.00" width="33.60" height="18.00" fill="#D7D7FF"/>
       <rect x="931.60" y="196.00" width="8.40" height="18.00" fill="#000000"/>
       <rect x="16.00" y="214.00" width="50.40" height="18.00" fill="#000000"/>
       <rect x="66.40" y="214.00" width="831.60" height="18.00" fill="#FFFF00"/>
       <rect x="898.00" y="214.00" width="42.00" height="18.00" fill="#000000"/>
       <rect x="16.00" y="232.00" width="50.40" height="18.00" fill="#585858"/>
-      <rect x="66.40" y="232.00" width="831.60" height="18.00" fill="#FFFF00"/>
+      <rect x="66.40" y="232.00" width="16.80" height="18.00" fill="#FFFF00"/>
+      <rect x="83.20" y="232.00" width="798.00" height="18.00" fill="#000000"/>
+      <rect x="881.20" y="232.00" width="16.80" height="18.00" fill="#FFFF00"/>
       <rect x="898.00" y="232.00" width="42.00" height="18.00" fill="#585858"/>
       <rect x="16.00" y="250.00" width="50.40" height="18.00" fill="#000000"/>
       <rect x="66.40" y="250.00" width="831.60" height="18.00" fill="#FFFF00"/>
@@ -455,38 +455,38 @@
       <text x="66.40" y="136.96" fill="#000000" xml:space="preserve">▌                                                                                                 ▐</text>
       <text x="898.00" y="136.96" fill="#262626" xml:space="preserve">0 …</text>
       <text x="16.00" y="154.96" fill="#262626" xml:space="preserve"> 3</text>
-      <text x="66.40" y="154.96" fill="#000000" xml:space="preserve">▌ Severity  Group      Protocol  Count  Summary                                                   ▐</text>
+      <text x="66.40" y="154.96" fill="#000000" xml:space="preserve">▌ 6 errors · 4 notes · 4 chats                                                                    ▐</text>
       <text x="898.00" y="154.96" fill="#262626" xml:space="preserve">al…</text>
       <text x="16.00" y="172.96" fill="#262626" xml:space="preserve"> 4</text>
-      <text x="66.40" y="172.96" fill="#000000" xml:space="preserve">▌ ─────────────────────────────────────────────────────────────────────────────────────────────── ▐</text>
+      <text x="66.40" y="172.96" fill="#000000" xml:space="preserve">▌                                                                                                 ▐</text>
       <text x="16.00" y="190.96" fill="#262626" xml:space="preserve"> 5</text>
-      <text x="66.40" y="190.96" fill="#000000" xml:space="preserve">▌ ─                                                                                               ▐</text>
+      <text x="66.40" y="190.96" fill="#000000" xml:space="preserve">▌ Severity  Group      Protocol  Count  Summary                                                   ▐</text>
       <text x="16.00" y="208.96" fill="#262626" xml:space="preserve"> 6</text>
-      <text x="66.40" y="208.96" fill="#000000" xml:space="preserve">▌</text>
-      <text x="83.20" y="208.96" fill="#FFFF00" xml:space="preserve">Error     Protocol   IPv4          5  IPv4 total length exceeds packet length (52 bytes)</text>
-      <text x="881.20" y="208.96" fill="#000000" xml:space="preserve"> ▐</text>
+      <text x="66.40" y="208.96" fill="#000000" xml:space="preserve">▌ ─────────────────────────────────────────────────────────────────────────────────────────────── ▐</text>
       <text x="898.00" y="208.96" fill="#262626" xml:space="preserve">va…</text>
       <text x="931.60" y="208.96" fill="#FFFFFF" xml:space="preserve">▼</text>
       <text x="16.00" y="226.96" fill="#FFFFFF" xml:space="preserve">━━━━━━</text>
-      <text x="66.40" y="226.96" fill="#000000" xml:space="preserve">▌ Error     Malformed  TELNET        1  Malformed Packet (Exception occurred)                     ▐</text>
+      <text x="66.40" y="226.96" fill="#000000" xml:space="preserve">▌ ─                                                                                               ▐</text>
       <text x="898.00" y="226.96" fill="#FFFFFF" xml:space="preserve">━━━━━</text>
       <text x="16.00" y="244.96" fill="#000000" xml:space="preserve">[+] Fr</text>
-      <text x="66.40" y="244.96" fill="#000000" xml:space="preserve">▌ Note      Protocol   TCP           1  The SYN packet does not contain a SACK PERM option        ▐</text>
+      <text x="66.40" y="244.96" fill="#000000" xml:space="preserve">▌</text>
+      <text x="83.20" y="244.96" fill="#FFFF00" xml:space="preserve">Error     Protocol   IPv4          5  IPv4 total length exceeds packet length (52 bytes)</text>
+      <text x="881.20" y="244.96" fill="#000000" xml:space="preserve"> ▐</text>
       <text x="16.00" y="262.96" fill="#FFFFFF" xml:space="preserve">[+] Et</text>
-      <text x="66.40" y="262.96" fill="#000000" xml:space="preserve">▌ Note      Sequence   TCP           1  This frame is a (suspected) retransmission                ▐</text>
+      <text x="66.40" y="262.96" fill="#000000" xml:space="preserve">▌ Error     Malformed  TELNET        1  Malformed Packet (Exception occurred)                     ▐</text>
       <text x="898.00" y="262.96" fill="#FFFFFF" xml:space="preserve">a0:97</text>
       <text x="16.00" y="280.96" fill="#FFFFFF" xml:space="preserve">[+] In</text>
-      <text x="66.40" y="280.96" fill="#000000" xml:space="preserve">▌ Note      Sequence   TCP           1  This frame initiates the connection closing               ▐</text>
+      <text x="66.40" y="280.96" fill="#000000" xml:space="preserve">▌ Note      Protocol   TCP           1  The SYN packet does not contain a SACK PERM option        ▐</text>
       <text x="16.00" y="298.96" fill="#FFFFFF" xml:space="preserve">[+] Tr</text>
-      <text x="66.40" y="298.96" fill="#000000" xml:space="preserve">▌ Note      Sequence   TCP           1  This frame undergoes the connection closing               ▐</text>
-      <text x="66.40" y="316.96" fill="#000000" xml:space="preserve">▌ Chat      Sequence   TCP           1  Connection establish request (SYN): server port 23        ▐</text>
-      <text x="66.40" y="334.96" fill="#000000" xml:space="preserve">▌ Chat      Sequence   TCP           1  Connection establish acknowledge (SYN+ACK): server port 2 ▐</text>
-      <text x="66.40" y="352.96" fill="#000000" xml:space="preserve">▌ 3                                                                                               ▐</text>
+      <text x="66.40" y="298.96" fill="#000000" xml:space="preserve">▌ Note      Sequence   TCP           1  This frame is a (suspected) retransmission                ▐</text>
+      <text x="66.40" y="316.96" fill="#000000" xml:space="preserve">▌ Note      Sequence   TCP           1  This frame initiates the connection closing               ▐</text>
+      <text x="66.40" y="334.96" fill="#000000" xml:space="preserve">▌ Note      Sequence   TCP           1  This frame undergoes the connection closing               ▐</text>
+      <text x="66.40" y="352.96" fill="#000000" xml:space="preserve">▌ Chat      Sequence   TCP           1  Connection establish request (SYN): server port 23        ▐</text>
       <text x="16.00" y="370.96" fill="#FFFFFF" xml:space="preserve">━━━━━━</text>
-      <text x="66.40" y="370.96" fill="#000000" xml:space="preserve">▌ Chat      Sequence   TCP           2  Connection finish (FIN)                                   ▐</text>
+      <text x="66.40" y="370.96" fill="#000000" xml:space="preserve">▌ Chat      Sequence   TCP           1  Connection establish acknowledge (SYN+ACK): server port 2 ▐</text>
       <text x="898.00" y="370.96" fill="#FFFFFF" xml:space="preserve">━━━━━</text>
       <text x="16.00" y="388.96" fill="#FFFFFF" xml:space="preserve"> 0000</text>
-      <text x="66.40" y="388.96" fill="#000000" xml:space="preserve">▌                                                                                                 ▐</text>
+      <text x="66.40" y="388.96" fill="#000000" xml:space="preserve">▌ 3                                                                                               ▐</text>
       <text x="16.00" y="406.96" fill="#FFFFFF" xml:space="preserve"> 0010</text>
       <text x="66.40" y="406.96" fill="#000000" xml:space="preserve">▌                                                                                                 ▐</text>
       <text x="16.00" y="424.96" fill="#FFFFFF" xml:space="preserve"> 0020</text>
