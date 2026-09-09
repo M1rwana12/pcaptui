@@ -974,17 +974,11 @@ func (w *ConvsUiWidget) OnData(data string, app gowid.IApp) {
 			bytesfrom = strings.Replace(bytesfrom, "MB", " MB", -1)
 			bytes = strings.Replace(bytes, "MB", " MB", -1)
 			if ports {
-				pa := strings.Split(addra, ":")
-				pb := strings.Split(addrb, ":")
-				if len(pa) == 2 && len(pb) == 2 {
-					addra = pa[0]
-					porta = pa[1]
-					addrb = pb[0]
-					portb = pb[1]
-					// Columns are Pkts, Bytes, Pkts A->B, Bytes A->B, Pkts B->A, Bytes B->A:
-					// the total first, then each direction.
-					datas = append(datas, []string{addra, porta, addrb, portb, frames, bytes, framesfrom, bytesfrom, framesto, bytesto, start, durn})
-				}
+				addra, porta = splitHostPort(addra)
+				addrb, portb = splitHostPort(addrb)
+				// Columns are Pkts, Bytes, Pkts A->B, Bytes A->B, Pkts B->A, Bytes B->A:
+				// the total first, then each direction.
+				datas = append(datas, []string{addra, porta, addrb, portb, frames, bytes, framesfrom, bytesfrom, framesto, bytesto, start, durn})
 			} else {
 				datas = append(datas, []string{addra, addrb, frames, bytes, framesfrom, bytesfrom, framesto, bytesto, start, durn})
 			}

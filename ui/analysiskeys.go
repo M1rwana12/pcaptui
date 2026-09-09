@@ -24,7 +24,12 @@ import (
 // fastest way to find a problem - could be used for a whole session without
 // ever being found.
 type analysisView struct {
-	Key     rune
+	Key rune
+	// Command is the name typed at `:`. It is registered from this list too,
+	// so a view cannot be reachable by key and not by name, and the command
+	// help cannot list a name that opens nothing - or miss one that works,
+	// which is what happened to http, dns and export.
+	Command string
 	Name    string
 	Summary string
 	Open    func(gowid.IApp)
@@ -37,24 +42,28 @@ func analysisViews() []analysisView {
 	res := []analysisView{
 		{
 			Key:     'p',
+			Command: "capinfo",
 			Name:    "Capture file properties",
 			Summary: "Size, duration, encapsulation, hashes",
 			Open:    startCapinfo,
 		},
 		{
 			Key:     's',
+			Command: "streams",
 			Name:    "Reassemble stream",
 			Summary: "Follow the stream the selected packet belongs to",
 			Open:    startStreamReassembly,
 		},
 		{
 			Key:     'v',
+			Command: "convs",
 			Name:    "Conversations",
 			Summary: "Who talked to whom, by packets and bytes",
 			Open:    openConvsUi,
 		},
 		{
 			Key:     'x',
+			Command: "export",
 			Name:    "Export objects",
 			Summary: "Write the files this capture carried out to disk",
 			Open:    openExportObjects,
@@ -65,6 +74,7 @@ func analysisViews() []analysisView {
 		stat := stat
 		res = append(res, analysisView{
 			Key:     stat.Key,
+			Command: stat.Command,
 			Name:    stat.Name,
 			Summary: stat.Summary,
 			Open:    func(app gowid.IApp) { startStats(stat, app) },
@@ -95,6 +105,30 @@ func analysisKeyHelp() string {
 		fmt.Fprintf(&b, "%c__ - %s\n", v.Key, v.Name)
 	}
 	return b.String()
+}
+
+// analysisCommandHelp is the block of `:` commands in the command-line help,
+// generated from the same list so that adding a view cannot leave it out.
+//
+// It was left out three times: http, dns and export all worked at `:` and none
+// of them appeared in `:help cmdline`, so a third of the analysis views were
+// undiscoverable from the help that exists to list them.
+func analysisCommandHelp() string {
+	var b strings.Builder
+	for _, v := range analysisViews() {
+		fmt.Fprintf(&b, "%s - %s\n", padCommand(v.Command), v.Summary)
+	}
+	return strings.TrimRight(b.String(), "\n")
+}
+
+// padCommand pads a name out to the width the hand-written lines around it
+// use, with the underscores they use rather than spaces.
+func padCommand(name string) string {
+	const width = 13
+	if len(name) >= width {
+		return name
+	}
+	return name + strings.Repeat("_", width-len(name))
 }
 
 //======================================================================

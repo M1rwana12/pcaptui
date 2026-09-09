@@ -56,7 +56,6 @@ import (
 	"github.com/m1rwana12/pcaptui/pkg/pdmltree"
 	"github.com/m1rwana12/pcaptui/pkg/psmlmodel"
 	"github.com/m1rwana12/pcaptui/pkg/shark"
-	"github.com/m1rwana12/pcaptui/pkg/stats"
 	"github.com/m1rwana12/pcaptui/pkg/system"
 	"github.com/m1rwana12/pcaptui/pkg/theme"
 	"github.com/m1rwana12/pcaptui/ui/menuutil"
@@ -1443,29 +1442,12 @@ func lastLineMode(app gowid.IApp) {
 		return nil
 	}))
 
-	MiniBuffer.Register("convs", minibufferFn(func(gowid.IApp, ...string) error {
-		openConvsUi(app)
-		return nil
-	}))
-
-	MiniBuffer.Register("streams", minibufferFn(func(gowid.IApp, ...string) error {
-		startStreamReassembly(app)
-		return nil
-	}))
-
-	MiniBuffer.Register("capinfo", minibufferFn(func(gowid.IApp, ...string) error {
-		startCapinfo(app)
-		return nil
-	}))
-
-	MiniBuffer.Register("export", minibufferFn(func(gowid.IApp, ...string) error {
-		openExportObjects(app)
-		return nil
-	}))
-
-	for _, stat := range stats.All {
-		MiniBuffer.Register(stat.Command, minibufferFn(func(gowid.IApp, ...string) error {
-			startStats(stat, app)
+	// Registered from the same list that binds the keys and writes both help
+	// screens, so a view cannot be reachable one way and not the other.
+	for _, v := range analysisViews() {
+		open := v.Open
+		MiniBuffer.Register(v.Command, minibufferFn(func(gowid.IApp, ...string) error {
+			open(app)
 			return nil
 		}))
 	}

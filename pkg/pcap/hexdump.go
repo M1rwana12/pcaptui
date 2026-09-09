@@ -88,6 +88,69 @@ func hexValue(c byte) byte {
 }
 
 //======================================================================
+
+// HexDumpReader turns the lines of `tshark -x` into one byte slice per packet.
+//
+// A packet is separated from the next by a blank line. Within a packet, tshark
+// may print the same bytes more than once: when a packet has more than one
+// data source - a reassembled TCP stream, a decrypted TLS record, a
+// decompressed body - each source is printed under a heading:
+//
+//	Packet (64 bytes):
+//	0000  20 52 45 43 56 ...
+//	Reassembled TCP (49 bytes):
+//	0000  48 54 54 50 2f 31 ...
+//
+// The first heading names the frame's own bytes, which is what the hex pane
+// shows; the later ones are the same packet seen another way, not more of it.
+// A packet with one source has no heading at all.
+//
+// So it is the *second* heading onwards that means "stop reading", not the
+// first. Reading it the other way round emptied the pane for every reassembled
+// packet, every decrypted record and every decompressed body - measured on a
+// two-segment HTTP response: the first packet showed its 93 bytes and the
+// second, the reassembled one, showed nothing.
+type HexDumpReader struct {
+	packet  []byte
+	sources int
+}
+
+// Line feeds in one line of output. It returns a packet, and true, on the
+// blank line that ends one.
+func (h *HexDumpReader) Line(line string) ([]byte, bool) {
+	lineBytes, isHexLine := HexDumpLine(line)
+
+	switch {
+	case isBlank(line):
+		packet := h.packet
+		h.packet = nil
+		h.sources = 0
+		return packet, true
+
+	case !isHexLine:
+		h.sources++
+
+	case h.sources <= 1:
+		// No heading at all means one source; one heading means this is still
+		// the first. Both are the frame's own bytes.
+		h.packet = append(h.packet, lineBytes...)
+	}
+
+	return nil, false
+}
+
+func isBlank(line string) bool {
+	for i := 0; i < len(line); i++ {
+		switch line[i] {
+		case ' ', '\t', '\r', '\n':
+		default:
+			return false
+		}
+	}
+	return true
+}
+
+//======================================================================
 // Local Variables:
 // mode: Go
 // fill-column: 78

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/m1rwana12/pcaptui"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -70,6 +71,49 @@ func TestTheHelpListsEveryKeyAndName(t *testing.T) {
 		assert.Contains(t, help, v.Name)
 	}
 	assert.Equal(t, len(analysisViews()), strings.Count(help, "\n"))
+}
+
+//======================================================================
+
+// Every view has a name to type as well as a key, and both come from the same
+// list, so neither can exist without the other.
+func TestEveryAnalysisViewHasACommand(t *testing.T) {
+	seen := map[string]string{}
+	for _, v := range analysisViews() {
+		require.NotEmpty(t, v.Command, "%s has no : command", v.Name)
+		if other, dup := seen[v.Command]; dup {
+			t.Errorf("%q opens both %s and %s", v.Command, other, v.Name)
+		}
+		seen[v.Command] = v.Name
+	}
+}
+
+// The command-line help exists to list the commands. Three of them - http, dns
+// and export - worked at `:` and were missing from it, so a third of the
+// analysis views could not be found from the help that names them.
+func TestTheCommandHelpNamesEveryView(t *testing.T) {
+	help := pcaptui.TemplateToString(Templates, "CmdLineHelp", TemplateData)
+
+	for _, v := range analysisViews() {
+		assert.Contains(t, help, v.Command,
+			"%s is reachable as :%s and is not in :help cmdline", v.Name, v.Command)
+	}
+}
+
+// The key help and the command help describe the same views, so neither can
+// list something the other does not.
+func TestBothHelpScreensDescribeTheSameViews(t *testing.T) {
+	keys := analysisKeyHelp()
+	commands := analysisCommandHelp()
+
+	assert.Equal(t, len(analysisViews()), strings.Count(keys, "\n"))
+	assert.Equal(t, len(analysisViews())-1, strings.Count(commands, "\n"),
+		"the command block is joined without a trailing newline")
+
+	for _, v := range analysisViews() {
+		assert.Contains(t, keys, v.Name)
+		assert.Contains(t, commands, v.Command)
+	}
 }
 
 //======================================================================

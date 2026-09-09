@@ -115,18 +115,16 @@ Activate cmdline mode with the : key.
 
 Hit tab to see and choose possible completions.
 
-capinfo______ - Capture file properties
-overview_____ - What is in this capture, what is wrong with it, who is on the wire
+Analysis - each of these also has a single key, listed under ?
+
+{{.AnalysisCommands}}
+
 clear-filter_ - Clear the display filter and apply
 clear-packets - Clear the current pcap
 columns______ - Choose the columns to display
 config_______ - Show pcaptui's config file
-convs________ - Open conversations view
-expert_______ - Problems the dissectors found in this capture
 filter_______ - Choose a display filter from recently-used
 help_________ - Various help dialogs
-endpoints____ - Who is on the wire, by packets and bytes
-hierarchy____ - Every protocol in this capture, by packets and bytes
 load_________ - Load a pcap from the filesystem
 logs_________ - Show pcaptui's log file
 map__________ - Map a keypress to a key sequence (see help map)
@@ -137,7 +135,6 @@ profile______ - Profile actions - create, use, delete, etc
 quit_________ - Quit pcaptui
 recents______ - Load a pcap from those recently-used
 set__________ - Set various config properties (see help set)
-streams______ - Open stream reassembly view
 theme________ - Choose a theme for the current terminal color mode
 unmap________ - Remove a keypress mapping
 wormhole_____ - Prepare to transfer the current pcap{{end}}
@@ -223,6 +220,7 @@ func init() {
 	// Generated from the bindings themselves - a hand-written list of keys is
 	// a list that drifts from what the keys actually do.
 	TemplateData["AnalysisKeys"] = analysisKeyHelp()
+	TemplateData["AnalysisCommands"] = analysisCommandHelp()
 }
 
 func WriteHelp(p *flags.Parser, w io.Writer) {

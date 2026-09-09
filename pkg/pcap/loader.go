@@ -1249,8 +1249,7 @@ func (c *PdmlLoader) loadPcapSync(row int, visible bool, ps iPdmlLoaderEnv, cb i
 			issuedKill := false
 			readAllRequiredPcap := false
 			rd := bufio.NewReader(pcapOut)
-			packet := make([]byte, 0)
-			skippingSource := false
+			hex := &HexDumpReader{}
 
 			for {
 				line, err := rd.ReadString('\n')
@@ -1265,14 +1264,8 @@ func (c *PdmlLoader) loadPcapSync(row int, visible bool, ps iPdmlLoaderEnv, cb i
 					break
 				}
 
-				lineBytes, isHexLine := HexDumpLine(line)
-
-				switch {
-				case strings.TrimSpace(line) == "":
-					// Only a blank line ends a packet.
+				if packet, done := hex.Line(line); done {
 					packets = append(packets, packet)
-					packet = make([]byte, 0)
-					skippingSource = false
 
 					readEnough := (len(packets) >= c.KillAfterReadingThisMany)
 					ps.updateCacheEntryWithPcap(row, packets, false)
@@ -1283,22 +1276,6 @@ func (c *PdmlLoader) loadPcapSync(row int, visible bool, ps iPdmlLoaderEnv, cb i
 						readAllRequiredPcap = true
 						pcapCancelFn()
 					}
-
-				case !isHexLine:
-					// A secondary data source, announced like
-					//
-					//   Reassembled TCP (266 bytes):
-					//
-					// with no blank line before it. Those bytes are the same
-					// packet seen another way, not more of it - and the hex
-					// pane shows the frame. Treating the header as the end of
-					// a packet would make the reassembly a packet of its own
-					// and shift every row after it; appending its dump would
-					// make this packet longer than the frame it describes.
-					skippingSource = true
-
-				case !skippingSource:
-					packet = append(packet, lineBytes...)
 				}
 			}
 

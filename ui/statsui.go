@@ -13,6 +13,7 @@ import (
 	"github.com/m1rwana12/pcaptui"
 	"github.com/m1rwana12/pcaptui/pkg/pcap"
 	"github.com/m1rwana12/pcaptui/pkg/stats"
+	log "github.com/sirupsen/logrus"
 )
 
 var StatsLoader *stats.Loader
@@ -52,6 +53,11 @@ type statsParseHandler struct {
 
 	data string
 
+	// failed is set when tshark reported a problem, so that the dialog does
+	// not then claim there was nothing to report. Only ever touched inside
+	// app.Run, which is to say on the one goroutine that draws.
+	failed bool
+
 	tick             *time.Ticker // for updating the spinner
 	stop             chan struct{}
 	stopOnce         sync.Once
@@ -76,6 +82,16 @@ var _ stats.IStatsCallbacks = (*statsParseHandler)(nil)
 var _ pcap.IBeforeBegin = (*statsParseHandler)(nil)
 var _ pcap.IAfterEnd = (*statsParseHandler)(nil)
 
+// Without this one, pcap.HandleError finds nothing to call and returns having
+// done nothing at all. tshark exits non-zero for a display filter it cannot
+// parse, for a -z argument this build does not have, and for a capture that
+// has been deleted or made unreadable since it was opened - and its stderr
+// says which. All of that was dropped on the floor, and what the user saw
+// instead was "Nothing to report for this capture." The overview now opens by
+// itself on every file, so that sentence was the program's answer to a
+// failure it had been told about.
+var _ pcap.IOnError = (*statsParseHandler)(nil)
+
 func (t *statsParseHandler) OnStatsData(data string) {
 	t.data = strings.Replace(data, "\r\n", "\n", -1) // For windows...
 }
@@ -84,6 +100,23 @@ func (t *statsParseHandler) AfterStatsEnd(success bool) {
 	// Reached through a plain defer in the loader, so it runs whether or not
 	// the app is still accepting callbacks.
 	t.stopSpinner()
+}
+
+func (t *statsParseHandler) OnError(code pcap.HandlerCode, app gowid.IApp, err error) {
+	if code&pcap.StatsCode == 0 {
+		return
+	}
+
+	log.Error(err)
+
+	app.Run(gowid.RunFunction(func(app gowid.IApp) {
+		t.failed = true
+		if !t.pleaseWaitClosed {
+			t.pleaseWaitClosed = true
+			ClosePleaseWait(app)
+		}
+		OpenError(fmt.Sprintf("%s\n\n%v", t.stat.Name, err), app)
+	}))
 }
 
 func (t *statsParseHandler) BeforeBegin(code pcap.HandlerCode, app gowid.IApp) {
@@ -120,6 +153,12 @@ func (t *statsParseHandler) AfterEnd(code pcap.HandlerCode, app gowid.IApp) {
 		if !t.pleaseWaitClosed {
 			t.pleaseWaitClosed = true
 			ClosePleaseWait(app)
+		}
+
+		if t.failed {
+			// The error dialog has already said what went wrong; saying
+			// "nothing to report" on top of it would contradict it.
+			return
 		}
 
 		v := t.view()
