@@ -55,7 +55,26 @@ type Pcaptui struct {
 
 // If args are passed through to tshark (e.g. stdout not a tty), then
 // strip these out so tshark doesn't fail.
-var PcaptuiOnly = []string{"--pass-thru", "--profile", "--log-tty", "--debug", "--tail"}
+//
+// The screenshot flags are here because they are pcaptui's own tooling and
+// tshark rejects them outright: `pcaptui --screencast -r x.pcap | cat` handed
+// --screencast straight to tshark.
+var PcaptuiOnly = []string{
+	"--pass-thru", "--profile", "--log-tty", "--debug", "--tail",
+	"--screenshot", "--screenshot-size", "--screenshot-keys", "--screencast",
+}
+
+// PcaptuiOnlyWithValue are the ones whose value is a separate argument, so
+// that dropping the flag has to drop what follows it too. Without this,
+// `pcaptui --profile foo -r x.pcap | cat` left "foo" in tshark's argv, where
+// a bare word is a read filter.
+//
+// The flags with an optional value are deliberately not here: --pass-thru and
+// --debug can be written bare, and nothing in the argument itself says whether
+// the next word belongs to them.
+var PcaptuiOnlyWithValue = []string{
+	"--profile", "--tail", "--screenshot", "--screenshot-size", "--screenshot-keys",
+}
 
 func FlagIsTrue(val string) bool {
 	return val == "true" || val == "yes"

@@ -889,8 +889,8 @@ func (w *ConvsUiWidget) OnData(data string, app gowid.IApp) {
 					convComp,
 					table.IntCompare{},
 					convComp,
-					table.FloatCompare{},
-					table.FloatCompare{},
+					pcaptui.ConvFloatCompare{},
+					pcaptui.ConvFloatCompare{},
 				}
 
 			} else {
@@ -932,8 +932,8 @@ func (w *ConvsUiWidget) OnData(data string, app gowid.IApp) {
 					convComp,
 					table.IntCompare{},
 					convComp,
-					table.FloatCompare{},
-					table.FloatCompare{},
+					pcaptui.ConvFloatCompare{},
+					pcaptui.ConvFloatCompare{},
 				}
 
 			}

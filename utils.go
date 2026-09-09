@@ -832,43 +832,72 @@ var _ table.ICompare = MACCompare{}
 
 //======================================================================
 
-// ConvPktsCompare is a unit type that satisfies ICompare, and can be used
-// for numerically comparing values emitted by the tshark -z conv,... e.g.
-// "2,456 kB"
+// ConvPktsCompare orders the byte columns of the conversations table, which
+// tshark writes with a unit: "900", "2 kB", "1 MB".
+//
+// The number goes through ParseCount rather than having its commas stripped.
+// Stripping them read "1,5 kB" - one and a half kilobytes, on a machine whose
+// tshark writes a decimal comma, as this one's does - as fifteen kilobytes,
+// and put the row in the wrong place under a header that says it is sorted.
 type ConvPktsCompare struct{}
 
 func (s ConvPktsCompare) Less(i, j string) bool {
-
-	mi := unitsRe.FindStringSubmatch(i)
-	if len(mi) <= 2 {
+	mx, oki := convBytes(i)
+	my, okj := convBytes(j)
+	if !oki || !okj {
+		// Neither ordering is claimed for a value that cannot be read, which
+		// leaves such rows where they were rather than inventing a place.
 		return false
-	}
-	mx, err := strconv.ParseUint(strings.Replace(mi[1], ",", "", -1), 10, 64)
-	if err != nil {
-		return false
-	}
-	if mi[2] == "kB" {
-		mx *= 1024
-	} else if mi[2] == "MB" {
-		mx *= (1024 * 1024)
-	}
-	mj := unitsRe.FindStringSubmatch(j)
-	if len(mj) <= 2 {
-		return false
-	}
-	my, err := strconv.ParseUint(strings.Replace(mj[1], ",", "", -1), 10, 64)
-	if err != nil {
-		return false
-	}
-	if mj[2] == "kB" {
-		my *= 1024
-	} else if mj[2] == "MB" {
-		my *= (1024 * 1024)
 	}
 
 	return mx < my
 }
 
+// convBytes is one cell of a byte column as a number of bytes.
+func convBytes(s string) (uint64, bool) {
+	m := unitsRe.FindStringSubmatch(s)
+	if len(m) <= 2 {
+		return 0, false
+	}
+
+	n, ok := ParseCount(m[1])
+	if !ok || n < 0 {
+		return 0, false
+	}
+
+	res := uint64(n)
+	switch m[2] {
+	case "kB":
+		res *= 1024
+	case "MB":
+		res *= 1024 * 1024
+	}
+
+	return res, true
+}
+
+//======================================================================
+
+// ConvFloatCompare orders the Start and Duration columns of the conversations
+// table.
+//
+// gowid's FloatCompare is strconv.ParseFloat, which rejects "0,000000000"
+// outright - and that is what tshark prints here. Both columns were therefore
+// unsortable on any machine whose tshark writes a decimal comma: clicking the
+// header did nothing at all, silently.
+type ConvFloatCompare struct{}
+
+func (s ConvFloatCompare) Less(i, j string) bool {
+	x, oki := ParseDecimal(i)
+	y, okj := ParseDecimal(j)
+	if !oki || !okj {
+		return false
+	}
+
+	return x < y
+}
+
+var _ table.ICompare = ConvFloatCompare{}
 var _ table.ICompare = ConvPktsCompare{}
 
 //======================================================================

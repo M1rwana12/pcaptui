@@ -33,11 +33,26 @@ func openExportObjects(app gowid.IApp) {
 		return
 	}
 
-	types, err := export.Types()
-	if err != nil {
-		OpenError(err.Error(), app)
-		return
-	}
+	// Asking tshark what it can export is a subprocess, and every other tshark
+	// this program runs is started from a goroutine. Run on the goroutine that
+	// draws, it freezes the whole interface for as long as tshark takes to
+	// start - which on this platform is not nothing.
+	pcaptui.TrackedGo(func() {
+		types, err := export.Types()
+
+		app.Run(gowid.RunFunction(func(app gowid.IApp) {
+			if err != nil {
+				OpenError(err.Error(), app)
+				return
+			}
+			openExportTypes(types, app)
+		}))
+	}, Goroutinewg)
+}
+
+// openExportTypes is the picker itself, opened once tshark has said which
+// kinds of object this build knows how to write.
+func openExportTypes(types []string, app gowid.IApp) {
 
 	var d *dialog.Widget
 

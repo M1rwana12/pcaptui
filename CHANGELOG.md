@@ -160,6 +160,18 @@
   without changing what the Protocol Hierarchy counted it as. Measured: the
   hierarchy said `telnet 46 4670` before and `http 2 622` after.
 
+- **Two columns of the Conversations table could not be sorted at all.** Start
+  and Duration went through a comparator that is `ParseFloat`, and `tshark`
+  writes `0,000000000` on a machine whose numbers use a decimal comma — as this
+  one's does. Clicking the header did nothing and said nothing. The byte
+  columns had the opposite half of the same bug: every comma was stripped, so
+  `1,5 kB` sorted as fifteen kilobytes.
+
+- **pcaptui's own flags were handed to `tshark` in pass-thru.**
+  `pcaptui --screencast -r x.pcap | cat` passed `--screencast` straight to
+  `tshark`, which rejects it; and a dropped flag left its value behind, so
+  `--profile work` became a read filter called `work`.
+
 - **A third of the analysis views were missing from `:help cmdline`.** `http`,
   `dns` and `export` all worked at the colon prompt and none was in the list
   that exists to name them. The commands, the keys, the menu and both help

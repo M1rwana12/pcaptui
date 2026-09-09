@@ -5,9 +5,9 @@ package stats
 
 import (
 	"fmt"
-	"regexp"
-	"strconv"
 	"strings"
+
+	"github.com/m1rwana12/pcaptui"
 )
 
 //======================================================================
@@ -115,28 +115,12 @@ func endpointRow(line string) (EndpointRow, bool) {
 // a parser that only understands bare digits works for the developer and
 // silently reads nothing for somebody else.
 //
-// Comma and apostrophe are stripped, but only where they group digits in
-// threes. Stripping them unconditionally would read "1,5" - which is how a
-// comma-decimal locale writes one and a half - as fifteen, and a wrong number
-// is worse than no number.
-//
-// A space separator, which some locales use, would have split the number into
-// two fields before reaching here; if that ever appears it needs a different
-// fix, and it will announce itself as an empty table rather than as a wrong
-// number.
+// The rule itself lives in the root package now, because the conversations
+// table needed the same one and had the opposite bug: it stripped every comma,
+// so a machine that writes "1,5 kB" sorted that as fifteen kilobytes.
 func parseCount(s string) (int, bool) {
-	if grouped.MatchString(s) {
-		s = strings.NewReplacer(",", "", "'", "").Replace(s)
-	}
-
-	n, err := strconv.Atoi(s)
-	if err != nil {
-		return 0, false
-	}
-	return n, true
+	return pcaptui.ParseCount(s)
 }
-
-var grouped = regexp.MustCompile(`^\d{1,3}([,']\d{3})+$`)
 
 //======================================================================
 // Local Variables:

@@ -35,6 +35,9 @@ func TsharkArgs(args []string) []string {
 		}
 
 		if pcaptuiOnly(arg) {
+			if takesAValue(arg) && i+1 < len(args) {
+				i++
+			}
 			continue
 		}
 
@@ -42,6 +45,17 @@ func TsharkArgs(args []string) []string {
 	}
 
 	return res
+}
+
+// takesAValue is whether the flag was written bare, with its value as the
+// next argument - in which case dropping the flag has to drop that too.
+func takesAValue(arg string) bool {
+	for _, flag := range PcaptuiOnlyWithValue {
+		if arg == flag {
+			return true
+		}
+	}
+	return false
 }
 
 // pcaptuiOnly reports whether arg is one of pcaptui's own flags, in either

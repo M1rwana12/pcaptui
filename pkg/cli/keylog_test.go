@@ -122,6 +122,34 @@ func TestWithoutTwoPassNothingIsAdded(t *testing.T) {
 	assert.NotContains(t, got, "-2")
 }
 
+// pcaptui's own tooling flags are not tshark's, and tshark rejects them.
+func TestTheScreenshotFlagsDoNotReachTshark(t *testing.T) {
+	got := TsharkArgs([]string{
+		"--screencast", "--screenshot-size", "120x36", "-r", "foo.pcap",
+	})
+
+	assert.Equal(t, []string{"-r", "foo.pcap"}, got)
+}
+
+// Dropping a flag has to drop its value too: a bare word left in tshark's argv
+// is a read filter, so "--profile foo" turned into a filter called foo.
+func TestAFlagsValueGoesWithIt(t *testing.T) {
+	assert.Equal(t, []string{"-r", "foo.pcap"},
+		TsharkArgs([]string{"--profile", "work", "-r", "foo.pcap"}))
+
+	assert.Equal(t, []string{"-r", "foo.pcap"},
+		TsharkArgs([]string{"--profile=work", "-r", "foo.pcap"}))
+}
+
+// The flags whose value is optional are left alone: --pass-thru and --debug
+// can be written bare, and nothing in the argument says whether the next word
+// belongs to them.
+func TestAnOptionalValueIsNotSwallowed(t *testing.T) {
+	got := TsharkArgs([]string{"--pass-thru", "-r", "foo.pcap"})
+
+	assert.Equal(t, []string{"-r", "foo.pcap"}, got)
+}
+
 //======================================================================
 // Local Variables:
 // mode: Go
