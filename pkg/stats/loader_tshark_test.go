@@ -60,7 +60,9 @@ func runStat(t *testing.T, s Stat, filter string) string {
 func runStatOn(t *testing.T, pcap string, s Stat, filter string) string {
 	t.Helper()
 
-	cmd := MakeCommands().Stats(pcap, s.ZArg(filter))
+	// ZArgs, not ZArg: a statistic can ask for more than one table in a pass,
+	// and the tests have to drive what the program drives.
+	cmd := MakeCommands().Stats(pcap, s.ZArgs(filter)...)
 
 	out, err := cmd.StdoutReader()
 	assert.NoError(t, err)
@@ -397,6 +399,54 @@ func TestTheRcodeFiltersFindTheRightAnswers(t *testing.T) {
 	nx := runFieldsQueryOn(t, dnsPcap, DNSFilter("rcode", "No such name"), "frame.number")
 	assert.Equal(t, []string{"4"}, strings.Fields(nx),
 		"the fourth packet is the answer that failed")
+}
+
+//======================================================================
+
+// Written by hand and assembled by text2pcap - see make-ipv6.sh beside it. Two
+// packets, one each way, with different payload sizes so that sent and
+// received cannot be confused with each other.
+const ipv6Pcap = "../../scripts/pcaps/ipv6.pcap"
+
+// The Endpoints view asked tshark for IPv4 only, so a capture of IPv6 traffic
+// answered "Nothing to report" to the question "who is on the wire".
+func TestIPv6HostsAreListed(t *testing.T) {
+	out := runStatOn(t, ipv6Pcap, Endpoints, "")
+	rows := ParseEndpoints(out)
+
+	require.Len(t, rows, 2, "raw output:\n%s", out)
+
+	for _, r := range rows {
+		assert.Contains(t, r.Address, ":", "an IPv6 capture has IPv6 addresses")
+		assert.Equal(t, 2, r.Packets)
+		assert.Equal(t, r.Packets, r.TxPkts+r.RxPkts)
+		assert.Equal(t, r.Bytes, r.TxBytes+r.RxBytes)
+	}
+}
+
+// tshark rejects ip.addr == <an IPv6 address> outright, so this is the half
+// that would have failed loudly rather than silently.
+func TestAnIPv6RowsFilterFindsItsPackets(t *testing.T) {
+	out := runStatOn(t, ipv6Pcap, Endpoints, "")
+	rows := ParseEndpoints(out)
+	require.NotEmpty(t, rows, "raw output:\n%s", out)
+
+	for _, r := range rows {
+		found := runFieldsQueryOn(t, ipv6Pcap, r.DisplayFilter(), "frame.number")
+
+		assert.Equal(t, r.Packets, len(strings.Fields(found)),
+			"filter %q found a different number of packets than the row claims",
+			r.DisplayFilter())
+	}
+}
+
+// The overview asks for both families in the same pass as everything else, so
+// the one output has to carry all four tables without them reading each other.
+func TestTheOverviewPassCarriesBothFamilies(t *testing.T) {
+	out := runStatOn(t, ipv6Pcap, Overview, "")
+
+	assert.NotEmpty(t, ParseHierarchy(out), "raw output:\n%s", out)
+	assert.Len(t, ParseEndpoints(out), 2, "raw output:\n%s", out)
 }
 
 //======================================================================

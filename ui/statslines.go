@@ -348,7 +348,7 @@ func overviewLines(out string) statsView {
 	add("What is in it", hierarchyLines(stats.ParseHierarchy(out)),
 		"No protocols reported.")
 	add("Who is on the wire", endpointLines(stats.ParseEndpoints(out)),
-		"No IPv4 addresses.")
+		"No addresses on the wire.")
 
 	return v
 }

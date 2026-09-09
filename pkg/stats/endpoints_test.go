@@ -138,6 +138,50 @@ func TestARowFiltersOnItsOwnAddress(t *testing.T) {
 }
 
 //======================================================================
+
+// Wireshark has no one field name covering both families, so an IPv6 host
+// filtered with ip.addr selects nothing and tshark rejects the expression. A
+// capture of IPv6 traffic used to answer "Nothing to report" to the question
+// "who is on the wire" while the hierarchy beside it listed ipv6.
+func TestAnIPv6AddressFiltersOnTheIPv6Field(t *testing.T) {
+	r := EndpointRow{Address: "2001:db8::1"}
+
+	assert.Equal(t, "ipv6.addr == 2001:db8::1", r.DisplayFilter())
+}
+
+func TestAnIPv4AddressStillFiltersOnIP(t *testing.T) {
+	r := EndpointRow{Address: "192.168.0.2"}
+
+	assert.Equal(t, "ip.addr == 192.168.0.2", r.DisplayFilter())
+}
+
+// Both tables arrive in one pass and one output, so the parser has to read
+// them as one list.
+func TestBothFamiliesComeOutOfOneOutput(t *testing.T) {
+	out := `
+================================================================================
+IPv6 Endpoints
+Filter:<No Filter>
+                       | Packets | |  Bytes  | | Tx Packets | | Tx Bytes | | Rx Packets | | Rx Bytes |
+2001:db8::1                     2   155 bytes           1      79 bytes             1      76 bytes
+================================================================================
+================================================================================
+IPv4 Endpoints
+Filter:<No Filter>
+                       | Packets | |  Bytes  | | Tx Packets | | Tx Bytes | | Rx Packets | | Rx Bytes |
+192.168.0.2                    92  7748 bytes          48    3465 bytes            44    4283 bytes
+================================================================================
+`
+	rows := ParseEndpoints(out)
+
+	require.Len(t, rows, 2)
+	assert.Equal(t, "2001:db8::1", rows[0].Address)
+	assert.Equal(t, "192.168.0.2", rows[1].Address)
+	assert.Equal(t, "ipv6.addr == 2001:db8::1", rows[0].DisplayFilter())
+	assert.Equal(t, "ip.addr == 192.168.0.2", rows[1].DisplayFilter())
+}
+
+//======================================================================
 // Local Variables:
 // mode: Go
 // fill-column: 78

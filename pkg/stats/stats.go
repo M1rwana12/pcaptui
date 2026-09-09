@@ -60,15 +60,22 @@ var (
 	// Endpoints is who is on the wire and how much each of them sent and
 	// received. Wireshark shows it under Statistics > Endpoints.
 	//
-	// IPv4 rather than every endpoint type: an address is the thing people
-	// look for by name, and it is the one a display filter can be built from
-	// without knowing which layer to ask about.
+	// Addresses rather than every endpoint type: an address is the thing
+	// people look for by name, and it is the one a display filter can be built
+	// from without knowing which layer to ask about.
+	//
+	// Both families, in one pass. Asking only for IPv4 meant a capture of IPv6
+	// traffic answered "Nothing to report" to the question "who is on the
+	// wire" while the protocol hierarchy in the same dialog listed ipv6 six
+	// lines above. Measured on a 22 MB capture: adding the second table cost
+	// nothing outside the noise between runs.
 	Endpoints = Stat{
 		Name:    "Endpoints",
 		Command: "endpoints",
 		Key:     't',
 		Summary: "Who is on the wire, by packets and bytes",
 		zbase:   "endpoints,ip",
+		extraZ:  []string{"endpoints,ipv6"},
 	}
 
 	// HTTP counts the responses by status: how many succeeded, how many were
@@ -108,7 +115,7 @@ var (
 		Key:     'o',
 		Summary: "What is in this capture, what is wrong with it, who is on the wire",
 		zbase:   "io,phs",
-		extraZ:  []string{"expert", "endpoints,ip"},
+		extraZ:  []string{"expert", "endpoints,ip", "endpoints,ipv6"},
 	}
 )
 

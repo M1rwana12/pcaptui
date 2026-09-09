@@ -30,7 +30,14 @@ type EndpointRow struct {
 
 // DisplayFilter narrows the packet list to the traffic this address is part
 // of, in either direction.
+//
+// Which field depends on the address: Wireshark has no one name covering both,
+// so `ip.addr` selects nothing for an IPv6 host and tshark rejects the filter
+// outright. An IPv6 address is the one with a colon in it.
 func (r EndpointRow) DisplayFilter() string {
+	if strings.Contains(r.Address, ":") {
+		return fmt.Sprintf("ipv6.addr == %s", r.Address)
+	}
 	return fmt.Sprintf("ip.addr == %s", r.Address)
 }
 

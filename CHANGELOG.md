@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **IPv6 hosts were invisible to Endpoints and to the Overview.** Both asked
+  `tshark` for IPv4 endpoints only, so a capture of IPv6 traffic answered
+  "Nothing to report" to the question "who is on the wire" — six lines below
+  the protocol hierarchy in the same dialog listing `ipv6`. Both families are
+  now asked for in the same pass, which measured as free, and a row's filter
+  uses `ipv6.addr` where the address has a colon in it: Wireshark has no one
+  field name covering both, and `ip.addr` against an IPv6 address is rejected
+  outright.
+
 ### Changed
 
 - **Expert Information is readable on a real capture.** Wireshark reports some
