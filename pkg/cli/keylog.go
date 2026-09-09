@@ -6,7 +6,6 @@ package cli
 import (
 	"fmt"
 	"os"
-	"strings"
 )
 
 //======================================================================
@@ -59,47 +58,6 @@ func CheckKeylog(path string) error {
 	f.Close()
 
 	return nil
-}
-
-//======================================================================
-
-// TsharkArgs converts pcaptui's own command line into one tshark accepts,
-// for the pass-thru case where pcaptui simply becomes tshark.
-//
-// Pcaptui-only flags are dropped, and --tls-keylog becomes the tshark
-// preference, so decryption keeps working when output is piped.
-func TsharkArgs(args []string) []string {
-	res := make([]string, 0, len(args))
-
-	for i := 0; i < len(args); i++ {
-		arg := args[i]
-
-		if path, ok := keylogValue(args, &i); ok {
-			if path != "" {
-				res = append(res, KeylogArg(path)...)
-			}
-			continue
-		}
-
-		if pcaptuiOnly(arg) {
-			continue
-		}
-
-		res = append(res, arg)
-	}
-
-	return res
-}
-
-// pcaptuiOnly reports whether arg is one of pcaptui's own flags, in either
-// the bare or the joined form, and so has no meaning to tshark.
-func pcaptuiOnly(arg string) bool {
-	for _, flag := range PcaptuiOnly {
-		if arg == flag || strings.HasPrefix(arg, flag+"=") {
-			return true
-		}
-	}
-	return false
 }
 
 // keylogValue recognises both spellings of the flag - "--tls-keylog path" and

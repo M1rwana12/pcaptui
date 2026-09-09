@@ -16,6 +16,7 @@ type Tshark struct {
 	Profile        string `long:"profile" short:"C" description:"Start with this configuration profile." value-name:"<profile>"`
 	PrintIfaces    bool   `short:"D" optional:"true" optional-value:"true" description:"Print a list of the interfaces on which pcaptui can capture."`
 	TLSKeylog      string `long:"tls-keylog" description:"Decrypt TLS using the keys in this log file (as written by SSLKEYLOGFILE)." value-name:"<keylog file>"`
+	TwoPass        bool   `long:"two-pass" description:"Read the file twice, so fields that depend on later packets are right. Slower to first packet."`
 	Screenshot     string `long:"screenshot" hidden:"true" description:"Render one frame to this path prefix and exit (documentation tooling)." value-name:"<prefix>"`
 	ScreenshotSize string `long:"screenshot-size" hidden:"true" default:"120x36" description:"Screen size for --screenshot." value-name:"<WxH>"`
 	ScreenshotKeys string `long:"screenshot-keys" hidden:"true" description:"Type this after the capture loads, before the screenshot." value-name:"<keys>"`
@@ -34,6 +35,7 @@ type Pcaptui struct {
 	CaptureFilter   string         `short:"f" description:"Apply capture filter." value-name:"<capture filter>"`
 	TimestampFormat string         `short:"t" description:"Set the format of the packet timestamp printed in summary lines." choice:"a" choice:"ad" choice:"adoy" choice:"d" choice:"dd" choice:"e" choice:"r" choice:"u" choice:"ud" choice:"udoy" value-name:"<timestamp format>"`
 	TLSKeylog       string         `long:"tls-keylog" description:"Decrypt TLS using the keys in this log file (as written by SSLKEYLOGFILE)." value-name:"<keylog file>"`
+	TwoPass         bool           `long:"two-pass" description:"Read the file twice, so fields that depend on later packets are right. Slower to first packet."`
 	Screenshot      string         `long:"screenshot" hidden:"true" description:"Render one frame to this path prefix and exit (documentation tooling)." value-name:"<prefix>"`
 	ScreenshotSize  string         `long:"screenshot-size" hidden:"true" default:"120x36" description:"Screen size for --screenshot." value-name:"<WxH>"`
 	ScreenshotKeys  string         `long:"screenshot-keys" hidden:"true" description:"Type this after the capture loads, before the screenshot." value-name:"<keys>"`

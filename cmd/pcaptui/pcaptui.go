@@ -946,7 +946,21 @@ func cmain() int {
 
 	appRunner := app.Runner()
 
-	pcap.PcapCmds = pcap.MakeCommands(opts.DecodeAs, tsharkArgs, pdmlArgs, psmlArgs, ui.PacketColors)
+	twoPass, why := twoPassFor(opts.TwoPass || profiles.ConfBool("main.two-pass", false), psrcs)
+	if why != "" {
+		// Said out loud rather than quietly dropped: the fields it was asked
+		// for will be missing, and a missing field looks exactly like a
+		// capture that does not have one.
+		fmt.Fprintf(os.Stderr, "%s\n", why)
+		log.Infof("%s", why)
+	}
+	if twoPass {
+		log.Infof("Reading the capture twice; the first packet will take longer to appear")
+	}
+
+	pcapCmds := pcap.MakeCommands(opts.DecodeAs, tsharkArgs, pdmlArgs, psmlArgs, ui.PacketColors)
+	pcapCmds.TwoPass = twoPass
+	pcap.PcapCmds = pcapCmds
 	pcap.PcapOpts = pcap.Options{
 		CacheSize:      cacheSize,
 		PacketsPerLoad: bundleSize,

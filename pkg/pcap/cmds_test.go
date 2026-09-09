@@ -172,6 +172,40 @@ func TestIfaceMarksTheChildAsACapture(t *testing.T) {
 }
 
 //======================================================================
+
+// Two-pass analysis has to reach every command that reads the capture, or the
+// packet list and the packet detail would disagree about the same packet.
+func TestTwoPassReachesEveryReaderOfTheFile(t *testing.T) {
+	c := MakeCommands(nil, nil, nil, nil, false)
+	c.TwoPass = true
+
+	assert.Contains(t, args(t, c.Psml("capture.pcap", "")), "-2")
+	assert.Contains(t, args(t, c.Pdml("capture.pcap", "")), "-2")
+	assert.Contains(t, args(t, c.Pcap("capture.pcap", "")), "-2")
+}
+
+func TestOnePassIsTheDefault(t *testing.T) {
+	c := MakeCommands(nil, nil, nil, nil, false)
+
+	assert.NotContains(t, args(t, c.Psml("capture.pcap", "")), "-2")
+	assert.NotContains(t, args(t, c.Pdml("capture.pcap", "")), "-2")
+	assert.NotContains(t, args(t, c.Pcap("capture.pcap", "")), "-2")
+}
+
+// tshark refuses two-pass mode on a pipe, and the refusal would arrive as a
+// capture that failed to load rather than as an explanation. The caller is
+// supposed to have decided already; this is the second guard.
+func TestTwoPassIsNotAskedForOnAStream(t *testing.T) {
+	c := MakeCommands(nil, nil, nil, nil, false)
+	c.TwoPass = true
+
+	got := args(t, c.Psml(strings.NewReader(""), ""))
+
+	assert.NotContains(t, got, "-2")
+	assert.Contains(t, got, "-l", "a stream is still read as it arrives")
+}
+
+//======================================================================
 // Local Variables:
 // mode: Go
 // fill-column: 78

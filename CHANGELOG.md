@@ -95,6 +95,16 @@
   existing capture contains DNS, and a fixture nobody can regenerate is one
   nobody can extend.
 
+- **`--two-pass`**, and `two-pass` in the configuration file. Some of what
+  `tshark` knows about a packet depends on the packets after it: a request
+  cannot say which frame answered it until that frame has been read. Off by
+  default, and measured before deciding — in two-pass mode `tshark` prints
+  nothing until it has read the whole file, so on 376,000 packets the first
+  packet took 2.7 seconds to appear instead of 0.36, growing with the file,
+  for 8% more total time. Asked for on a live capture or a pipe, which cannot
+  be read twice, `pcaptui` says so and carries on with one pass rather than
+  leaving the missing fields to look like a capture that has none.
+
 ### Changed
 
 - **A million packets carry 1.9 MB of colour instead of 115 MB.** Measured

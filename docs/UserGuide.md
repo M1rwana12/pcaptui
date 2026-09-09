@@ -16,6 +16,7 @@
 - [HTTP](#http)
 - [DNS](#dns)
 - [Decrypting TLS](#decrypting-tls)
+- [Two-pass analysis](#two-pass-analysis)
 - [Columns](#columns)
 - [The command line](#the-command-line)
 - [Configuration](#configuration)
@@ -367,6 +368,39 @@ like traffic whose keys you never had, which is the worst way for this
 particular feature to fail. An existing but empty file is fine: the browser
 creates the log when it starts and fills it in as sessions are negotiated.
 
+## Two-pass analysis
+
+```bash
+pcaptui --two-pass -r traffic.pcap
+```
+
+or, in the configuration file:
+
+```toml
+[main]
+  two-pass = true
+```
+
+Some of what `tshark` can tell you about a packet is only knowable once it has
+seen the packets after it. A request cannot say which frame answered it until
+that frame has been read. Reading the file twice fills those in.
+
+Off by default, because of what it costs. In two-pass mode `tshark` prints
+nothing at all until it has read the whole file: measured on a capture of
+376,000 packets, the first packet took 2.7 seconds to appear instead of 0.36,
+and that gap grows with the file. The total time is only about 8% longer — it
+is the wait for the first packet that changes, and packets on screen
+immediately is what `pcaptui` is for.
+
+What it does not change: the fields that point backwards. A response already
+knows how long it took and which request it belongs to, because that packet has
+been read by the time the response arrives.
+
+It needs a file. `tshark` cannot read a pipe twice, and a live capture is being
+written while it is read — reading it twice would mean reading two different
+things. Asked for one of those, `pcaptui` says so and carries on with one pass,
+rather than leaving you to wonder why the fields you asked for are missing.
+
 ## Columns
 
 `:columns`, or **Edit Columns** in the Misc menu.
@@ -456,6 +490,7 @@ laptop; raise them if you routinely open very large captures and have the room.
 | Key | |
 |---|---|
 | `tls-keylog` | TLS key log file, as `--tls-keylog` |
+| `two-pass` | read the file twice, as `--two-pass` |
 | `auto-scroll` | follow a live capture as packets arrive |
 | `packet-colors` | colour the packet list using Wireshark's rules |
 | `dark-mode` | start in dark mode |

@@ -15,6 +15,7 @@ import (
 	"github.com/kballard/go-shellquote"
 	"github.com/m1rwana12/pcaptui"
 	"github.com/m1rwana12/pcaptui/configs/profiles"
+	"github.com/m1rwana12/pcaptui/pkg/cli"
 	"github.com/m1rwana12/pcaptui/pkg/shark"
 	"github.com/m1rwana12/pcaptui/pkg/summary"
 )
@@ -113,6 +114,17 @@ type Commands struct {
 	PdmlArgs []string
 	PsmlArgs []string
 	Color    bool
+	// TwoPass asks tshark to read the capture twice, so that the fields which
+	// point forwards are filled in. Measured on a request and its answer: with
+	// one pass the request has no http.response_in at all, and with two it
+	// names the frame that answered it. The ones that point backwards - the
+	// response saying how long it took, and which request it belongs to - are
+	// there either way, because that packet has already been read.
+	//
+	// Only ever set for a file the user named. tshark refuses it outright on a
+	// pipe, and on a live capture it would mean reading a file that is still
+	// being written. The caller decides; these commands only carry it.
+	TwoPass bool
 }
 
 func MakeCommands(decodeAs []string, args []string, pdml []string, psml []string, color bool) Commands {
@@ -197,6 +209,12 @@ func (c Commands) Psml(pcap interface{}, displayFilter string) IPcapCommand {
 	if !fifo {
 		// read from cmdline file
 		args = append(args, "-r", pcap.(string))
+		if c.TwoPass {
+			// Guarded by the fifo check as well as by the caller: tshark
+			// refuses two-pass mode on a pipe, and the refusal would arrive
+			// as a failed load rather than as an explanation.
+			args = append(args, cli.TwoPassArg)
+		}
 	} else {
 		args = append(args, "-r", "-")
 		args = append(args, "-l") // provide data sooner to decoder routine in pcaptui
@@ -232,6 +250,9 @@ func (c Commands) Psml(pcap interface{}, displayFilter string) IPcapCommand {
 func (c Commands) Pcap(pcap string, displayFilter string) IPcapCommand {
 	// need to use stdout and -w - otherwise, tshark writes one-line text output
 	args := []string{"-r", pcap, "-x"}
+	if c.TwoPass {
+		args = append(args, cli.TwoPassArg)
+	}
 	if displayFilter != "" {
 		args = append(args, "-Y", displayFilter)
 	}
@@ -241,6 +262,9 @@ func (c Commands) Pcap(pcap string, displayFilter string) IPcapCommand {
 
 func (c Commands) Pdml(pcap string, displayFilter string) IPcapCommand {
 	args := []string{"-T", "pdml", "-r", pcap}
+	if c.TwoPass {
+		args = append(args, cli.TwoPassArg)
+	}
 	if c.Color {
 		args = append(args, "--color")
 	}

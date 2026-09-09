@@ -106,6 +106,23 @@ func TestTsharkArgsIgnoresATrailingKeylogFlagWithNoValue(t *testing.T) {
 }
 
 //======================================================================
+
+// --two-pass is pcaptui's spelling of a flag tshark has, so in pass-thru it is
+// translated rather than dropped: a pipeline should behave the way the
+// terminal does.
+func TestTwoPassBecomesTsharksOwnFlag(t *testing.T) {
+	got := TsharkArgs([]string{"--two-pass", "-r", "foo.pcap"})
+
+	assert.Equal(t, []string{"-2", "-r", "foo.pcap"}, got)
+}
+
+func TestWithoutTwoPassNothingIsAdded(t *testing.T) {
+	got := TsharkArgs([]string{"-r", "foo.pcap"})
+
+	assert.NotContains(t, got, "-2")
+}
+
+//======================================================================
 // Local Variables:
 // mode: Go
 // fill-column: 78
