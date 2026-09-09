@@ -33,6 +33,13 @@
 
 ### Changed
 
+- **The conversations parser is a function, and has tests.** It was fused to
+  the widget construction around it and could not be called on its own, so the
+  one test near it called no program code at all — it re-implemented the parse
+  inline, and its format string had stopped matching the real one. That is
+  where every IPv6 conversation was being dropped, for as long as the parser
+  existed.
+
 - **The Overview fills the screen it is given.** Each section was cut to four
   rows whatever the terminal, so a tall one showed four rows and then blank
   space above the Close button. The limit now comes from the height of the

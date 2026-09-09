@@ -804,21 +804,6 @@ func (w *ConvsUiWidget) OnData(data string, app gowid.IApp) {
 	var next string
 	var ports bool = false
 
-	var (
-		addra      string
-		porta      string
-		addrb      string
-		portb      string
-		framesto   string
-		bytesto    string
-		framesfrom string
-		bytesfrom  string
-		frames     string
-		bytes      string
-		start      string
-		durn       string
-	)
-
 	var datas [][]string
 
 	saveConversation := func(cur string) {
@@ -1012,47 +997,8 @@ func (w *ConvsUiWidget) OnData(data string, app gowid.IApp) {
 			continue
 		}
 
-		line = strings.Replace(line, " bytes", "", -1)
-		line = strings.Replace(line, "bytes", "", -1)
-		line = strings.Replace(line, " kB", "kB", -1)
-		line = strings.Replace(line, " MB", "MB", -1)
-		r = strings.NewReader(line)
-		// tshark prints the columns in this order:
-		//
-		//   addrA <-> addrB   <-Frames <-Bytes   ->Frames ->Bytes   Total   Start Duration
-		//
-		// so the first pair is B->A, the second is A->B, and the third is the
-		// total. The variable names below are the ones this code has always
-		// used and they read backwards - framesto holds the <- figure - which
-		// is how the total and the B->A column came to be swapped in the table.
-		n, err = fmt.Fscanf(r, "%s <-> %s %s %s %s %s %s %s %s %s",
-			&addra,
-			&addrb,
-			&framesto, // <- , that is B->A
-			&bytesto,
-			&framesfrom, // -> , that is A->B
-			&bytesfrom,
-			&frames, // total
-			&bytes,
-			&start,
-			&durn,
-		)
-		if err == nil && n == 10 {
-			bytesto = strings.Replace(bytesto, "kB", " kB", -1)
-			bytesfrom = strings.Replace(bytesfrom, "kB", " kB", -1)
-			bytes = strings.Replace(bytes, "kB", " kB", -1)
-			bytesto = strings.Replace(bytesto, "MB", " MB", -1)
-			bytesfrom = strings.Replace(bytesfrom, "MB", " MB", -1)
-			bytes = strings.Replace(bytes, "MB", " MB", -1)
-			if ports {
-				addra, porta = splitHostPort(addra)
-				addrb, portb = splitHostPort(addrb)
-				// Columns are Pkts, Bytes, Pkts A->B, Bytes A->B, Pkts B->A, Bytes B->A:
-				// the total first, then each direction.
-				datas = append(datas, []string{addra, porta, addrb, portb, frames, bytes, framesfrom, bytesfrom, framesto, bytesto, start, durn})
-			} else {
-				datas = append(datas, []string{addra, addrb, frames, bytes, framesfrom, bytesfrom, framesto, bytesto, start, durn})
-			}
+		if row, ok := parseConvLine(line, ports); ok {
+			datas = append(datas, row.cells(ports))
 		}
 	}
 
