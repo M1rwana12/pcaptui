@@ -1,5 +1,30 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- **Expert Information is readable on a real capture.** Wireshark reports some
+  items once per occurrence with a counter in the text, and the tap reports
+  each of those as a separate kind of problem: on a capture of 376,832 packets
+  `tshark -z expert` printed 4,108 rows, of which 4,095 were
+  `Duplicate ACK (#n)`. Thirteen facts arriving as four thousand lines, with
+  the Overview summarising them as "and 4104 more" — which reads as four
+  thousand distinct problems.
+
+  Those rows now fold into one, counting `143,325` under
+  `Duplicate ACK (#1-#4095)`, and Enter on it filters the packet list to every
+  one of them. The Overview now says "and 10 more".
+
+- **The per-severity totals are shown.** `tshark` states them in its section
+  headings — `Notes (430012)` — and the program had been reading them and
+  throwing the number away. The dialog now opens with
+  `20,481 errors · 430,012 notes · 16,384 chats`.
+
+- **Every table groups its digits the same way.** The Overview printed
+  `frame 7 1027` six lines above `192.0.2.10 7 1,027` — one quantity, two
+  spellings, in one dialog.
+
 ## [1.1.0] - 2026-09-09
 
 ### Added

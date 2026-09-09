@@ -20,7 +20,13 @@ import (
 // rows have to be one flat list for any of them to be selectable, and a row
 // that has floated away from its heading has to carry its severity with it.
 // Order is kept as tshark gives it, which is worst first.
-func expertLines(rows []stats.ExpertRow) statsView {
+//
+// The numbered rows are folded first. Without that, a capture of 376,832
+// packets opened on 4,108 rows of which 4,095 said "Duplicate ACK (#n)" - the
+// four that mattered were at the top and nothing on screen said the rest were
+// one fact repeated.
+func expertLines(rows []stats.ExpertRow, totals []stats.SeverityTotal) statsView {
+	rows = stats.CollapseNumbered(rows)
 	if len(rows) == 0 {
 		return statsView{}
 	}
@@ -30,7 +36,7 @@ func expertLines(rows []stats.ExpertRow) statsView {
 		sevw = max(sevw, len(severityLabel(r.Severity)))
 		grpw = max(grpw, len(r.Group))
 		prow = max(prow, len(r.Protocol))
-		cntw = max(cntw, len(fmt.Sprintf("%d", r.Count)))
+		cntw = max(cntw, len(groupDigits(r.Count)))
 	}
 
 	line := func(sev, grp, pro, cnt, sum string) string {
@@ -42,7 +48,7 @@ func expertLines(rows []stats.ExpertRow) statsView {
 	for _, r := range rows {
 		v.Rows = append(v.Rows, statsLine{
 			Text: line(severityLabel(r.Severity), r.Group, r.Protocol,
-				fmt.Sprintf("%d", r.Count), r.Summary),
+				groupDigits(r.Count), expertSummary(r)),
 			Filter: r.DisplayFilter(),
 		})
 	}
@@ -50,7 +56,45 @@ func expertLines(rows []stats.ExpertRow) statsView {
 	titles := line("Severity", "Group", "Protocol", "Count", "Summary")
 	v.Header = []string{titles, rule(titles, v.Rows)}
 
+	// tshark states the per-severity totals in its section headings and this
+	// program read them and threw them away, so a capture with 430,012
+	// note-level events said nothing resembling that anywhere.
+	if line := severityTotals(totals); line != "" {
+		v.Header = append([]string{line, ""}, v.Header...)
+	}
+
 	return v
+}
+
+// expertSummary says when a row stands for a family rather than one message,
+// and which numbers it covers - "Duplicate ACK (#1-#4095)". A folded count
+// with no sign that it was folded would read as one problem seen that often.
+func expertSummary(r stats.ExpertRow) string {
+	if r.Merged > 1 {
+		return fmt.Sprintf("%s (#%d-#%d)", r.Summary, r.FirstNum, r.LastNum)
+	}
+	return r.Summary
+}
+
+// severityTotals is the line tshark already knew and the program did not say.
+func severityTotals(totals []stats.SeverityTotal) string {
+	parts := make([]string, 0, len(totals))
+	for _, t := range totals {
+		if t.Count == 0 {
+			continue
+		}
+		parts = append(parts, fmt.Sprintf("%s %s", groupDigits(t.Count), severityPlural(t.Severity)))
+	}
+	return strings.Join(parts, " · ")
+}
+
+// severityPlural reads as a quantity of things rather than as tshark's own
+// section name: "16,384 chats", not "16,384 Chats".
+func severityPlural(s string) string {
+	if s == "Warns" {
+		return "warnings"
+	}
+	return strings.ToLower(s)
 }
 
 // severityLabel drops tshark's plural. A column of "Errors / Errors / Notes"
@@ -81,7 +125,7 @@ func hierarchyLines(rows []stats.HierarchyRow) statsView {
 	namew, framew := len("Protocol"), len("Frames")
 	for _, r := range rows {
 		namew = max(namew, 2*r.Depth+len(r.Protocol))
-		framew = max(framew, len(fmt.Sprintf("%d", r.Frames)))
+		framew = max(framew, len(groupDigits(r.Frames)))
 	}
 
 	line := func(name, frames, bytes string) string {
@@ -93,8 +137,11 @@ func hierarchyLines(rows []stats.HierarchyRow) statsView {
 		v.Rows = append(v.Rows, statsLine{
 			Text: line(
 				strings.Repeat(" ", 2*r.Depth)+r.Protocol,
-				fmt.Sprintf("%d", r.Frames),
-				fmt.Sprintf("%d", r.Bytes),
+				// Grouped like every other table here. The overview used to print
+				// "frame 7 1027" six lines above "192.0.2.10 7 1,027" - the same
+				// quantity in two spellings, in one dialog.
+				groupDigits(r.Frames),
+				groupDigits(r.Bytes),
 			),
 			Filter: r.DisplayFilter(),
 		})
@@ -296,7 +343,7 @@ func overviewLines(out string) statsView {
 		}
 	}
 
-	add("What is wrong", expertLines(stats.ParseExpert(out)),
+	add("What is wrong", expertLines(stats.ParseExpert(out), nil),
 		"Nothing the dissectors object to.")
 	add("What is in it", hierarchyLines(stats.ParseHierarchy(out)),
 		"No protocols reported.")

@@ -22,6 +22,13 @@ type ExpertRow struct {
 	Group    string // Sequence, Protocol, Malformed, Checksum, ...
 	Protocol string
 	Summary  string
+
+	// Merged is how many of tshark's numbered rows this one stands for, and
+	// FirstNum/LastNum are the lowest and highest of those numbers. Zero for
+	// a row that arrived as itself. See CollapseNumbered.
+	Merged   int
+	FirstNum int
+	LastNum  int
 }
 
 // DisplayFilter is an expression matching the packets this row is about.
@@ -31,6 +38,18 @@ type ExpertRow struct {
 // the text, and Wireshark exposes that as a filterable field - so the row
 // turns into a question the packet list can answer.
 func (r ExpertRow) DisplayFilter() string {
+	if r.Merged > 1 {
+		// A folded row stands for every numbered variant of its text, so it
+		// has to select all of them. If the text cannot be written as a regex
+		// this filter language accepts, the row offers the one exact message
+		// it can name rather than a filter that means something else.
+		if filter, ok := mergedFilter(r.Summary); ok {
+			return filter
+		}
+		return fmt.Sprintf("_ws.expert.message == %s",
+			quoteFilterString(fmt.Sprintf("%s (#%d)", r.Summary, r.FirstNum)))
+	}
+
 	return fmt.Sprintf("_ws.expert.message == %s", quoteFilterString(r.Summary))
 }
 

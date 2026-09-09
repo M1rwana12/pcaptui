@@ -190,7 +190,7 @@ func (t *statsParseHandler) view() statsView {
 		body := overviewLines(t.data)
 		v.Header, v.Rows = body.Header, body.Rows
 	case stats.Expert.Command:
-		body := expertLines(stats.ParseExpert(t.data))
+		body := expertLines(stats.ParseExpert(t.data), stats.ExpertTotals(t.data))
 		v.Header, v.Rows = body.Header, body.Rows
 	case stats.ProtoHierarchy.Command:
 		body := hierarchyLines(stats.ParseHierarchy(t.data))

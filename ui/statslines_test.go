@@ -4,6 +4,7 @@
 package ui
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -26,7 +27,7 @@ func someExpertRows() []stats.ExpertRow {
 }
 
 func TestEveryExpertRowIsSelectable(t *testing.T) {
-	v := expertLines(someExpertRows())
+	v := expertLines(someExpertRows(), nil)
 
 	require.Len(t, v.Rows, 3)
 	for i, r := range v.Rows {
@@ -38,7 +39,7 @@ func TestEveryExpertRowIsSelectable(t *testing.T) {
 // sections into one list is what makes the rows selectable, so each row has to
 // carry its own severity or the flattening loses it.
 func TestASeverityTravelsWithItsRow(t *testing.T) {
-	v := expertLines(someExpertRows())
+	v := expertLines(someExpertRows(), nil)
 
 	assert.Contains(t, v.Rows[0].Text, "Error")
 	assert.Contains(t, v.Rows[2].Text, "Note")
@@ -47,14 +48,14 @@ func TestASeverityTravelsWithItsRow(t *testing.T) {
 // "Errors" over a column of single rows reads as a tally. The column says what
 // one row is.
 func TestTheSeverityColumnIsSingular(t *testing.T) {
-	v := expertLines(someExpertRows())
+	v := expertLines(someExpertRows(), nil)
 
 	assert.NotContains(t, v.Rows[0].Text, "Errors")
 	assert.NotContains(t, v.Rows[2].Text, "Notes")
 }
 
 func TestTheColumnTitlesAreAHeaderNotARow(t *testing.T) {
-	v := expertLines(someExpertRows())
+	v := expertLines(someExpertRows(), nil)
 
 	require.Len(t, v.Header, 2)
 	assert.Contains(t, v.Header[0], "Severity")
@@ -66,7 +67,7 @@ func TestTheColumnTitlesAreAHeaderNotARow(t *testing.T) {
 }
 
 func TestColumnsLineUp(t *testing.T) {
-	v := expertLines(someExpertRows())
+	v := expertLines(someExpertRows(), nil)
 
 	at := strings.Index(v.Rows[0].Text, "IPv4 total length")
 	require.Positive(t, at)
@@ -79,7 +80,7 @@ func TestColumnsLineUp(t *testing.T) {
 // A rule that stops after the titles leaves most of the table with nothing
 // under it, because the last column is free text and much the widest.
 func TestTheRuleSpansTheWidestLine(t *testing.T) {
-	v := expertLines(someExpertRows())
+	v := expertLines(someExpertRows(), nil)
 
 	widest := len([]rune(v.Header[0]))
 	for _, r := range v.Rows {
@@ -92,7 +93,7 @@ func TestTheRuleSpansTheWidestLine(t *testing.T) {
 }
 
 func TestNoRowsIsAnEmptyView(t *testing.T) {
-	assert.True(t, expertLines(nil).empty())
+	assert.True(t, expertLines(nil, nil).empty())
 	assert.True(t, hierarchyLines(nil).empty())
 }
 
@@ -468,6 +469,74 @@ func TestACaptureWithNoDNSIsAnEmptyView(t *testing.T) {
 
 	assert.True(t, dnsLines(rows).empty())
 	assert.True(t, dnsLines(nil).empty())
+}
+
+//======================================================================
+
+func someNumberedRows() []stats.ExpertRow {
+	rows := []stats.ExpertRow{
+		{Severity: "Errors", Count: 20480, Group: "Protocol", Protocol: "IPv4",
+			Summary: "IPv4 total length exceeds packet length (52 bytes)"},
+	}
+	for i := 1; i <= 4095; i++ {
+		rows = append(rows, stats.ExpertRow{
+			Severity: "Notes", Count: 35, Group: "Sequence", Protocol: "TCP",
+			Summary: fmt.Sprintf("Duplicate ACK (#%d)", i),
+		})
+	}
+	return rows
+}
+
+// A capture of 376,832 packets opened on 4,108 rows, 4,095 of which were one
+// fact repeated with a counter in the text.
+func TestTheNumberedRowsArriveAsOne(t *testing.T) {
+	v := expertLines(someNumberedRows(), nil)
+
+	require.Len(t, v.Rows, 2)
+	assert.Contains(t, v.Rows[1].Text, "Duplicate ACK (#1-#4095)",
+		"a folded count with no sign it was folded reads as one problem seen that often")
+	assert.Contains(t, v.Rows[1].Text, "143,325")
+}
+
+func TestAFoldedRowIsStillSelectable(t *testing.T) {
+	v := expertLines(someNumberedRows(), nil)
+
+	assert.Equal(t,
+		`_ws.expert.message matches "^Duplicate ACK [(]#[0-9]+[)]$"`,
+		v.Rows[1].Filter)
+	assert.True(t, v.Rows[1].actionable())
+}
+
+// tshark counts these in its section headings, and the program used to read
+// them and drop them.
+func TestTheSeverityTotalsAreShown(t *testing.T) {
+	v := expertLines(someExpertRows(), []stats.SeverityTotal{
+		{Severity: "Errors", Count: 20481},
+		{Severity: "Warns", Count: 3},
+		{Severity: "Notes", Count: 430012},
+	})
+
+	require.NotEmpty(t, v.Header)
+	assert.Equal(t, "20,481 errors · 3 warnings · 430,012 notes", v.Header[0])
+}
+
+func TestWithNoTotalsThereIsNoTotalsLine(t *testing.T) {
+	v := expertLines(someExpertRows(), nil)
+
+	require.NotEmpty(t, v.Header)
+	assert.Contains(t, v.Header[0], "Severity", "the column titles come first")
+}
+
+// The same quantity was printed two ways in one dialog: the hierarchy with
+// %d and everything else grouped.
+func TestEveryTableGroupsItsDigits(t *testing.T) {
+	hier := hierarchyLines([]stats.HierarchyRow{
+		{Depth: 0, Protocol: "frame", Frames: 376832, Bytes: 44483480},
+	})
+
+	require.Len(t, hier.Rows, 1)
+	assert.Contains(t, hier.Rows[0].Text, "376,832")
+	assert.Contains(t, hier.Rows[0].Text, "44,483,480")
 }
 
 //======================================================================
