@@ -1458,6 +1458,11 @@ func lastLineMode(app gowid.IApp) {
 		return nil
 	}))
 
+	MiniBuffer.Register("export", minibufferFn(func(gowid.IApp, ...string) error {
+		openExportObjects(app)
+		return nil
+	}))
+
 	for _, stat := range stats.All {
 		MiniBuffer.Register(stat.Command, minibufferFn(func(gowid.IApp, ...string) error {
 			startStats(stat, app)

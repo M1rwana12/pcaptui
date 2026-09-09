@@ -17,6 +17,7 @@
 - [DNS](#dns)
 - [Decrypting TLS](#decrypting-tls)
 - [Two-pass analysis](#two-pass-analysis)
+- [Exporting objects](#exporting-objects)
 - [Columns](#columns)
 - [The command line](#the-command-line)
 - [Configuration](#configuration)
@@ -400,6 +401,31 @@ It needs a file. `tshark` cannot read a pipe twice, and a live capture is being
 written while it is read — reading it twice would mean reading two different
 things. Asked for one of those, `pcaptui` says so and carries on with one pass,
 rather than leaving you to wonder why the fields you asked for are missing.
+
+## Exporting objects
+
+`x`, `:export`, or **Export objects** in the Analysis menu.
+
+The files a capture carried — a page fetched over HTTP, a mail body, a block
+copied over SMB — written out to disk. Choose the kind and `pcaptui` says how
+many it wrote and where.
+
+The kinds on offer come from your `tshark` rather than from a list inside
+`pcaptui`, because which ones exist depends on the Wireshark version installed.
+
+The files go under `pcaptui`'s own directory, in a folder named after the
+capture, the kind and the time — not beside the capture, which is often
+somewhere you cannot write, and not into one shared folder, so that two exports
+never look like one. The dialog names the folder when it is done.
+
+The whole capture is exported, not the display filter. An object is
+reassembled from the packets carrying it, and a filter that hid some of them
+would write a file that is quietly short.
+
+`tshark` says nothing about what it wrote and exits successfully either way,
+so `pcaptui` reads the folder before and after and reports the difference.
+"No http objects in this capture" is a real answer, and looks different from
+having written some.
 
 ## Columns
 

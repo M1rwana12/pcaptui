@@ -105,6 +105,15 @@
   be read twice, `pcaptui` says so and carries on with one pass rather than
   leaving the missing fields to look like a capture that has none.
 
+- **Export objects** — `x`, `:export`, or the Analysis menu. The files a
+  capture carried — a page fetched over HTTP, a mail body, a block copied over
+  SMB — written out to disk, with a count and the folder they went to. The
+  kinds on offer come from your `tshark`, not from a list inside `pcaptui`, so
+  they match the Wireshark you have. `tshark` says nothing about what it wrote
+  and exits successfully either way, so `pcaptui` reads the folder before and
+  after: "no http objects in this capture" is a real answer and looks different
+  from having written some.
+
 ### Changed
 
 - **A million packets carry 1.9 MB of colour instead of 115 MB.** Measured

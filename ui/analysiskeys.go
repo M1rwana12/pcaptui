@@ -53,6 +53,12 @@ func analysisViews() []analysisView {
 			Summary: "Who talked to whom, by packets and bytes",
 			Open:    openConvsUi,
 		},
+		{
+			Key:     'x',
+			Name:    "Export objects",
+			Summary: "Write the files this capture carried out to disk",
+			Open:    openExportObjects,
+		},
 	}
 
 	for _, stat := range stats.All {

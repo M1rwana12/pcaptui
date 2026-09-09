@@ -71,7 +71,7 @@ tcpdump -w - port 53 | pcaptui -r -
 
 ## Аналіз
 
-Девʼять виглядів, по клавіші на кожен — та сама літера стоїть біля них у меню Analysis.
+Десять виглядів, по клавіші на кожен — та сама літера стоїть біля них у меню Analysis.
 
 | Клавіша | | |
 |---|---|---|
@@ -84,6 +84,7 @@ tcpdump -w - port 53 | pcaptui -r -
 | `v` | Conversations | хто з ким говорив, у пакетах і байтах |
 | `s` | Reassemble stream | зібрати потік, до якого належить пакет |
 | `p` | Capture file properties | розмір, тривалість, інкапсуляція, хеші |
+| `x` | Export objects | записати на диск файли, які ніс цей захват |
 
 <p align="center">
   <img src=".github/assets/screenshot-expert.svg" alt="Expert Information повідомляє про підозру на ретрансмісію" width="100%">

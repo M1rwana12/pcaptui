@@ -71,7 +71,7 @@ statistic that matched nothing says so in words instead of opening an empty box.
 
 ## Analysis
 
-Nine views, one key each — the same key that appears beside them in the Analysis
+Ten views, one key each — the same key that appears beside them in the Analysis
 menu.
 
 | Key | | |
@@ -85,6 +85,7 @@ menu.
 | `v` | Conversations | who talked to whom, by packets and bytes |
 | `s` | Reassemble stream | follow the conversation this packet is in |
 | `p` | Capture file properties | size, duration, encapsulation, hashes |
+| `x` | Export objects | write the files this capture carried out to disk |
 
 <p align="center">
   <img src=".github/assets/screenshot-expert.svg" alt="Expert Information, reporting a suspected retransmission" width="100%">
