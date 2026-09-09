@@ -450,6 +450,55 @@ func TestTheOverviewPassCarriesBothFamilies(t *testing.T) {
 }
 
 //======================================================================
+
+// One HTTP request carrying Basic authentication - see make-creds.sh beside
+// it. No other capture here contains a login.
+const credsPcap = "../../scripts/pcaps/creds.pcap"
+
+func TestALoginInTheClearIsFound(t *testing.T) {
+	out := runStatOn(t, credsPcap, Credentials, "")
+	rows := ParseCredentials(out)
+
+	require.Len(t, rows, 1, "raw output:\n%s", out)
+	assert.Equal(t, 1, rows[0].Packet)
+	assert.Contains(t, rows[0].Protocol, "HTTP")
+	assert.Equal(t, "user", rows[0].Username)
+}
+
+// The row names a packet, so its filter has to land on exactly that one.
+func TestTheLoginsFilterFindsItsPacket(t *testing.T) {
+	out := runStatOn(t, credsPcap, Credentials, "")
+	rows := ParseCredentials(out)
+	require.NotEmpty(t, rows, "raw output:\n%s", out)
+
+	found := runFieldsQueryOn(t, credsPcap, rows[0].DisplayFilter(), "frame.number")
+
+	assert.Equal(t, []string{"1"}, strings.Fields(found))
+}
+
+// This is the measurement the ignoresFilter flag exists for, kept as a test so
+// that a future tshark quietly starting to honour the filter is noticed rather
+// than assumed.
+func TestTheCredentialsTapStillIgnoresAFilterItIsGiven(t *testing.T) {
+	cmd := MakeCommands().Stats(credsPcap, "credentials,frame.number == 999")
+
+	out, err := cmd.StdoutReader()
+	require.NoError(t, err)
+	require.NoError(t, cmd.Start())
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(out)
+	cmd.Wait()
+
+	rows := ParseCredentials(buf.String())
+
+	assert.Len(t, rows, 1,
+		"tshark still reports the login for a filter that excludes it. If this "+
+			"has changed, Credentials can stop setting ignoresFilter. Raw output:\n%s",
+		buf.String())
+}
+
+//======================================================================
 // Local Variables:
 // mode: Go
 // fill-column: 78

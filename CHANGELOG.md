@@ -4,6 +4,19 @@
 
 ### Added
 
+- **Credentials** — `a`, `:credentials`, or the Analysis menu. The logins
+  `tshark` can read in the clear: HTTP basic authentication, FTP, POP, IMAP,
+  SMTP and telnet. "This capture is carrying a password, here it is, and here
+  is the packet" is a stronger answer than most of what the other views give.
+
+  It is the only view whose rows name a packet, so Enter lands on that exact
+  frame rather than on everything matching some text.
+
+  It also ignores the display filter, and says so instead of pretending
+  otherwise: `tshark` accepts a filter for this tap, exits successfully and
+  reports the same logins anyway — measured with a filter that excludes every
+  packet in the file.
+
 - **The Overview says what the file is.** When it was captured, how long it
   covers, how many packets, how large, and whether a snapshot length cut the
   packets short. None of the three statistics answers *when*, and "this is a

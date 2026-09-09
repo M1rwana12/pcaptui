@@ -13,6 +13,7 @@
 - [Expert Information](#expert-information)
 - [Protocol Hierarchy](#protocol-hierarchy)
 - [Endpoints](#endpoints)
+- [Credentials](#credentials)
 - [HTTP](#http)
 - [DNS](#dns)
 - [Decrypting TLS](#decrypting-tls)
@@ -297,6 +298,27 @@ wire" is one keypress from "show me only them".
 Bytes rather than packets in the two direction columns: a host sending many
 small acknowledgements and one sending few large payloads look the same by
 packet count and nothing alike by volume.
+
+## Credentials
+
+`a`, `:credentials`, or **Credentials** in the Analysis menu.
+
+The logins `tshark` could read in the clear: HTTP basic authentication, FTP,
+POP, IMAP, SMTP and telnet. For a capture somebody has just handed you, "this
+one is carrying a password, here it is, and here is the packet" is a stronger
+answer than most of what the other views can give.
+
+It is the only one of these whose rows name a packet. Everything else counts
+occurrences and has to be turned back into a filter on its own text; here Enter
+lands on `frame.number == 14` — that exact frame.
+
+`a` for auth: `c` is taken by copy-mode.
+
+**It ignores the display filter, and says so.** `tshark` accepts a filter for
+this tap, exits successfully, and reports the same logins regardless — measured
+with a filter that excludes every packet in the file. So `pcaptui` does not
+pass one, and the heading says the result is the whole capture rather than
+naming a filter that had no effect.
 
 ## HTTP
 

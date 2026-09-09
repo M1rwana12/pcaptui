@@ -305,8 +305,18 @@ func rowTexts(v statsView) []string {
 // Both statistics honour the display filter. A reader who has forgotten what
 // is in the filter box would otherwise take a subset for the whole capture.
 func TestTheHeadingNamesTheFilterInForce(t *testing.T) {
-	assert.Equal(t, "Expert Information", statsHeading("Expert Information", ""))
-	assert.Contains(t, statsHeading("Expert Information", "tcp.port == 23"), "tcp.port == 23")
+	assert.Equal(t, "Expert Information", statsHeading("Expert Information", "", false))
+	assert.Contains(t, statsHeading("Expert Information", "tcp.port == 23", false), "tcp.port == 23")
+}
+
+// One tap takes a display filter and ignores it: measured, `-z credentials`
+// with a filter that excludes every packet still reports the login. Naming
+// that filter in the heading would be a plain untruth.
+func TestAFilterThatWasIgnoredIsNotClaimed(t *testing.T) {
+	got := statsHeading("Credentials", "tcp.port == 23", true)
+
+	assert.NotContains(t, got, "tcp.port == 23")
+	assert.Contains(t, got, "whole capture")
 }
 
 func TestAnEmptyResultSaysWhichKindOfEmpty(t *testing.T) {

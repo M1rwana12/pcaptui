@@ -229,13 +229,23 @@ func (t *statsParseHandler) AfterEnd(code pcap.HandlerCode, app gowid.IApp) {
 	t.stopSpinner()
 }
 
+// filterAsUsed is the filter that actually narrowed the result, which for a
+// tap that ignores one is none - so "nothing to report for this display
+// filter" is not said about a table the filter never touched.
+func (t *statsParseHandler) filterAsUsed() string {
+	if t.stat.IgnoresFilter() {
+		return ""
+	}
+	return t.filter
+}
+
 // view turns tshark's output into the dialog.
 //
 // A statistic narrowed by a filter that matches no packets prints absolutely
 // nothing - no header, no empty table - so no rows is a real answer and the
 // caller says so in words rather than opening an empty box.
 func (t *statsParseHandler) view() statsView {
-	v := statsView{Heading: statsHeading(t.stat.Name, t.filter)}
+	v := statsView{Heading: statsHeading(t.stat.Name, t.filter, t.stat.IgnoresFilter())}
 
 	if strings.TrimSpace(t.data) == "" {
 		return v
@@ -259,6 +269,9 @@ func (t *statsParseHandler) view() statsView {
 		v.Header, v.Rows = body.Header, body.Rows
 	case stats.DNS.Command:
 		body := dnsLines(stats.ParseTree(t.data))
+		v.Header, v.Rows = body.Header, body.Rows
+	case stats.Credentials.Command:
+		body := credentialLines(stats.ParseCredentials(t.data))
 		v.Header, v.Rows = body.Header, body.Rows
 	default:
 		// A statistic this package does not know how to lay out is still worth

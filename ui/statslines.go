@@ -200,6 +200,44 @@ func httpLines(rows []stats.TreeRow) statsView {
 
 //======================================================================
 
+// credentialLines lays out the logins tshark could read in the clear.
+//
+// The only table here whose rows name a packet, so the Packet column comes
+// first and Enter on a row lands on that exact frame rather than on everything
+// matching some text.
+func credentialLines(rows []stats.CredentialRow) statsView {
+	if len(rows) == 0 {
+		return statsView{}
+	}
+
+	pktw, prow, userw := len("Packet"), len("Protocol"), len("Username")
+	for _, r := range rows {
+		pktw = max(pktw, len(groupDigits(r.Packet)))
+		prow = max(prow, len(r.Protocol))
+		userw = max(userw, len(r.Username))
+	}
+
+	line := func(pkt, proto, user, info string) string {
+		return strings.TrimRight(fmt.Sprintf("%*s  %-*s  %-*s  %s",
+			pktw, pkt, prow, proto, userw, user, info), " ")
+	}
+
+	var v statsView
+	for _, r := range rows {
+		v.Rows = append(v.Rows, statsLine{
+			Text:   line(groupDigits(r.Packet), r.Protocol, r.Username, r.Info),
+			Filter: r.DisplayFilter(),
+		})
+	}
+
+	titles := line("Packet", "Protocol", "Username", "Info")
+	v.Header = []string{titles, rule(titles, v.Rows)}
+
+	return v
+}
+
+//======================================================================
+
 // dnsLines lays out the DNS statistics, keeping the indentation that says
 // which section a row belongs to - the same name appears in more than one.
 //
@@ -495,9 +533,15 @@ func max(a, b int) int {
 // The filter belongs in the title because both statistics honour it: a reader
 // who has forgotten what is in the filter box would otherwise take a subset
 // for the whole capture.
-func statsHeading(name string, filter string) string {
+func statsHeading(name string, filter string, ignoresFilter bool) string {
 	if filter == "" {
 		return name
+	}
+	if ignoresFilter {
+		// Saying "display filter: tcp" over a table computed from the whole
+		// capture would be a plain untruth. Measured on credentials: tshark
+		// takes the filter, exits zero and reports the same rows.
+		return fmt.Sprintf("%s  ·  the whole capture: this one ignores the display filter", name)
 	}
 	return fmt.Sprintf("%s  ·  display filter: %s", name, filter)
 }
