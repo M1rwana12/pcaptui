@@ -83,14 +83,18 @@ func severityTotals(totals []stats.SeverityTotal) string {
 		if t.Count == 0 {
 			continue
 		}
-		parts = append(parts, fmt.Sprintf("%s %s", groupDigits(t.Count), severityPlural(t.Severity)))
+		parts = append(parts, fmt.Sprintf("%s %s", groupDigits(t.Count), severityWord(t.Severity, t.Count)))
 	}
 	return strings.Join(parts, " · ")
 }
 
-// severityPlural reads as a quantity of things rather than as tshark's own
-// section name: "16,384 chats", not "16,384 Chats".
-func severityPlural(s string) string {
+// severityWord reads as a quantity of things rather than as tshark's own
+// section name: "16,384 chats", not "16,384 Chats" - and "1 note", because a
+// capture with one of them said "1 notes".
+func severityWord(s string, n int) string {
+	if n == 1 {
+		return strings.ToLower(severityLabel(s))
+	}
 	if s == "Warns" {
 		return "warnings"
 	}

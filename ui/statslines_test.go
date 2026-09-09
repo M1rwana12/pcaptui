@@ -520,6 +520,18 @@ func TestTheSeverityTotalsAreShown(t *testing.T) {
 	assert.Equal(t, "20,481 errors · 3 warnings · 430,012 notes", v.Header[0])
 }
 
+// A capture with one of something said "1 notes".
+func TestOneOfSomethingIsSingular(t *testing.T) {
+	v := expertLines(someExpertRows(), []stats.SeverityTotal{
+		{Severity: "Notes", Count: 1},
+		{Severity: "Warns", Count: 1},
+		{Severity: "Chats", Count: 3},
+	})
+
+	require.NotEmpty(t, v.Header)
+	assert.Equal(t, "1 note · 1 warning · 3 chats", v.Header[0])
+}
+
 func TestWithNoTotalsThereIsNoTotalsLine(t *testing.T) {
 	v := expertLines(someExpertRows(), nil)
 
