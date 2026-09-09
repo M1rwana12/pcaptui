@@ -132,6 +132,39 @@
 
 ### Fixed
 
+- **The hex pane was empty for every reassembled packet.** `tshark` labels each
+  data source when a packet has more than one — a reassembled TCP stream, a
+  decrypted TLS record, a decompressed body — and it labels the first one too.
+  The reader treated that first label as "a second source starts here" and
+  skipped the frame's own bytes. Measured on a two-segment HTTP response: the
+  first packet showed its 93 bytes and the second showed none.
+
+- **Every IPv6 conversation was missing from the Conversations table.**
+  `tshark` does not bracket IPv6, so one end reads `2001:db8::1:50000` — an
+  address with four colons of its own. The code split on every colon and
+  required exactly two pieces, so the row was dropped without a word. The tab
+  said `TCP (0)` on a capture with one IPv6 conversation in it.
+
+- **A statistic that failed said "Nothing to report for this capture."** The
+  handler had no `OnError`, so the error was type-asserted away and lost —
+  including `tshark`'s own explanation of which display filter field is wrong.
+  The Overview opens by itself on every capture, so that sentence had become
+  the program's answer to a failure it had been told about in detail.
+
+- **`--tls-keylog`, `-d` and `main.tshark-args` reached only the packet list.**
+  The four other loaders — statistics, stream reassembly, conversations, object
+  export — each built their own `tshark` command line from scratch and carried
+  none of them. So the key log decrypted the packet list while the reassembled
+  stream stayed ciphertext, which is the opposite of what the User Guide
+  promises; and `-d tcp.port==23,http` changed what the list said a packet was
+  without changing what the Protocol Hierarchy counted it as. Measured: the
+  hierarchy said `telnet 46 4670` before and `http 2 622` after.
+
+- **A third of the analysis views were missing from `:help cmdline`.** `http`,
+  `dns` and `export` all worked at the colon prompt and none was in the list
+  that exists to name them. The commands, the keys, the menu and both help
+  screens now come from one list.
+
 - **On an 8-colour terminal the hex pane never showed whether it had focus.**
   Three of its four highlights — the cursor byte, the protocol layer and the
   line-number gutter — were given the same colours focused and unfocused, so

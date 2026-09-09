@@ -40,12 +40,16 @@ var _ ILoaderCmds = commands{}
 
 func (c commands) Stream(pcapfile string, proto string, idx int) pcap.IPcapCommand {
 	args := []string{"-r", pcapfile, "-q", "-z", fmt.Sprintf("follow,%s,raw,%d", proto, idx)}
+	// Including the TLS key log, without which a reassembled stream is
+	// ciphertext - which the User Guide says it is not.
+	args = append(args, pcaptui.TsharkExtras()...)
 	return &pcap.Command{Cmd: exec.Command(pcaptui.TSharkBin(), args...)}
 }
 
 // startAt is zero-indexed
 func (c commands) Indexer(pcapfile string, proto string, idx int) pcap.IPcapCommand {
 	args := []string{"-T", "pdml", "-r", pcapfile, "-Y", fmt.Sprintf("%s.stream eq %d", proto, idx)}
+	args = append(args, pcaptui.TsharkExtras()...)
 	return &pcap.Command{Cmd: exec.Command(pcaptui.TSharkBin(), args...)}
 }
 

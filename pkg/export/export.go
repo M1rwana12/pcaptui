@@ -116,8 +116,7 @@ func Objects(pcapPath string, typ string, dir string) ([]string, error) {
 		return nil, err
 	}
 
-	cmd := exec.Command(pcaptui.TSharkBin(),
-		"-q", "-r", pcapPath, "--export-objects", typ+","+dir)
+	cmd := objectsCommand(pcapPath, typ, dir)
 
 	if out, err := cmd.CombinedOutput(); err != nil {
 		return nil, fmt.Errorf("%s could not export %s objects: %v\n%s",
@@ -130,6 +129,18 @@ func Objects(pcapPath string, typ string, dir string) ([]string, error) {
 	}
 
 	return added(before, after), nil
+}
+
+// objectsCommand is the tshark that does the writing.
+//
+// It carries the shared arguments - the decode-as rules, the TLS key log and
+// main.tshark-args - because the objects inside a decrypted session do not
+// exist without them, and a decode-as rule decides what a stream even is.
+func objectsCommand(pcapPath string, typ string, dir string) *exec.Cmd {
+	args := []string{"-q", "-r", pcapPath, "--export-objects", typ + "," + dir}
+	args = append(args, pcaptui.TsharkExtras()...)
+
+	return exec.Command(pcaptui.TSharkBin(), args...)
 }
 
 // names is the set of file names directly in dir.

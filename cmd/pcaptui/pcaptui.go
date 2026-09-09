@@ -958,6 +958,14 @@ func cmain() int {
 		log.Infof("Reading the capture twice; the first packet will take longer to appear")
 	}
 
+	// The same arguments the packet list is read with, for every other tshark
+	// pcaptui runs: the statistics, the stream reassembly, the conversations
+	// and the object export. Without this the key log decrypted the packet
+	// list and not the stream view, and a decode-as rule changed what the
+	// list said a packet was without changing what the protocol hierarchy
+	// counted it as.
+	pcaptui.SetTsharkExtras(opts.DecodeAs, tsharkArgs)
+
 	pcapCmds := pcap.MakeCommands(opts.DecodeAs, tsharkArgs, pdmlArgs, psmlArgs, ui.PacketColors)
 	pcapCmds.TwoPass = twoPass
 	pcap.PcapCmds = pcapCmds

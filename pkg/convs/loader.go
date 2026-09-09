@@ -49,6 +49,9 @@ func (c commands) Convs(pcapfile string, convs []string, filter string, abs bool
 			args[len(args)-1] = fmt.Sprintf("%s,%s", args[len(args)-1], filter)
 		}
 	}
+	// Decode-as rules, the TLS key log and main.tshark-args, so that the
+	// conversations are the ones the packet list is showing.
+	args = append(args, pcaptui.TsharkExtras()...)
 	return &pcap.Command{
 		Cmd: exec.Command(pcaptui.TSharkBin(), args...),
 	}

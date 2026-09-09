@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/m1rwana12/pcaptui"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -170,6 +171,20 @@ func TestEveryTypeTsharkOffersIsOneItAccepts(t *testing.T) {
 		_, err := Objects(demoPcap, typ, t.TempDir())
 		assert.NoError(t, err, "tshark offered %q and then refused it", typ)
 	}
+}
+
+// The objects inside a decrypted session do not exist without the key log, and
+// what counts as a stream at all depends on the decode-as rules.
+func TestTheExportCommandCarriesTheSharedArguments(t *testing.T) {
+	defer pcaptui.SetTsharkExtras(nil, nil)
+	pcaptui.SetTsharkExtras([]string{"tcp.port==8080,http"},
+		[]string{"-o", "tls.keylog_file:/keys"})
+
+	got := strings.Join(objectsCommand("capture.pcap", "http", "/tmp/out").Args[1:], " ")
+
+	assert.Contains(t, got, "-d tcp.port==8080,http")
+	assert.Contains(t, got, "-o tls.keylog_file:/keys")
+	assert.Contains(t, got, "--export-objects http,/tmp/out")
 }
 
 //======================================================================

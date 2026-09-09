@@ -49,6 +49,10 @@ func (c commands) Stats(pcapfile string, zargs ...string) pcap.IPcapCommand {
 		args = append(args, "-z", z)
 	}
 	args = append(args, "-r", pcapfile)
+	// Decode-as rules, the TLS key log and main.tshark-args. Without them a
+	// statistic answers a different question than the packet list does about
+	// the same capture.
+	args = append(args, pcaptui.TsharkExtras()...)
 
 	return &pcap.Command{
 		Cmd: exec.Command(pcaptui.TSharkBin(), args...),
