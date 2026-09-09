@@ -1,5 +1,5 @@
 === frame 1 ===
-pcaptui v1.0.0  |  telnet-cooked.pcap  |  92 packets                                        Analysis    Misc
+pcaptui v1.1.0  |  telnet-cooked.pcap  |  92 packets                                        Analysis    Misc
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃Filter:                                                                                    <Apply> <Recent> ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
@@ -28,7 +28,7 @@ pcaptui v1.0.0  |  telnet-cooked.pcap  |  92 packets                            
 
 
 === frame 2 ===
-pcaptui v1.0.0  |  telnet-cooked.pcap  |  92 packets                                        Analysis    Misc
+pcaptui v1.1.0  |  telnet-cooked.pcap  |  92 packets                                        Analysis    Misc
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃Filter:                                                                                    <Apply> <Recent> ┃
 ┗━━━━━▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜━━━━┛
@@ -57,7 +57,7 @@ pcaptui v1.0.0  |  telnet-cooked.pcap  |  92 packets                            
 
 
 === frame 3 ===
-pcaptui v1.0.0  |  telnet-cooked.pcap  |  92 packets                                        Analysis    Misc
+pcaptui v1.1.0  |  telnet-cooked.pcap  |  92 packets                                        Analysis    Misc
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃Filter:                                                                                    <Apply> <Recent> ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
@@ -86,7 +86,7 @@ pcaptui v1.0.0  |  telnet-cooked.pcap  |  92 packets                            
 
 
 === frame 4 ===
-pcaptui v1.0.0  |  telnet-cooked.pcap  |  92 packets                                        Analysis    Misc
+pcaptui v1.1.0  |  telnet-cooked.pcap  |  92 packets                                        Analysis    Misc
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃Filter:                                                                                    <Apply> <Recent> ┃
 ┗━━━━━▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜━━━━┛
@@ -115,7 +115,7 @@ pcaptui v1.0.0  |  telnet-cooked.pcap  |  92 packets                            
 
 
 === frame 5 ===
-pcaptui v1.0.0  |  telnet-cooked.pcap  |  5 packets · filtered                              Analysis    Misc
+pcaptui v1.1.0  |  telnet-cooked.pcap  |  5 packets · filtered                              Analysis    Misc
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃Filter: _ws.expert.message == "IPv4 total length exceeds packet length (52 bytes)"         <Apply> <Recent> ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛

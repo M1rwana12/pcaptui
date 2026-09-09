@@ -56,7 +56,7 @@
       <rect x="16.00" y="466.00" width="924.00" height="18.00" fill="#000000"/>
       <rect x="16.00" y="484.00" width="924.00" height="18.00" fill="#000000"/>
       <rect x="16.00" y="502.00" width="924.00" height="18.00" fill="#000000"/>
-      <text x="16.00" y="28.96" fill="#FF0000" xml:space="preserve">pcaptui v1.0.0</text>
+      <text x="16.00" y="28.96" fill="#FF0000" xml:space="preserve">pcaptui v1.1.0</text>
       <text x="133.60" y="28.96" fill="#FFFFFF" xml:space="preserve">  |  telnet-cooked.pcap  |  92 packets</text>
       <text x="772.00" y="28.96" fill="#000000" xml:space="preserve">  Analysis    Misc</text>
       <text x="16.00" y="46.96" fill="#FFFFFF" xml:space="preserve">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓</text>
@@ -186,7 +186,7 @@
       <rect x="16.00" y="466.00" width="924.00" height="18.00" fill="#000000"/>
       <rect x="16.00" y="484.00" width="924.00" height="18.00" fill="#000000"/>
       <rect x="16.00" y="502.00" width="924.00" height="18.00" fill="#000000"/>
-      <text x="16.00" y="28.96" fill="#FF0000" xml:space="preserve">pcaptui v1.0.0</text>
+      <text x="16.00" y="28.96" fill="#FF0000" xml:space="preserve">pcaptui v1.1.0</text>
       <text x="133.60" y="28.96" fill="#FFFFFF" xml:space="preserve">  |  telnet-cooked.pcap  |  92 packets</text>
       <text x="772.00" y="28.96" fill="#000000" xml:space="preserve">  Analysis    Misc</text>
       <text x="16.00" y="46.96" fill="#FFFFFF" xml:space="preserve">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓</text>
@@ -303,7 +303,7 @@
       <rect x="16.00" y="466.00" width="924.00" height="18.00" fill="#000000"/>
       <rect x="16.00" y="484.00" width="924.00" height="18.00" fill="#000000"/>
       <rect x="16.00" y="502.00" width="924.00" height="18.00" fill="#000000"/>
-      <text x="16.00" y="28.96" fill="#FF0000" xml:space="preserve">pcaptui v1.0.0</text>
+      <text x="16.00" y="28.96" fill="#FF0000" xml:space="preserve">pcaptui v1.1.0</text>
       <text x="133.60" y="28.96" fill="#FFFFFF" xml:space="preserve">  |  telnet-cooked.pcap  |  92 packets</text>
       <text x="772.00" y="28.96" fill="#000000" xml:space="preserve">  Analysis    Misc</text>
       <text x="16.00" y="46.96" fill="#FFFFFF" xml:space="preserve">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓</text>
@@ -433,7 +433,7 @@
       <rect x="16.00" y="466.00" width="924.00" height="18.00" fill="#000000"/>
       <rect x="16.00" y="484.00" width="924.00" height="18.00" fill="#000000"/>
       <rect x="16.00" y="502.00" width="924.00" height="18.00" fill="#000000"/>
-      <text x="16.00" y="28.96" fill="#FF0000" xml:space="preserve">pcaptui v1.0.0</text>
+      <text x="16.00" y="28.96" fill="#FF0000" xml:space="preserve">pcaptui v1.1.0</text>
       <text x="133.60" y="28.96" fill="#FFFFFF" xml:space="preserve">  |  telnet-cooked.pcap  |  92 packets</text>
       <text x="772.00" y="28.96" fill="#000000" xml:space="preserve">  Analysis    Misc</text>
       <text x="16.00" y="46.96" fill="#FFFFFF" xml:space="preserve">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓</text>
@@ -544,7 +544,7 @@
       <rect x="16.00" y="466.00" width="924.00" height="18.00" fill="#000000"/>
       <rect x="16.00" y="484.00" width="924.00" height="18.00" fill="#000000"/>
       <rect x="16.00" y="502.00" width="924.00" height="18.00" fill="#000000"/>
-      <text x="16.00" y="28.96" fill="#FF0000" xml:space="preserve">pcaptui v1.0.0</text>
+      <text x="16.00" y="28.96" fill="#FF0000" xml:space="preserve">pcaptui v1.1.0</text>
       <text x="133.60" y="28.96" fill="#FFFFFF" xml:space="preserve">  |  telnet-cooked.pcap  |  5 packets · filtered</text>
       <text x="772.00" y="28.96" fill="#000000" xml:space="preserve">  Analysis    Misc</text>
       <text x="16.00" y="46.96" fill="#FFFFFF" xml:space="preserve">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓</text>
