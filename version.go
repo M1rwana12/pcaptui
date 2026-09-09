@@ -5,7 +5,7 @@
 
 package pcaptui
 
-var Version string = "v1.0.0"
+var Version string = "v1.1.0"
 
 //======================================================================
 // Local Variables:
