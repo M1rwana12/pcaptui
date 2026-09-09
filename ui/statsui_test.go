@@ -111,6 +111,46 @@ func TestAnUnknownStatisticIsShownAsPlainLines(t *testing.T) {
 }
 
 //======================================================================
+
+// A statistic is one pass over the whole capture, and the overview starts one
+// by itself when a file loads: 11.6 s on a 44 MB capture here, and the
+// README's own pitch is a two-gigabyte one. The shared please-wait dialog has
+// no buttons, and Escape closed it without stopping anything - tshark went on
+// reading and the result opened over whatever the user had moved on to.
+func TestClosingTheWaitDialogStopsTheLoad(t *testing.T) {
+	stopped := 0
+	w := newStatsWait("Overview", func() { stopped++ })
+
+	// What the Cancel button and Escape both arrive at.
+	w.onClose()
+
+	assert.Equal(t, 1, stopped)
+}
+
+// The load that finished takes its own dialog down, and that must not be read
+// as the user asking for it to stop.
+func TestFinishingDoesNotLookLikeCancelling(t *testing.T) {
+	stopped := 0
+	w := newStatsWait("Overview", func() { stopped++ })
+
+	w.closing = true
+	w.onClose()
+
+	assert.Zero(t, stopped)
+}
+
+// close() on a dialog that was never opened does nothing at all, which is what
+// makes it safe to call from every ending path.
+func TestClosingWhatWasNeverOpenedIsHarmless(t *testing.T) {
+	stopped := 0
+	w := newStatsWait("Overview", func() { stopped++ })
+
+	w.close(nil)
+
+	assert.Zero(t, stopped)
+}
+
+//======================================================================
 // Local Variables:
 // mode: Go
 // fill-column: 78

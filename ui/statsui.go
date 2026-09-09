@@ -35,14 +35,18 @@ func startStats(stat stats.Stat, app gowid.IApp) {
 
 	filter := Loader.DisplayFilter()
 
-	StatsLoader = stats.NewLoader(stats.MakeCommands(), Loader.Context())
+	loader := stats.NewLoader(stats.MakeCommands(), Loader.Context())
+	StatsLoader = loader
 
-	StatsLoader.StartLoad(
-		Loader.PcapPdml,
-		stat.ZArgs(filter),
-		app,
-		&statsParseHandler{stat: stat, filter: filter},
-	)
+	h := &statsParseHandler{stat: stat, filter: filter}
+	h.wait = newStatsWait(stat.Name, func() {
+		// On the goroutine that draws, because it arrives from the dialog.
+		h.cancelled = true
+		loader.StopLoad()
+		log.Infof("Cancelled %s", stat.Name)
+	})
+
+	loader.StartLoad(Loader.PcapPdml, stat.ZArgs(filter), app, h)
 }
 
 //======================================================================
@@ -53,15 +57,18 @@ type statsParseHandler struct {
 
 	data string
 
-	// failed is set when tshark reported a problem, so that the dialog does
-	// not then claim there was nothing to report. Only ever touched inside
-	// app.Run, which is to say on the one goroutine that draws.
-	failed bool
+	wait *statsWait
 
-	tick             *time.Ticker // for updating the spinner
-	stop             chan struct{}
-	stopOnce         sync.Once
-	pleaseWaitClosed bool
+	// failed is set when tshark reported a problem, and cancelled when the
+	// user closed the wait dialog, so that neither outcome then claims there
+	// was nothing to report. Both are only ever touched inside app.Run, which
+	// is to say on the one goroutine that draws.
+	failed    bool
+	cancelled bool
+
+	tick     *time.Ticker // for updating the spinner
+	stop     chan struct{}
+	stopOnce sync.Once
 }
 
 // stopSpinner ends the goroutine that animates the please-wait spinner.
@@ -110,11 +117,13 @@ func (t *statsParseHandler) OnError(code pcap.HandlerCode, app gowid.IApp, err e
 	log.Error(err)
 
 	app.Run(gowid.RunFunction(func(app gowid.IApp) {
-		t.failed = true
-		if !t.pleaseWaitClosed {
-			t.pleaseWaitClosed = true
-			ClosePleaseWait(app)
+		if t.cancelled {
+			// tshark was killed on purpose; its complaint about that is not
+			// news to the person who did it.
+			return
 		}
+		t.failed = true
+		t.wait.close(app)
 		OpenError(fmt.Sprintf("%s\n\n%v", t.stat.Name, err), app)
 	}))
 }
@@ -124,7 +133,7 @@ func (t *statsParseHandler) BeforeBegin(code pcap.HandlerCode, app gowid.IApp) {
 		return
 	}
 	app.Run(gowid.RunFunction(func(app gowid.IApp) {
-		OpenPleaseWait(appView, app)
+		t.wait.open(app)
 	}))
 
 	t.tick = time.NewTicker(time.Duration(200) * time.Millisecond)
@@ -136,7 +145,7 @@ func (t *statsParseHandler) BeforeBegin(code pcap.HandlerCode, app gowid.IApp) {
 			select {
 			case <-t.tick.C:
 				app.Run(gowid.RunFunction(func(app gowid.IApp) {
-					pleaseWaitSpinner.Update()
+					t.wait.update()
 				}))
 			case <-t.stop:
 				break Loop
@@ -150,9 +159,12 @@ func (t *statsParseHandler) AfterEnd(code pcap.HandlerCode, app gowid.IApp) {
 		return
 	}
 	app.Run(gowid.RunFunction(func(app gowid.IApp) {
-		if !t.pleaseWaitClosed {
-			t.pleaseWaitClosed = true
-			ClosePleaseWait(app)
+		t.wait.close(app)
+
+		if t.cancelled {
+			// The user asked for this to stop. Opening the result now would
+			// land it on top of whatever they moved on to.
+			return
 		}
 
 		if t.failed {

@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **A statistic can be cancelled.** Every `-z` view is one pass over the whole
+  capture — measured here at 1.07 s for 2.8 MB, 3.51 s for 22 MB and 11.6 s for
+  44 MB, and the Overview starts one by itself when a file finishes loading.
+  The wait dialog had no buttons at all, and Escape closed it without stopping
+  anything: `tshark` went on reading and the result opened over whatever you
+  had moved on to. It now says Cancel, means it, and treats Escape the same
+  way.
+
 ### Fixed
 
 - **IPv6 hosts were invisible to Endpoints and to the Overview.** Both asked
