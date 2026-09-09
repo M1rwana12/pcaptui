@@ -14,6 +14,7 @@
 - [Protocol Hierarchy](#protocol-hierarchy)
 - [Endpoints](#endpoints)
 - [HTTP](#http)
+- [DNS](#dns)
 - [Decrypting TLS](#decrypting-tls)
 - [Columns](#columns)
 - [The command line](#the-command-line)
@@ -304,6 +305,31 @@ every status class it knows about, present or not, so a capture with three
 responses would otherwise be four useful lines under sixteen zeroes.
 
 `w` rather than `h`: `h` is one of the vim movement keys.
+
+## DNS
+
+`d`, `:dns`, or **DNS** in the Analysis menu.
+
+What was asked of DNS and how the answers turned out: how many lookups there
+were, what kinds of record they asked for, how the answers came back, and how
+long the server took.
+
+Enter on a row filters the packet list where a filter can say what the row
+means — the totals, the query/response split, the response codes, and the
+record types. The rest of the table is averages and lengths, and no display
+filter selects "the packets behind this average", so those rows are shown and
+not offered.
+
+One row does not agree with its own count, and cannot be made to. `tshark`
+reads the response-code bits of every DNS header, and a query carries a zero
+there, so two lookups report "No error" three times: both queries and the one
+good answer. The filter finds only the answer, because that is the only place
+Wireshark puts the field. The filter is the useful half — "show me the answers
+that failed" is the question being asked.
+
+Only what is in the capture is listed, and a heading `tshark` counts at zero
+stays if its own rows were counted — otherwise the statistics under it would
+be indented beneath nothing.
 
 ## Decrypting TLS
 

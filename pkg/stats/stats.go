@@ -6,7 +6,8 @@
 // tshark carries a large collection of analyses behind -z; pcaptui used only
 // conv,* for the conversations view and follow,* for stream reassembly. The
 // ones here answer the questions asked most often of a capture: what is in it,
-// what is wrong with it, who is on the wire, and how its HTTP turned out.
+// what is wrong with it, who is on the wire, and how its HTTP and DNS turned
+// out.
 package stats
 
 import "strings"
@@ -69,6 +70,7 @@ var (
 		Summary: "Who is on the wire, by packets and bytes",
 		zbase:   "endpoints,ip",
 	}
+
 	// HTTP counts the responses by status: how many succeeded, how many were
 	// not found, how many the server failed on. Wireshark shows it under
 	// Statistics > HTTP > Packet Counter.
@@ -80,6 +82,17 @@ var (
 		Key:     'w',
 		Summary: "How the HTTP responses in this capture turned out",
 		zbase:   "http,tree",
+	}
+
+	// DNS is what was asked for and how the answers turned out: how many
+	// lookups failed, with which code, and how long the server took.
+	// Wireshark shows it under Statistics > DNS.
+	DNS = Stat{
+		Name:    "DNS",
+		Command: "dns",
+		Key:     'd',
+		Summary: "What was asked of DNS and how the answers turned out",
+		zbase:   "dns,tree",
 	}
 
 	// Overview is the three of them at once: what is in the capture, what is
@@ -100,7 +113,7 @@ var (
 )
 
 // All is every statistic pcaptui offers, in the order they are presented.
-var All = []Stat{Overview, Expert, ProtoHierarchy, Endpoints, HTTP}
+var All = []Stat{Overview, Expert, ProtoHierarchy, Endpoints, HTTP, DNS}
 
 // Lookup finds a statistic by its minibuffer command.
 func Lookup(command string) (Stat, bool) {

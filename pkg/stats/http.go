@@ -59,22 +59,6 @@ var (
 	httpMethod = regexp.MustCompile(`^[A-Z]{3,}$`)
 )
 
-// HTTPRows drops the rows tshark prints at zero.
-//
-// The table is a fixed skeleton: every status class and every method it knows
-// about, present or not. On a capture with three responses that is four useful
-// lines under sixteen empty ones, and the empty ones are what the eye lands on
-// first. What is in the capture is the question being asked.
-func HTTPRows(rows []TreeRow) []TreeRow {
-	res := make([]TreeRow, 0, len(rows))
-	for _, r := range rows {
-		if r.Count > 0 {
-			res = append(res, r)
-		}
-	}
-	return res
-}
-
 //======================================================================
 // Local Variables:
 // mode: Go

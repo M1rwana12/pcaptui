@@ -49,6 +49,10 @@ const testPcap = "../../scripts/pcaps/telnet-cooked.pcap"
 // it exercises the whole shape of that table.
 const httpPcap = "../../scripts/pcaps/demo.pcap"
 
+// Written by hand and assembled by text2pcap - see make-dns.sh beside it. Two
+// lookups, one answered and one refused with No such name, a second apart.
+const dnsPcap = "../../scripts/pcaps/dns.pcap"
+
 func runStat(t *testing.T, s Stat, filter string) string {
 	return runStatOn(t, testPcap, s, filter)
 }
@@ -290,7 +294,7 @@ func TestHTTPOutputStillParses(t *testing.T) {
 // packets that row counted.
 func TestEveryHTTPRowsFilterFindsItsPackets(t *testing.T) {
 	out := runStatOn(t, httpPcap, HTTP, "")
-	rows := HTTPRows(ParseTree(out))
+	rows := NonEmptyRows(ParseTree(out))
 	require.NotEmpty(t, rows, "raw output:\n%s", out)
 
 	tried := 0
@@ -308,6 +312,91 @@ func TestEveryHTTPRowsFilterFindsItsPackets(t *testing.T) {
 	}
 
 	require.NotZero(t, tried, "no row offered a filter to check")
+}
+
+//======================================================================
+
+func TestDNSOutputStillParses(t *testing.T) {
+	out := runStatOn(t, dnsPcap, DNS, "")
+	rows := ParseTree(out)
+
+	require.NotEmpty(t, rows,
+		"tshark printed a DNS table that the parser read as nothing. Raw output:\n%s", out)
+
+	byName := map[string]TreeRow{}
+	for _, r := range rows {
+		byName[r.Name] = r
+	}
+
+	total, ok := byName["Total Packets"]
+	require.True(t, ok, "raw output:\n%s", out)
+	assert.Equal(t, 4, total.Count)
+
+	// Two lookups, one of which the server had no name for.
+	assert.Equal(t, 3, byName["No error"].Count, "raw output:\n%s", out)
+	assert.Equal(t, "rcode", byName["No error"].Parent)
+	assert.Equal(t, 1, byName["No such name"].Count, "raw output:\n%s", out)
+	assert.Equal(t, "rcode", byName["No such name"].Parent)
+}
+
+// The fixture answers each query exactly one second later, so this is the one
+// row whose average is a number a test can name.
+func TestTheDNSResponseTimeIsRead(t *testing.T) {
+	out := runStatOn(t, dnsPcap, DNS, "")
+
+	for _, r := range ParseTree(out) {
+		if r.Name == "request-response time (msec)" {
+			assert.Equal(t, 2, r.Count)
+			assert.Contains(t, r.Average, "1000",
+				"the fixture answers a second later. Raw output:\n%s", out)
+			return
+		}
+	}
+
+	t.Fatalf("tshark reported no response time at all. Raw output:\n%s", out)
+}
+
+// Each row that offers a filter has to be one tshark accepts, answering with
+// the packets that row counted.
+//
+// Except the rcode rows, which cannot agree with their own count: tshark reads
+// the rcode bits of every DNS header and a query carries a zero there, while
+// the dissector puts dns.flags.rcode on responses only. They are checked below
+// against the fixture instead.
+func TestEveryDNSRowsFilterFindsItsPackets(t *testing.T) {
+	out := runStatOn(t, dnsPcap, DNS, "")
+	rows := NonEmptyRows(ParseTree(out))
+	require.NotEmpty(t, rows, "raw output:\n%s", out)
+
+	tried := 0
+	for _, r := range rows {
+		filter := DNSFilter(r.Parent, r.Name)
+		if filter == "" || r.Parent == "rcode" {
+			continue
+		}
+		tried++
+
+		found := runFieldsQueryOn(t, dnsPcap, filter, "frame.number")
+		assert.Equal(t, r.Count, len(strings.Fields(found)),
+			"filter %q found a different number of packets than %q under %q claims",
+			filter, r.Name, r.Parent)
+	}
+
+	require.NotZero(t, tried, "no row offered a filter to check")
+}
+
+// The rcode filters, against what the fixture actually contains: one answer
+// that succeeded and one that failed with No such name. This is the mapping
+// from Wireshark's spelling to the number in the protocol, which is the part
+// that could silently drift.
+func TestTheRcodeFiltersFindTheRightAnswers(t *testing.T) {
+	ok := runFieldsQueryOn(t, dnsPcap, DNSFilter("rcode", "No error"), "frame.number")
+	assert.Equal(t, []string{"2"}, strings.Fields(ok),
+		"the second packet is the answer that succeeded")
+
+	nx := runFieldsQueryOn(t, dnsPcap, DNSFilter("rcode", "No such name"), "frame.number")
+	assert.Equal(t, []string{"4"}, strings.Fields(nx),
+		"the fourth packet is the answer that failed")
 }
 
 //======================================================================

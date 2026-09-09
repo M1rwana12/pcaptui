@@ -384,6 +384,93 @@ func TestACaptureWithNoHTTPIsAnEmptyView(t *testing.T) {
 }
 
 //======================================================================
+
+func someDNSRows() []stats.TreeRow {
+	return []stats.TreeRow{
+		{Depth: 0, Name: "Total Packets", Count: 4, Percent: "100%"},
+		{Depth: 0, Name: "rcode", Count: 4, Percent: "100%"},
+		{Depth: 1, Name: "No error", Parent: "rcode", Count: 3, Percent: "75,00%"},
+		{Depth: 1, Name: "No such name", Parent: "rcode", Count: 1, Percent: "25,00%"},
+		{Depth: 0, Name: "Query Stats", Count: 0, Percent: "100%"},
+		{Depth: 1, Name: "Qname Len", Parent: "Query Stats", Count: 2, Average: "12,00"},
+		{Depth: 0, Name: "Service Stats", Count: 0, Percent: "100%"},
+		{Depth: 1, Name: "no. of retransmissions", Parent: "Service Stats", Count: 0},
+	}
+}
+
+// A heading counted at zero stays when its own rows were counted; one with
+// nothing under it goes.
+func TestAnEmptyDNSSectionGoesAndAFullOneStays(t *testing.T) {
+	v := dnsLines(someDNSRows())
+
+	var text string
+	for _, r := range v.Rows {
+		text += r.Text + "\n"
+	}
+
+	assert.Contains(t, text, "Query Stats")
+	assert.Contains(t, text, "Qname Len")
+	assert.NotContains(t, text, "Service Stats")
+	assert.NotContains(t, text, "retransmissions")
+}
+
+// The row that says how long the server took has its count in packets and its
+// answer in milliseconds, so the count alone says nothing.
+func TestTheDNSAverageHasAColumn(t *testing.T) {
+	v := dnsLines(someDNSRows())
+
+	assert.Contains(t, v.Header[0], "Average")
+
+	at := strings.Index(v.Header[0], "Average")
+	require.Positive(t, at)
+	for _, r := range v.Rows {
+		if strings.Contains(r.Text, "Qname Len") {
+			assert.Contains(t, r.Text[at:], "12,00")
+			return
+		}
+	}
+	t.Fatal("the row with the average was not shown")
+}
+
+// A table where nothing has an average should not carry an empty column for
+// one. The HTTP table is the case: every row is a count.
+func TestATableWithNoAveragesHasNoAverageColumn(t *testing.T) {
+	rows := []stats.TreeRow{
+		{Depth: 0, Name: "Total Packets", Count: 4, Percent: "100%"},
+		{Depth: 0, Name: "rcode", Count: 4, Percent: "100%"},
+	}
+
+	v := dnsLines(rows)
+
+	assert.NotContains(t, v.Header[0], "Average")
+}
+
+func TestADNSRowFiltersThroughItsSection(t *testing.T) {
+	v := dnsLines(someDNSRows())
+
+	byText := map[string]statsLine{}
+	for _, r := range v.Rows {
+		byText[strings.TrimSpace(strings.Split(r.Text, "  ")[0])] = r
+	}
+
+	assert.Equal(t, "dns.flags.rcode == 3", byText["No such name"].Filter)
+	assert.Equal(t, "dns", byText["Total Packets"].Filter)
+	assert.Equal(t, "", byText["Qname Len"].Filter,
+		"no filter selects the packets behind an average")
+	assert.False(t, byText["Qname Len"].actionable())
+}
+
+func TestACaptureWithNoDNSIsAnEmptyView(t *testing.T) {
+	rows := []stats.TreeRow{
+		{Depth: 0, Name: "Total Packets", Count: 0, Percent: "100%"},
+		{Depth: 0, Name: "rcode", Count: 0, Percent: "100%"},
+	}
+
+	assert.True(t, dnsLines(rows).empty())
+	assert.True(t, dnsLines(nil).empty())
+}
+
+//======================================================================
 // Local Variables:
 // mode: Go
 // fill-column: 78

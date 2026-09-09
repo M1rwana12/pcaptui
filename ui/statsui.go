@@ -162,6 +162,9 @@ func (t *statsParseHandler) view() statsView {
 	case stats.HTTP.Command:
 		body := httpLines(stats.ParseTree(t.data))
 		v.Header, v.Rows = body.Header, body.Rows
+	case stats.DNS.Command:
+		body := dnsLines(stats.ParseTree(t.data))
+		v.Header, v.Rows = body.Header, body.Rows
 	default:
 		// A statistic this package does not know how to lay out is still worth
 		// showing; it just cannot offer a filter for any of its rows.

@@ -83,6 +83,18 @@
   prints a fixed skeleton of every status class it knows, so three responses
   would otherwise arrive as four useful lines under sixteen zeroes.
 
+- **DNS, what was asked and how it came back.** `d`, `:dns`, or DNS in the
+  Analysis menu: the lookups, the record types, the response codes and how long
+  the server took. Enter on a row filters the packet list wherever a filter can
+  say what the row means — one row cannot, and says so: tshark reads the
+  response-code bits of every DNS header, including queries, which carry a
+  zero, so its "No error" count includes the questions while the filter finds
+  only the answers.
+
+  It comes with `scripts/pcaps/dns.pcap` and the script that builds it. Neither
+  existing capture contains DNS, and a fixture nobody can regenerate is one
+  nobody can extend.
+
 ### Changed
 
 - **A million packets carry 1.9 MB of colour instead of 115 MB.** Measured

@@ -55,34 +55,6 @@ func TestARequestMethodFiltersOnTheMethod(t *testing.T) {
 }
 
 //======================================================================
-
-// The table is a fixed skeleton of every status class tshark knows, so most of
-// it is zeroes on any real capture.
-func TestTheRowsCountedAtZeroAreDropped(t *testing.T) {
-	rows := []TreeRow{
-		{Name: "Total HTTP Packets", Count: 3},
-		{Name: "1xx: Informational", Count: 0},
-		{Name: "2xx: Success", Count: 1},
-		{Name: "3xx: Redirection", Count: 0},
-	}
-
-	got := HTTPRows(rows)
-
-	assert.Len(t, got, 2)
-	assert.Equal(t, "Total HTTP Packets", got[0].Name)
-	assert.Equal(t, "2xx: Success", got[1].Name)
-}
-
-func TestATableOfNothingButZeroesIsEmpty(t *testing.T) {
-	rows := []TreeRow{
-		{Name: "Total HTTP Packets", Count: 0},
-		{Name: "2xx: Success", Count: 0},
-	}
-
-	assert.Empty(t, HTTPRows(rows))
-}
-
-//======================================================================
 // Local Variables:
 // mode: Go
 // fill-column: 78

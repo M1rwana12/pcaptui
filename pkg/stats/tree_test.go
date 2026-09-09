@@ -170,6 +170,116 @@ Total HTTP Packets            3             100%
 }
 
 //======================================================================
+
+// Real output of `tshark -z dns,tree`, cut to the columns that matter. Blank
+// Average cells with numbers further along the line are the point: reading
+// Average from its column to the end of the line would take the Rate.
+const dnsTree = `
+==============================================================================
+DNS:
+Packet Type                    Count         Average       Min Val       Rate (ms)     Percent       
+------------------------------------------------------------------------------
+Total Packets                  4                                         0,0013        100%          
+rcode                          4                                         0,0013        100%          
+ No error                      3                                         0,0010        75,00%        
+ No such name                  1                                         0,0003        25,00%        
+Query Stats                    0                                         0,0000        100%          
+ Qname Len                     2             12,00         12            0,0007                      
+ Label Stats                   0                                         0,0000                      
+  2nd Level                    2                                         0,0007                      
+Service Stats                  0                                         0,0000        100%          
+ no. of retransmissions        0                                         0,0000                      
+------------------------------------------------------------------------------
+`
+
+// A row that leaves Average blank has to come back blank. The columns after it
+// are not empty, and a reader that scanned to the end of the line would report
+// the Rate as the average.
+func TestABlankAverageIsNotTheNextColumn(t *testing.T) {
+	rows := ParseTree(dnsTree)
+	require.NotEmpty(t, rows)
+
+	byName := map[string]TreeRow{}
+	for _, r := range rows {
+		byName[r.Name] = r
+	}
+
+	assert.Equal(t, "", byName["Total Packets"].Average)
+	assert.Equal(t, "", byName["No error"].Average)
+	assert.Equal(t, "12,00", byName["Qname Len"].Average)
+}
+
+// The same name appears in more than one section of the DNS table, so a row
+// has to know what it sits under before anything can be said about it.
+func TestARowKnowsWhatItSitsUnder(t *testing.T) {
+	rows := ParseTree(dnsTree)
+
+	parents := map[string]string{}
+	for _, r := range rows {
+		parents[r.Name] = r.Parent
+	}
+
+	assert.Equal(t, "", parents["Total Packets"], "a top-level row has no parent")
+	assert.Equal(t, "rcode", parents["No such name"])
+	assert.Equal(t, "Query Stats", parents["Qname Len"])
+	assert.Equal(t, "Label Stats", parents["2nd Level"])
+}
+
+// Leaving a section and entering the next one has to forget the first one's
+// rows: "Service Stats" is not inside "Query Stats".
+func TestLeavingASectionForgetsIt(t *testing.T) {
+	rows := ParseTree(dnsTree)
+
+	for _, r := range rows {
+		if r.Name == "no. of retransmissions" {
+			assert.Equal(t, "Service Stats", r.Parent)
+			return
+		}
+	}
+	t.Fatal("the row was not parsed at all")
+}
+
+//======================================================================
+
+// tshark's tables are fixed skeletons of everything it can count, so most of
+// any one of them is zeroes on a real capture.
+func TestTheRowsCountedAtNothingAreDropped(t *testing.T) {
+	rows := NonEmptyRows(ParseTree(dnsTree))
+
+	var names []string
+	for _, r := range rows {
+		names = append(names, r.Name)
+	}
+
+	assert.NotContains(t, names, "Service Stats")
+	assert.NotContains(t, names, "no. of retransmissions")
+}
+
+// A heading tshark counts at zero still has to stay when its own rows were
+// counted, or they end up indented under nothing.
+func TestAZeroHeadingWithSomethingUnderItStays(t *testing.T) {
+	rows := NonEmptyRows(ParseTree(dnsTree))
+
+	var names []string
+	for _, r := range rows {
+		names = append(names, r.Name)
+	}
+
+	assert.Contains(t, names, "Query Stats", "its query statistics were counted")
+	assert.Contains(t, names, "Label Stats", "2nd Level under it was counted")
+	assert.Contains(t, names, "2nd Level")
+}
+
+func TestATableOfNothingButZeroesIsDroppedEntirely(t *testing.T) {
+	rows := []TreeRow{
+		{Depth: 0, Name: "Total HTTP Packets", Count: 0},
+		{Depth: 1, Name: "HTTP Response Packets", Count: 0},
+	}
+
+	assert.Empty(t, NonEmptyRows(rows))
+}
+
+//======================================================================
 // Local Variables:
 // mode: Go
 // fill-column: 78

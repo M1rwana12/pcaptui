@@ -113,7 +113,7 @@ func hierarchyLines(rows []stats.HierarchyRow) statsView {
 // every status class it knows, so a capture with three responses prints four
 // useful lines under sixteen zeroes, and the zeroes are what the eye lands on.
 func httpLines(rows []stats.TreeRow) statsView {
-	rows = stats.HTTPRows(rows)
+	rows = stats.NonEmptyRows(rows)
 	if len(rows) == 0 {
 		return statsView{}
 	}
@@ -141,6 +141,58 @@ func httpLines(rows []stats.TreeRow) statsView {
 	}
 
 	titles := line("Response", "Count", "Percent")
+	v.Header = []string{titles, rule(titles, v.Rows)}
+
+	return v
+}
+
+//======================================================================
+
+// dnsLines lays out the DNS statistics, keeping the indentation that says
+// which section a row belongs to - the same name appears in more than one.
+//
+// An Average column, which the HTTP table does not need and this one does: the
+// row that says how long the server took to answer has its count in packets
+// and its answer in milliseconds, and the count alone says nothing. It is only
+// shown when some row has one.
+func dnsLines(rows []stats.TreeRow) statsView {
+	rows = stats.NonEmptyRows(rows)
+	if len(rows) == 0 {
+		return statsView{}
+	}
+
+	namew, cntw, avgw := len("Statistic"), len("Count"), 0
+	for _, r := range rows {
+		namew = max(namew, r.Depth+len(r.Name))
+		cntw = max(cntw, len(groupDigits(r.Count)))
+		avgw = max(avgw, len(r.Average))
+	}
+	if avgw > 0 {
+		avgw = max(avgw, len("Average"))
+	}
+
+	line := func(name, count, avg, pct string) string {
+		if avgw == 0 {
+			return fmt.Sprintf("%-*s  %*s  %s", namew, name, cntw, count, pct)
+		}
+		return fmt.Sprintf("%-*s  %*s  %*s  %s",
+			namew, name, cntw, count, avgw, avg, pct)
+	}
+
+	var v statsView
+	for _, r := range rows {
+		v.Rows = append(v.Rows, statsLine{
+			Text: line(
+				strings.Repeat(" ", r.Depth)+r.Name,
+				groupDigits(r.Count),
+				r.Average,
+				r.Percent,
+			),
+			Filter: stats.DNSFilter(r.Parent, r.Name),
+		})
+	}
+
+	titles := line("Statistic", "Count", "Average", "Percent")
 	v.Header = []string{titles, rule(titles, v.Rows)}
 
 	return v
