@@ -342,12 +342,41 @@ func endpointLines(rows []stats.EndpointRow) statsView {
 	return v
 }
 
-// overviewLimit is how many rows of each section the overview shows.
+// overviewLimitFor is how many rows of each section the overview shows on a
+// screen of this height.
 //
-// It is a summary, not a table: past a handful of rows the eye stops reading
-// and starts scrolling, and each section has its own view a keypress away for
-// when the whole thing is wanted.
-const overviewLimit = 4
+// It used to be a constant four, whatever the terminal. Measured at 120x36:
+// four expert rows, "… and 6 more", and then eight blank lines above the Close
+// button - every one of the hidden rows would have fitted.
+//
+// The budget is the dialog's height, which is four fifths of the screen, less
+// what is drawn around the rows: its frame, the heading and the blank under
+// it, the rule and the button at the foot, a title and a rule for each of the
+// four sections, a blank line between them, and the file's own facts, which
+// are never cut.
+//
+// Three or more, always. A screen too short for that scrolls, and a summary
+// showing two rows of each section is still a summary; one showing none is a
+// list of headings.
+func overviewLimitFor(screenHeight int, factRows int) int {
+	const (
+		dialogFraction = 0.8
+		frame          = 2
+		heading        = 2
+		foot           = 2
+		sections       = 4
+		perSection     = 2 // its title and the rule under it
+		separators     = 3
+		fewest         = 3
+	)
+
+	available := int(float64(screenHeight)*dialogFraction) -
+		frame - heading - foot - sections*perSection - separators - factRows
+
+	// The three statistics share what is left; the file's facts are already
+	// taken out of it.
+	return max(fewest, available/3)
+}
 
 // overviewLines is what the capture is, plus the three statistics, as one
 // screen.
@@ -366,7 +395,7 @@ const overviewLimit = 4
 //
 // Every row keeps the filter its own table would have given it, so the summary
 // is not a dead end - enter still lands on the packets.
-func overviewLines(out string, info capinfo.Info) statsView {
+func overviewLines(out string, info capinfo.Info, limit int) statsView {
 	var v statsView
 
 	section := func(title string) {
@@ -385,8 +414,8 @@ func overviewLines(out string, info capinfo.Info) statsView {
 		}
 
 		shown := body.Rows
-		if len(shown) > overviewLimit {
-			shown = shown[:overviewLimit]
+		if len(shown) > limit {
+			shown = shown[:limit]
 		}
 		for _, r := range shown {
 			v.Rows = append(v.Rows, statsLine{Text: "  " + r.Text, Filter: r.Filter})

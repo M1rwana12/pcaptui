@@ -324,6 +324,75 @@ type ConvsUiWidget struct {
 	shortNames          []string                // ["eth", "ip", ...] - from config file
 	tabIndex            map[string]int          // {"eth": 0, "ipv6": 2, ...} -> mapping to tabs in UI
 	started             bool                    // false if stream load needs to be done, true if under way or done
+
+	// The busiest tab that is not Ethernet, and how many rows it had, so that
+	// the view can open on it. It used to open on Ethernet always, which on
+	// any routed capture is one row per next-hop MAC address - true, and not
+	// what anybody came to look at.
+	//
+	// Once the user has picked a tab themselves, nothing moves under them
+	// again: the tables arrive one protocol at a time, so a later one being
+	// busier is not a reason to take the screen away.
+	busiestRows int
+	busiestTab  int
+	tabChosen   bool
+}
+
+// ethernetShortName is the tab this never chooses on its own.
+var ethernetShortName = convs.Ethernet{}.Short()
+
+// openOnBusiest shows the tab with the most conversations in it, as each
+// protocol's table arrives.
+//
+// The view used to open on Ethernet, always, because it is the first tab. On
+// any routed capture that is one row per next-hop MAC address - true, and not
+// what anybody opened the view to see. The counts are already computed for the
+// tab labels, so choosing by them costs nothing.
+//
+// Ethernet is never chosen automatically for the same reason. A capture with
+// nothing but Ethernet in it stays there, because nothing else is ever found
+// to move to.
+//
+// Once the user has picked a tab themselves, nothing moves under them again:
+// the tables arrive one protocol at a time, and a later one being busier is
+// not a reason to take the screen away.
+func (w *ConvsUiWidget) openOnBusiest(shortName string, rows int, app gowid.IApp) {
+	if w.tabChosen || shortName == ethernetShortName {
+		return
+	}
+
+	i, ok := w.tabIndex[shortName]
+	if !ok || i >= len(w.convs) {
+		return
+	}
+
+	if !preferTab(rows, i, w.busiestRows, w.busiestTab) {
+		return
+	}
+
+	w.busiestRows, w.busiestTab = rows, i
+	w.convHolder.SetSubWidget(w.convs[i], app)
+}
+
+// preferTab is whether a tab that has just arrived should take the screen from
+// the one showing.
+//
+// More conversations wins. A tie goes to the tab further along, which is the
+// more specific of the two - the tabs run Ethernet, IPv4, IPv6, TCP, UDP, and
+// a capture with one IPv4 conversation and one TCP conversation is better
+// answered by the tab that names ports.
+//
+// The tie rule is here rather than left to arrival order because tshark prints
+// its sections in the reverse of the order they were asked for, which is a
+// thing to depend on only when it is written down.
+func preferTab(rows, index, bestRows, bestIndex int) bool {
+	if rows == 0 {
+		return false
+	}
+	if rows != bestRows {
+		return rows > bestRows
+	}
+	return index > bestIndex
 }
 
 func (w *ConvsUiWidget) AbsoluteTime() bool {
@@ -390,6 +459,7 @@ func (w *ConvsUiWidget) construct() {
 		w.buttonLabels[p] = text.New(fmt.Sprintf(" %s ", convTypes[p]))
 		b := button.NewBare(w.buttonLabels[p])
 		b.OnClick(gowid.MakeWidgetCallback("cb", func(app gowid.IApp, w2 gowid.IWidget) {
+			w.tabChosen = true
 			w.convHolder.SetSubWidget(newconv, app)
 		}))
 
@@ -821,6 +891,7 @@ func (w *ConvsUiWidget) OnData(data string, app gowid.IApp) {
 			w.convs[w.tabIndex[currentShortName]].tbl = tbl
 			w.convs[w.tabIndex[currentShortName]].model = model
 			w.buttonLabels[currentShortName].SetText(fmt.Sprintf(" %s (%d) ", cur, len(datas)), app)
+			w.openOnBusiest(currentShortName, len(datas), app)
 		}
 	}
 

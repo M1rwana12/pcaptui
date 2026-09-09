@@ -217,7 +217,8 @@ func (t *statsParseHandler) AfterEnd(code pcap.HandlerCode, app gowid.IApp) {
 			return
 		}
 
-		v := t.view()
+		_, height := app.GetScreen().Size()
+		v := t.view(height)
 		if v.empty() {
 			OpenMessage(fmt.Sprintf("%s\n\n%s",
 				v.Heading, statsEmptyMessage(t.filter)), appView, app)
@@ -244,7 +245,7 @@ func (t *statsParseHandler) filterAsUsed() string {
 // A statistic narrowed by a filter that matches no packets prints absolutely
 // nothing - no header, no empty table - so no rows is a real answer and the
 // caller says so in words rather than opening an empty box.
-func (t *statsParseHandler) view() statsView {
+func (t *statsParseHandler) view(screenHeight int) statsView {
 	v := statsView{Heading: statsHeading(t.stat.Name, t.filter, t.stat.IgnoresFilter())}
 
 	if strings.TrimSpace(t.data) == "" {
@@ -253,7 +254,10 @@ func (t *statsParseHandler) view() statsView {
 
 	switch t.stat.Command {
 	case stats.Overview.Command:
-		body := overviewLines(t.data, t.facts)
+		// The screen, not a constant: the summary used to cut every section to
+		// four rows and then leave eight blank lines above the Close button.
+		facts := len(fileFactsLines(t.facts, stats.ParseIOStat(t.data)))
+		body := overviewLines(t.data, t.facts, overviewLimitFor(screenHeight, facts))
 		v.Header, v.Rows = body.Header, body.Rows
 	case stats.Expert.Command:
 		body := expertLines(stats.ParseExpert(t.data), stats.ExpertTotals(t.data))

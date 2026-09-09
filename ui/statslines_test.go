@@ -219,7 +219,7 @@ Errors (6)
 `
 
 func TestTheOverviewAnswersAllThreeQuestions(t *testing.T) {
-	v := overviewLines(overviewOutput, capinfo.Info{})
+	v := overviewLines(overviewOutput, capinfo.Info{}, 4)
 
 	text := strings.Join(rowTexts(v), "\n")
 	assert.Contains(t, text, "What is wrong")
@@ -229,7 +229,7 @@ func TestTheOverviewAnswersAllThreeQuestions(t *testing.T) {
 
 // Problems first: that is what somebody handed a capture is looking for.
 func TestTheOverviewLeadsWithProblems(t *testing.T) {
-	v := overviewLines(overviewOutput, capinfo.Info{})
+	v := overviewLines(overviewOutput, capinfo.Info{}, 4)
 
 	assert.Equal(t, "What is wrong", v.Rows[0].Text)
 }
@@ -238,7 +238,7 @@ func TestTheOverviewLeadsWithProblems(t *testing.T) {
 // and leave the others alone. An expert line has seven fields once the word
 // "bytes" is dropped often enough to be a real risk of inventing an endpoint.
 func TestEachSectionTakesOnlyItsOwnRows(t *testing.T) {
-	v := overviewLines(overviewOutput, capinfo.Info{})
+	v := overviewLines(overviewOutput, capinfo.Info{}, 4)
 	text := strings.Join(rowTexts(v), "\n")
 
 	assert.Contains(t, text, "IPv4 total length exceeds")
@@ -259,7 +259,7 @@ func TestEachSectionTakesOnlyItsOwnRows(t *testing.T) {
 // A summary that cannot be acted on is a dead end; every row keeps the filter
 // its own table would have given it.
 func TestOverviewRowsStillCarryTheirFilters(t *testing.T) {
-	v := overviewLines(overviewOutput, capinfo.Info{})
+	v := overviewLines(overviewOutput, capinfo.Info{}, 4)
 
 	var actionable int
 	for _, r := range v.Rows {
@@ -273,7 +273,7 @@ func TestOverviewRowsStillCarryTheirFilters(t *testing.T) {
 }
 
 func TestASectionSaysHowManyItLeftOut(t *testing.T) {
-	v := overviewLines(overviewOutput, capinfo.Info{})
+	v := overviewLines(overviewOutput, capinfo.Info{}, 4)
 
 	assert.Contains(t, strings.Join(rowTexts(v), "\n"), "and 2 more",
 		"six hierarchy rows shown four at a time should say so")
@@ -284,7 +284,7 @@ func TestASectionSaysHowManyItLeftOut(t *testing.T) {
 func TestAnEmptySectionSaysSoInWords(t *testing.T) {
 	onlyEndpoints := `192.168.0.2  92  7748 bytes  48  3465 bytes  44  4283 bytes
 `
-	v := overviewLines(onlyEndpoints, capinfo.Info{})
+	v := overviewLines(onlyEndpoints, capinfo.Info{}, 4)
 	text := strings.Join(rowTexts(v), "\n")
 
 	assert.Contains(t, text, "Nothing the dissectors object to")
@@ -578,7 +578,7 @@ func someFileFacts() capinfo.Info {
 // wire. None of them answers when - and "this is a forty-second slice from
 // 1999, not the hour you asked for" is often the whole answer.
 func TestTheOverviewSaysWhatTheFileIs(t *testing.T) {
-	v := overviewLines(overviewOutput, someFileFacts())
+	v := overviewLines(overviewOutput, someFileFacts(), 4)
 
 	var text string
 	for _, r := range v.Rows {
@@ -594,7 +594,7 @@ func TestTheOverviewSaysWhatTheFileIs(t *testing.T) {
 // It comes first because it is the cheapest and the most general: capinfos
 // took 0.27 s on a capture whose -z pass took 9 to 11 s.
 func TestTheFileComesBeforeTheStatistics(t *testing.T) {
-	v := overviewLines(overviewOutput, someFileFacts())
+	v := overviewLines(overviewOutput, someFileFacts(), 4)
 
 	require.NotEmpty(t, v.Rows)
 	assert.Equal(t, "What this file is", v.Rows[0].Text)
@@ -602,7 +602,7 @@ func TestTheFileComesBeforeTheStatistics(t *testing.T) {
 
 // capinfos missing or failing is not a reason to say nothing about the rest.
 func TestWithNoFileFactsTheSectionIsNotDrawn(t *testing.T) {
-	v := overviewLines(overviewOutput, capinfo.Info{})
+	v := overviewLines(overviewOutput, capinfo.Info{}, 4)
 
 	require.NotEmpty(t, v.Rows)
 	assert.Equal(t, "What is wrong", v.Rows[0].Text)
@@ -706,6 +706,47 @@ func TestTheTrafficLineJoinsTheFileFacts(t *testing.T) {
 
 	assert.Contains(t, text, "Traffic")
 	assert.Contains(t, text, "█·▄")
+}
+
+//======================================================================
+
+// The limit was a constant four whatever the terminal. Measured at 120x36:
+// four expert rows, "… and 6 more", and eight blank lines above the Close
+// button - every hidden row would have fitted.
+func TestATallerScreenShowsMoreRows(t *testing.T) {
+	short := overviewLimitFor(24, 0)
+	tall := overviewLimitFor(60, 0)
+
+	assert.Greater(t, tall, short)
+	assert.Greater(t, tall, 4, "a sixty-row terminal can hold more than four")
+}
+
+// The file's own facts are never cut, so they come out of the budget the three
+// statistics share.
+func TestTheFileFactsTakeFromTheBudget(t *testing.T) {
+	withFacts := overviewLimitFor(60, 6)
+	without := overviewLimitFor(60, 0)
+
+	assert.Less(t, withFacts, without)
+}
+
+// A summary showing two rows of each section is still a summary; one showing
+// none is a list of headings.
+func TestAShortScreenStillShowsSomething(t *testing.T) {
+	for _, h := range []int{0, 1, 10, 20} {
+		assert.GreaterOrEqual(t, overviewLimitFor(h, 0), 3, "height %d", h)
+	}
+}
+
+// Measured against the real dialog. At 120x36 with six lines of file facts the
+// three sections get three rows each, and the content fills the box exactly -
+// fewer than the old constant four, because the constant was set before the
+// file facts existed and six of its rows now go to them. At 120x50 they get
+// more. Both were checked by rendering the dialog and looking at what was left
+// above the Close button.
+func TestTheLimitMatchesTheRenderedDialog(t *testing.T) {
+	assert.Equal(t, 3, overviewLimitFor(36, 6))
+	assert.Greater(t, overviewLimitFor(50, 6), 3)
 }
 
 //======================================================================

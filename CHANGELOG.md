@@ -33,6 +33,19 @@
 
 ### Changed
 
+- **The Overview fills the screen it is given.** Each section was cut to four
+  rows whatever the terminal, so a tall one showed four rows and then blank
+  space above the Close button. The limit now comes from the height of the
+  dialog, less what is drawn around the rows, and never falls below three.
+
+- **Conversations opens on the busiest tab rather than on Ethernet.** On any
+  routed capture the Ethernet tab is one row per next-hop MAC address — true,
+  and not what anybody opened the view to see. The counts were already computed
+  for the tab labels. A tie goes to the more specific tab, so a capture with
+  one IPv4 conversation and one TCP conversation opens on the one that names
+  ports; that rule is written down rather than left to arrival order, because
+  `tshark` prints its sections in the reverse of the order they were asked for.
+
 - **A statistic can be cancelled.** Every `-z` view is one pass over the whole
   capture — measured here at 1.07 s for 2.8 MB, 3.51 s for 22 MB and 11.6 s for
   44 MB, and the Overview starts one by itself when a file finishes loading.
@@ -40,19 +53,6 @@
   anything: `tshark` went on reading and the result opened over whatever you
   had moved on to. It now says Cancel, means it, and treats Escape the same
   way.
-
-### Fixed
-
-- **IPv6 hosts were invisible to Endpoints and to the Overview.** Both asked
-  `tshark` for IPv4 endpoints only, so a capture of IPv6 traffic answered
-  "Nothing to report" to the question "who is on the wire" — six lines below
-  the protocol hierarchy in the same dialog listing `ipv6`. Both families are
-  now asked for in the same pass, which measured as free, and a row's filter
-  uses `ipv6.addr` where the address has a colon in it: Wireshark has no one
-  field name covering both, and `ip.addr` against an IPv6 address is rejected
-  outright.
-
-### Changed
 
 - **Expert Information is readable on a real capture.** Wireshark reports some
   items once per occurrence with a counter in the text, and the tap reports
@@ -74,6 +74,17 @@
 - **Every table groups its digits the same way.** The Overview printed
   `frame 7 1027` six lines above `192.0.2.10 7 1,027` — one quantity, two
   spellings, in one dialog.
+
+### Fixed
+
+- **IPv6 hosts were invisible to Endpoints and to the Overview.** Both asked
+  `tshark` for IPv4 endpoints only, so a capture of IPv6 traffic answered
+  "Nothing to report" to the question "who is on the wire" — six lines below
+  the protocol hierarchy in the same dialog listing `ipv6`. Both families are
+  now asked for in the same pass, which measured as free, and a row's filter
+  uses `ipv6.addr` where the address has a colon in it: Wireshark has no one
+  field name covering both, and `ip.addr` against an IPv6 address is rejected
+  outright.
 
 ## [1.1.0] - 2026-09-09
 

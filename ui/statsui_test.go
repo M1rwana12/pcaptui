@@ -25,7 +25,7 @@ func TestStatsViewCarriesTitleAndRows(t *testing.T) {
 	h := &statsParseHandler{stat: stats.Expert}
 	h.OnStatsData(expertData)
 
-	v := h.view()
+	v := h.view(36)
 
 	assert.True(t, strings.HasPrefix(v.Heading, "Expert Information"))
 	assert.NotContains(t, v.Heading, "display filter",
@@ -38,7 +38,7 @@ func TestStatsViewNamesTheFilterInUse(t *testing.T) {
 	h := &statsParseHandler{stat: stats.ProtoHierarchy, filter: "tcp.port in {23,80}"}
 	h.OnStatsData("frame  frames:7 bytes:1027\n")
 
-	v := h.view()
+	v := h.view(36)
 
 	assert.Contains(t, v.Heading, "Protocol Hierarchy")
 	assert.Contains(t, v.Heading, "tcp.port in {23,80}")
@@ -50,7 +50,7 @@ func TestAnExpertRowCarriesItsFilter(t *testing.T) {
 	h := &statsParseHandler{stat: stats.Expert}
 	h.OnStatsData(expertData)
 
-	v := h.view()
+	v := h.view(36)
 
 	require.Len(t, v.Rows, 1)
 	assert.Equal(t,
@@ -62,7 +62,7 @@ func TestAHierarchyRowCarriesItsProtocol(t *testing.T) {
 	h := &statsParseHandler{stat: stats.ProtoHierarchy}
 	h.OnStatsData("frame            frames:7 bytes:1027\n  eth            frames:7 bytes:1027\n")
 
-	v := h.view()
+	v := h.view(36)
 
 	require.Len(t, v.Rows, 2)
 	assert.Equal(t, "eth", v.Rows[1].Filter)
@@ -75,14 +75,14 @@ func TestAnEmptyResultIsAnEmptyView(t *testing.T) {
 	h := &statsParseHandler{stat: stats.Expert, filter: "udp"}
 	h.OnStatsData("")
 
-	assert.True(t, h.view().empty())
+	assert.True(t, h.view(36).empty())
 }
 
 func TestWhitespaceOnlyOutputIsAlsoEmpty(t *testing.T) {
 	h := &statsParseHandler{stat: stats.Expert}
 	h.OnStatsData("   \n\t\n")
 
-	assert.True(t, h.view().empty())
+	assert.True(t, h.view(36).empty())
 }
 
 // tshark on Windows ends its lines with CRLF, and a stray CR renders as a
@@ -91,7 +91,7 @@ func TestStatsDataNormalisesWindowsLineEndings(t *testing.T) {
 	h := &statsParseHandler{stat: stats.Expert}
 	h.OnStatsData(strings.ReplaceAll(expertData, "\n", "\r\n"))
 
-	v := h.view()
+	v := h.view(36)
 
 	require.Len(t, v.Rows, 1)
 	assert.NotContains(t, v.Rows[0].Text, "\r")
@@ -103,7 +103,7 @@ func TestAnUnknownStatisticIsShownAsPlainLines(t *testing.T) {
 	h := &statsParseHandler{stat: stats.Stat{Name: "Something Else", Command: "else"}}
 	h.OnStatsData("one\ntwo\n")
 
-	v := h.view()
+	v := h.view(36)
 
 	require.Len(t, v.Rows, 2)
 	assert.Equal(t, "one", v.Rows[0].Text)
