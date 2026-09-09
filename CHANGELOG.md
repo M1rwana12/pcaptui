@@ -12,6 +12,12 @@
   almost nothing next to the rest: `capinfos` took 0.27 s on a 44 MB capture
   where the statistics pass over the same file took 9.1 to 11.6 s.
 
+- **And when the traffic happened**, as one row of blocks with `·` for an
+  interval that carried nothing. A burst at the start, a hole in the middle or
+  "all of it arrived in the last three seconds" is a shape, and it rides in the
+  pass that was already running. The interval is chosen from the length of the
+  capture, about twenty marks, rounded to a number a person would have picked.
+
 ### Changed
 
 - **A statistic can be cancelled.** Every `-z` view is one pass over the whole

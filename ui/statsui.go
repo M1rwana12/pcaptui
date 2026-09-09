@@ -69,6 +69,18 @@ func startStats(stat stats.Stat, app gowid.IApp) {
 			log.Warnf("Could not read the file's own properties: %v", err)
 		}
 
+		// The traffic over time needs a bucket size, and the bucket size needs
+		// the length of the capture - which capinfos has just said. It rides in
+		// the same pass as the rest.
+		// Guarded twice over, because capinfos failing is a case that reaches
+		// here: "39,571274 seconds" has a number in front of a word, and an
+		// empty Duration has neither.
+		if fields := strings.Fields(info.Duration); len(fields) > 0 {
+			if seconds, ok := pcaptui.ParseDecimal(fields[0]); ok {
+				zargs = append(zargs, stats.IOStatArg(seconds, filter))
+			}
+		}
+
 		app.Run(gowid.RunFunction(func(app gowid.IApp) {
 			h.facts = info
 			loader.StartLoad(pcapfile, zargs, app, h)

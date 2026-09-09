@@ -607,7 +607,7 @@ func TestASnapshotLimitThatIsNotSetIsNotShown(t *testing.T) {
 	info := someFileFacts()
 	info.SnapLen = "file hdr: (not set)"
 
-	lines := fileFactsLines(info)
+	lines := fileFactsLines(info, nil)
 
 	require.NotEmpty(t, lines)
 	for _, l := range lines {
@@ -618,7 +618,7 @@ func TestASnapshotLimitThatIsNotSetIsNotShown(t *testing.T) {
 // A fact capinfos did not report is left out rather than shown blank: an empty
 // value reads as something looked up and found missing.
 func TestAFactThatIsNotThereIsNotAnEmptyLine(t *testing.T) {
-	lines := fileFactsLines(capinfo.Info{Packets: "92"})
+	lines := fileFactsLines(capinfo.Info{Packets: "92"}, nil)
 
 	require.Len(t, lines, 1)
 	assert.Contains(t, lines[0].Text, "Packets")
@@ -628,9 +628,74 @@ func TestAFactThatIsNotThereIsNotAnEmptyLine(t *testing.T) {
 // These say what the file is, not which packets to look at, so none of them
 // pretends to be selectable.
 func TestTheFileFactsAreNotSelectable(t *testing.T) {
-	for _, l := range fileFactsLines(someFileFacts()) {
+	for _, l := range fileFactsLines(someFileFacts(), nil) {
 		assert.False(t, l.actionable())
 	}
+}
+
+//======================================================================
+
+func trafficRows(frames ...int) []stats.IOStatRow {
+	rows := make([]stats.IOStatRow, 0, len(frames))
+	for i, f := range frames {
+		rows = append(rows, stats.IOStatRow{
+			Label:  fmt.Sprintf("%d <> %d", i*5, (i+1)*5),
+			Frames: f,
+		})
+	}
+	return rows
+}
+
+// The shape is the answer: a burst at the start, a hole in the middle. Reading
+// it off twenty numbers is work; reading it off one row is not.
+func TestTheTrafficIsDrawnAsAShape(t *testing.T) {
+	got := sparkline(trafficRows(44, 6, 0, 2, 14, 14, 0, 12))
+
+	assert.Equal(t, 8, len([]rune(got)))
+	assert.Equal(t, '█', []rune(got)[0], "the busiest interval is full height")
+}
+
+// A gap is the point, so an empty interval is not drawn as a block at all.
+func TestAnEmptyIntervalIsAGap(t *testing.T) {
+	got := []rune(sparkline(trafficRows(10, 0, 10)))
+
+	require.Len(t, got, 3)
+	assert.Equal(t, '·', got[1])
+}
+
+// Rounding a lone packet down to nothing would turn "quiet" into "silent",
+// and silence is what the gaps mean.
+func TestOnePacketIsNotSilence(t *testing.T) {
+	got := []rune(sparkline(trafficRows(1000, 1)))
+
+	require.Len(t, got, 2)
+	assert.NotEqual(t, '·', got[1])
+	assert.Equal(t, '▁', got[1], "the shortest block, but a block")
+}
+
+func TestAFlatCaptureIsFlat(t *testing.T) {
+	got := sparkline(trafficRows(5, 5, 5))
+
+	assert.Equal(t, "███", got)
+}
+
+// Nothing to draw is not a row of nothing: with no traffic at all, or no
+// buckets, the line is left out.
+func TestNoTrafficDrawsNoLine(t *testing.T) {
+	assert.Equal(t, "", sparkline(nil))
+	assert.Equal(t, "", sparkline(trafficRows(0, 0, 0)))
+}
+
+func TestTheTrafficLineJoinsTheFileFacts(t *testing.T) {
+	lines := fileFactsLines(someFileFacts(), trafficRows(4, 0, 2))
+
+	var text string
+	for _, l := range lines {
+		text += l.Text + "\n"
+	}
+
+	assert.Contains(t, text, "Traffic")
+	assert.Contains(t, text, "█·▄")
 }
 
 //======================================================================

@@ -213,8 +213,11 @@ and **who is on the wire**. Each of the last three shows its first few rows and
 says how many it left out; the full table for any of them is one key away.
 
 The file's own facts come first — when it was captured, how long it covers, how
-many packets and how large, and whether the packets were cut short by a
-snapshot length. None of the statistics answers *when*, and "this is a
+many packets and how large, whether the packets were cut short by a snapshot
+length, and the traffic over time as a single row of blocks, with `·` for an
+interval that carried nothing. A burst at the start, a hole in the middle, or
+"all of it arrived in the last three seconds" is a shape, and a shape reads
+better drawn than counted. None of the statistics answers *when*, and "this is a
 forty-second slice, not the hour you asked for" is often the whole answer. They
 also cost almost nothing next to the rest: `capinfos` reads them in a fraction
 of the time the statistics pass takes over the same file.

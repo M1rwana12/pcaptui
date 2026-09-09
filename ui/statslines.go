@@ -364,7 +364,7 @@ func overviewLines(out string, info capinfo.Info) statsView {
 	// a table, so there is nothing to cut and nothing to say "and N more"
 	// about. It is skipped entirely when capinfos said nothing, which is what a
 	// missing or failed capinfos looks like from here.
-	if facts := fileFactsLines(info); len(facts) > 0 {
+	if facts := fileFactsLines(info, stats.ParseIOStat(out)); len(facts) > 0 {
 		section("What this file is")
 		v.Rows = append(v.Rows, facts...)
 	}
@@ -381,14 +381,14 @@ func overviewLines(out string, info capinfo.Info) statsView {
 
 // fileFactsLines is the file's own properties, laid out as label and value.
 //
-// Five of the twenty-odd capinfos prints. The rest - the hashes, the bit rate,
-// the average packet size - answer questions nobody has yet when they open a
-// capture, and `p` still shows all of them.
+// Five of the twenty-odd capinfos prints, plus the traffic over time. The rest
+// - the hashes, the bit rate, the average packet size - answer questions
+// nobody has yet when they open a capture, and `p` still shows all of them.
 //
 // The snapshot length is only shown when there is one. capinfos writes
 // "file hdr: (not set)" otherwise, and a line saying a limit is not set is a
 // line spent on nothing.
-func fileFactsLines(info capinfo.Info) []statsLine {
+func fileFactsLines(info capinfo.Info, traffic []stats.IOStatRow) []statsLine {
 	type fact struct{ label, value string }
 
 	facts := []fact{
@@ -399,6 +399,9 @@ func fileFactsLines(info capinfo.Info) []statsLine {
 	}
 	if info.SnapLen != "" && !strings.Contains(info.SnapLen, "not set") {
 		facts = append(facts, fact{"Packet limit", info.SnapLen})
+	}
+	if line := sparkline(traffic); line != "" {
+		facts = append(facts, fact{"Traffic", line})
 	}
 
 	width := 0
@@ -419,6 +422,50 @@ func fileFactsLines(info capinfo.Info) []statsLine {
 	}
 
 	return res
+}
+
+// sparkline draws the traffic over time as one row of blocks, tallest bucket
+// full height and an empty one left as a gap you can see.
+//
+// One line rather than a table of twenty. What is being asked here is a shape
+// - did it all arrive in the last three seconds, is there a hole in the middle
+// - and a shape reads better drawn than counted. The full numbers are one
+// keypress away in the packet list.
+//
+// The blocks are eighths of a cell, which every terminal font that can draw a
+// box can draw. A bucket that is not empty never renders as the shortest one
+// unless it really is the smallest: rounding a lone packet down to nothing
+// would turn "quiet" into "silent", and the gaps are the point.
+func sparkline(rows []stats.IOStatRow) string {
+	if len(rows) == 0 {
+		return ""
+	}
+
+	most := 0
+	for _, r := range rows {
+		most = max(most, r.Frames)
+	}
+	if most == 0 {
+		return ""
+	}
+
+	blocks := []rune("▁▂▃▄▅▆▇█")
+
+	var b strings.Builder
+	for _, r := range rows {
+		if r.Frames == 0 {
+			// Not a block at all: a gap has to look like one.
+			b.WriteRune('·')
+			continue
+		}
+
+		// Ceiling, so the quietest interval that carried anything still gets
+		// the shortest block rather than none.
+		i := (r.Frames*len(blocks) + most - 1) / most
+		b.WriteRune(blocks[min(i, len(blocks))-1])
+	}
+
+	return b.String()
 }
 
 // rule draws the line under the column titles, as wide as the widest thing it
