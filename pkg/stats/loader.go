@@ -204,7 +204,15 @@ func (c *Loader) loadStatsAsync(pcapf string, zargs []string, app gowid.IApp, cb
 	procChan <- pid
 
 	buf := new(bytes.Buffer)
-	buf.ReadFrom(statsOut)
+	if _, err := buf.ReadFrom(statsOut); err != nil {
+		// A short read means a table with its last rows missing, and the
+		// parsers accept that quietly - a truncated final line is simply
+		// dropped. So the dialog would show fewer rows than the capture has
+		// and say nothing about it.
+		pcap.HandleError(pcap.StatsCode, app,
+			fmt.Errorf("Could not read the statistics from %v: %v", c.statsCmd, err), cb)
+		return
+	}
 
 	cb.OnStatsData(buf.String())
 

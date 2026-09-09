@@ -1956,7 +1956,21 @@ func (p *PsmlLoader) PsmlHeaders() []string {
 //
 // A method rather than the whole slice: handing out a []PacketColors would
 // mean building the very slice the palette exists to avoid.
+//
+// Under the loader's own lock, because this is read by the goroutine that
+// draws while the goroutine that loads is appending to the same slice. Taking
+// the length and then indexing are two reads of one slice header, so without
+// the lock a render that lands mid-append can pair the new length with the
+// old backing array and read past its end. Before the palette the caller held
+// a slice of its own and never touched the loader's; the palette made this a
+// live read, and the lock is what pays for that.
+//
+// The critical section it waits on is a handful of appends with no callback
+// inside it, and this runs once per visible row per frame.
 func (p *PsmlLoader) ColorAt(row int) PacketColors {
+	p.Lock()
+	defer p.Unlock()
+
 	if row < 0 || row >= len(p.packetPsmlColorIdx) {
 		return PacketColors{}
 	}
@@ -1964,8 +1978,12 @@ func (p *PsmlLoader) ColorAt(row int) PacketColors {
 }
 
 // NumColors is how many rows have a colour yet, which is what a caller needs
-// during a load to know whether a row is covered.
+// during a load to know whether a row is covered. Under the lock for the same
+// reason as ColorAt.
 func (p *PsmlLoader) NumColors() int {
+	p.Lock()
+	defer p.Unlock()
+
 	return len(p.packetPsmlColorIdx)
 }
 
