@@ -536,21 +536,16 @@ func cmain() int {
 		}
 	}
 
-	displayFilter := opts.DisplayFilter
-
 	// Validate supplied filters e.g. no capture filter when reading from file
-	if len(fileSrcs) > 0 {
-		if captureFilter != "" {
-			fmt.Fprintf(os.Stderr, "Cannot use a capture filter when reading from a pcap file - '%s' and '%s'.\n", captureFilter, pcapf)
-			return 1
-		}
-		if argsFilter != "" {
-			if opts.DisplayFilter != "" {
-				fmt.Fprintf(os.Stderr, "Two display filters provided - '%s' and '%s' - please supply one only.\n", opts.DisplayFilter, argsFilter)
-				return 1
-			}
-			displayFilter = argsFilter
-		}
+	if len(fileSrcs) > 0 && captureFilter != "" {
+		fmt.Fprintf(os.Stderr, "Cannot use a capture filter when reading from a pcap file - '%s' and '%s'.\n", captureFilter, pcapf)
+		return 1
+	}
+
+	displayFilter, filtErr := displayFilterFor(opts.DisplayFilter, argsFilter, len(fileSrcs) > 0)
+	if filtErr != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", filtErr)
+		return 1
 	}
 
 	// Here we now have an accurate view of all psrcs - either file, fifo, pipe or interface
@@ -615,7 +610,14 @@ func cmain() int {
 	// default the result is a program with no filename in the title, an empty
 	// filter box, empty panes and an exit status of zero - with the mistyped
 	// expression not even echoed back to be corrected.
-	if err := cli.CheckDisplayFilter(tsharkBin, emptyPcap, opts.DisplayFilter); err != nil {
+	//
+	// displayFilter, not opts.DisplayFilter: a filter can arrive either as -Y
+	// or as the positional argument, and this used to check only the flag. So
+	// `pcaptui -Y 'tcp.prot == 80' -r file` stopped and said which field does
+	// not exist, while `pcaptui -r file 'tcp.prot == 80'` - the form this
+	// program's own README uses - drew exactly the empty screen described
+	// above and exited zero.
+	if err := cli.CheckDisplayFilter(tsharkBin, emptyPcap, displayFilter); err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		return 1
 	}

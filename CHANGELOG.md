@@ -52,6 +52,14 @@
 
 ### Fixed
 
+- **A display filter given as the positional argument was never checked.** The
+  `-Y` form was: `pcaptui -Y 'tcp.prot == 80' -r capture.pcap` stops and names
+  the field that does not exist. The positional form — which this project's own
+  README uses — started the program, drew a title with no filename, an empty
+  filter box and three empty panes, and exited zero. A typo looked exactly like
+  a capture with nothing in it. Both forms now resolve through one function, so
+  there is one filter to check and no second path to forget.
+
 - **The stream parser could not read four of the thirteen names `tshark`
   prints.** The grammar's character class for a family name allowed letters
   only, so a `Follow: http2,raw` header — or `mpeg-pes` — ended the parse, and

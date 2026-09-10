@@ -100,7 +100,7 @@ the Analysis menu:
 
 | Key | |
 |---|---|
-| `o` | overview — all three questions at once |
+| `o` | overview — all four questions at once |
 | `p` | capture file properties |
 | `s` | reassemble the stream the selected packet is in |
 | `v` | conversations |
@@ -130,8 +130,14 @@ Press `/` to reach the filter box and type any Wireshark display filter.
 The box validates as you type — it turns red while the expression is incomplete
 or wrong, so you know before you press enter. Tab completes field names.
 
-The filter applies to the packet list, and, importantly, to Expert Information
-and Protocol Hierarchy as well.
+The filter applies to the packet list and to every statistic — each one names
+the filter at the top of its result. Two exceptions: Credentials ignores it,
+because `tshark`'s own tap does and says so; and Conversations has a checkbox
+for it, unticked by default.
+
+A filter can also be given on the command line, either as `-Y` or as the
+positional argument after the file. Both are checked before the interface
+opens, so a mistyped field stops the program with `tshark`'s own explanation.
 
 `:filter` opens a list of filters you have used before.
 
