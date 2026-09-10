@@ -275,6 +275,14 @@ A capture opened at packet number one answers none of the questions the person
 opening it has. It is a dialog over the packet list rather than a different
 view, so one keypress dismisses it and nothing has to be navigated back out of.
 
+**On a capture over 10 MB the statistics are offered rather than run.** They are
+one pass over every packet in the file, and that pass gets slower as the file
+grows — measured, 85 MB is 19 seconds on Linux and 47 on macOS — so on a large
+capture it would be minutes of waiting that nobody asked for. What still opens
+by itself is what the file says about itself, which costs a fraction of a
+second at any size: when it was captured, how long it covers, how many packets
+and how large. Press `o` for the rest, whenever you want it.
+
 ## Expert Information
 
 `e`, `:expert`, or **Expert Information** in the Analysis menu.

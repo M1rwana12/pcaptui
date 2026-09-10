@@ -1,0 +1,39 @@
+name: Bench
+
+# Run by hand, to answer a question that cannot be answered on the maintainer's
+# machine: what the Overview's one pass over a capture costs on a platform this
+# is not developed on. It chose the 10 MB threshold in ui/startview.go, and it
+# is how that choice gets checked again - after a Wireshark release, say, or
+# when somebody doubts the number. Never runs on a push.
+#
+# See scripts/bench-overview.sh, which works locally too.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  overview:
+    name: overview cost
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tshark
+        if: runner.os == 'Linux'
+        run: |
+          sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq || echo "apt-get update reported errors; continuing to the install"
+          echo "wireshark-common wireshark-common/install-setuid boolean false" | sudo debconf-set-selections
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tshark
+
+      - name: Install tshark
+        if: runner.os == 'macOS'
+        run: brew install wireshark
+
+      - name: Measure
+        run: bash scripts/bench-overview.sh 1 5 20 50

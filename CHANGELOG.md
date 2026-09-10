@@ -27,6 +27,29 @@
   with the same dead banner as TLS, and a fixture for it can only be built by
   inventing the traffic secrets — which would test the invention.
 
+### Changed
+
+- **On a capture over 10 MB the Overview's statistics are offered, not run.**
+  They are one `tshark` pass over every packet, and the pass gets *slower* as
+  the file grows, so a rate measured on a small capture understates a large one.
+  Measured on the three platforms this is tested on, with
+  `scripts/bench-overview.sh`:
+
+  | | 21 MB | 85 MB |
+  |---|---|---|
+  | Linux | 1.9 s | 19.4 s |
+  | macOS | 5.0 s | 47.1 s |
+  | Windows | 5.8 s | — |
+
+  So the summary that opens by itself was, on a large file, minutes of a
+  spinner nobody asked for — and the slowest platform is not the one this is
+  developed on. What still opens by itself is what `capinfos` can answer, which
+  stays cheap at every size (0.52 s for that 85 MB on the slowest of the
+  three): when the capture was taken, how long it covers, how many packets, how
+  large. Under the facts it says what the rest would cost and which key runs
+  it. Pressing `o` still runs everything, at any size — that is somebody asking
+  for it.
+
 ### Fixed
 
 - **The stream parser could not read four of the thirteen names `tshark`
