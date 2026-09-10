@@ -512,7 +512,14 @@ func (w *Widget) realUserInput(ev interface{}, size gowid.IRenderSize, focus gow
 			case vim.KeyIn(ev, w.opt.RightKeys):
 				//res = Scroll(w, 1, w.Wrap(), app)
 				pos := w.Position()
-				if pos < len(w.data) {
+				// The last byte is len-1, so the test is on where the cursor
+				// would land. Testing where it is instead let it step one past
+				// the end of the packet, and nothing said so: Render draws no
+				// cursor for a position that is not a byte, and the struct
+				// pane, asked which field owns byte len(data), answers with
+				// nothing. The highlight vanished and the two panes stopped
+				// agreeing about where the reader was looking.
+				if pos+1 < len(w.data) {
 					w.SetPosition(pos+1, app)
 					res = true
 				}
@@ -583,11 +590,13 @@ func (w *Widget) realUserInput(ev interface{}, size gowid.IRenderSize, focus gow
 		res = true
 	} else if goToLastRow {
 		lastPos := len(w.data) - 1
-		w.SetPosition(gwutil.Min(lastPos, lastPos-lastPos%16+pos%16), app)
+		// Max(0, ...) for a packet with no bytes at all: len-1 is -1 there,
+		// and a negative byte offset is a position no pane can make sense of.
+		w.SetPosition(gwutil.Max(0, gwutil.Min(lastPos, lastPos-lastPos%16+pos%16)), app)
 		res = true
 	} else if scrollDown {
 		if moveCursor {
-			w.SetPosition(gwutil.Min(pos+16, len(w.data)-1), app)
+			w.SetPosition(gwutil.Max(0, gwutil.Min(pos+16, len(w.data)-1)), app)
 			if atBottom {
 				w.offset += 1
 			}
@@ -660,7 +669,8 @@ func (t *Widget) GoToEnd(size gowid.IRenderSize, app gowid.IApp) {
 	dataRows := (len(t.data) + 15) / 16
 	t.offset += gwutil.Max(0, dataRows-(canvasRows+t.offset))
 
-	t.SetPosition(len(t.data)-1, app)
+	// Max(0, ...) because a packet with no bytes has no last byte either.
+	t.SetPosition(gwutil.Max(0, len(t.data)-1), app)
 }
 
 // Can leave the cursor out of sight
