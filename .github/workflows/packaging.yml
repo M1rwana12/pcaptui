@@ -42,14 +42,25 @@ jobs:
           cd /home/builder
           sudo -u builder namcap PKGBUILD
 
+      # The AUR serves .SRCINFO, not the PKGBUILD: it is what the site reads
+      # for the version, the dependencies and the sources. A .SRCINFO left
+      # behind after a version bump is the commonest way an AUR package lies
+      # about itself, and it lies quietly - the package still builds.
+      - name: The committed .SRCINFO is the one makepkg generates
+        run: |
+          cd /home/builder
+          sudo -u builder makepkg --printsrcinfo > .SRCINFO.generated
+          if ! diff -u "$GITHUB_WORKSPACE/packaging/aur/.SRCINFO" .SRCINFO.generated; then
+            echo "::error::packaging/aur/.SRCINFO is stale - regenerate it with makepkg --printsrcinfo"
+            exit 1
+          fi
+
       # --nocheck is not passed: the check() function runs go test ./..., and
       # wireshark-cli is installed above, so the tests that drive a real tshark
       # run here rather than skipping.
       - name: Build, test and package
         run: |
           cd /home/builder
-          sudo -u builder makepkg --printsrcinfo > .SRCINFO
-          cat .SRCINFO
           sudo -u builder makepkg --syncdeps --noconfirm
 
       - name: Install the package and run it
@@ -65,8 +76,3 @@ jobs:
         run: |
           cd /home/builder
           namcap pcaptui-*.pkg.tar.zst
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: srcinfo
-          path: /home/builder/.SRCINFO

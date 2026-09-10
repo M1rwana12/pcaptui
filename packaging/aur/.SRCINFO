@@ -1,0 +1,14 @@
+pkgbase = pcaptui
+	pkgdesc = Terminal interface to tshark: packet list, protocol tree and hex view, over SSH
+	pkgver = 1.2.0
+	pkgrel = 1
+	url = https://github.com/m1rwana12/pcaptui
+	arch = x86_64
+	arch = aarch64
+	license = MIT
+	makedepends = go
+	depends = wireshark-cli
+	source = pcaptui-1.2.0.tar.gz::https://github.com/m1rwana12/pcaptui/archive/refs/tags/v1.2.0.tar.gz
+	sha256sums = 908d38340cb3d865a88775f8adf913a2c451b7568146577b0a499f81a6763240
+
+pkgname = pcaptui
