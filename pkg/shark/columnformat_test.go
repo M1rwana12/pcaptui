@@ -7,12 +7,15 @@ package shark
 import (
 	"testing"
 
+	"github.com/m1rwana12/pcaptui/internal/tsharktest"
 	"github.com/stretchr/testify/assert"
 )
 
 //======================================================================
 
+// The column formats come from tshark -G column-formats, so this needs one.
 func TestCF1(t *testing.T) {
+	tsharktest.Need(t)
 
 	fields := &ColumnsFromTshark{}
 	err := fields.InitNoCache()

@@ -12,6 +12,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/m1rwana12/pcaptui/internal/tsharktest"
 	"github.com/m1rwana12/pcaptui/pkg/summary"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -59,6 +60,7 @@ func runStat(t *testing.T, s Stat, filter string) string {
 
 func runStatOn(t *testing.T, pcap string, s Stat, filter string) string {
 	t.Helper()
+	tsharktest.Need(t)
 
 	// ZArgs, not ZArg: a statistic can ask for more than one table in a pass,
 	// and the tests have to drive what the program drives.
@@ -255,6 +257,7 @@ func runFieldsQuery(t *testing.T, filter string, field string) string {
 
 func runFieldsQueryOn(t *testing.T, pcap string, filter string, field string) string {
 	t.Helper()
+	tsharktest.Need(t)
 
 	cmd := exec.Command("tshark", "-r", pcap, "-Y", filter, "-T", "fields", "-e", field)
 	out, err := cmd.Output()
@@ -480,6 +483,12 @@ func TestTheLoginsFilterFindsItsPacket(t *testing.T) {
 // that a future tshark quietly starting to honour the filter is noticed rather
 // than assumed.
 func TestTheCredentialsTapStillIgnoresAFilterItIsGiven(t *testing.T) {
+	// This one builds its own command rather than going through runStat, so it
+	// needs the guard of its own. Without tshark it does not merely fail: the
+	// summary goroutine pcap.Command.Start registers is never run, so TestMain
+	// waits on it and the whole binary ends in a deadlock three minutes later.
+	tsharktest.Need(t)
+
 	cmd := MakeCommands().Stats(credsPcap, "credentials,frame.number == 999")
 
 	out, err := cmd.StdoutReader()

@@ -82,7 +82,48 @@
   `frame 7 1027` six lines above `192.0.2.10 7 1,027` — one quantity, two
   spellings, in one dialog.
 
+- **The byte pane has tests.** It draws every packet's bytes and had none: no
+  coverage at all over the code that decides which cell holds which byte, next
+  to a reader that had already been wrong once. Twenty tests now, and they are
+  written as rules rather than as a copy of the output — that the hex and the
+  ascii describe the same byte, that the cursor marks one byte in both columns,
+  that a layer ends where it says it ends, that the scrollbar's two numbers
+  agree with the data. Two of them failed when they were written; see Fixed.
+
+- **The divider offsets have tests, and the weak one was replaced.** The test
+  beside them exercised `encoding/json` and no program code. What matters about
+  dragging a divider is that width moves between two panes and is never
+  created, lost or made negative, and that is what is checked now. The json
+  round trip stays, because those three field names are a saved format: rename
+  one and everybody's saved layout is quietly lost.
+
+- **A test that needs `tshark` says so, instead of failing.** Thirty-one tests
+  drive a real `tshark`, which is the only way to confirm that an argument this
+  program spells is an argument `tshark` accepts. On a machine with no
+  Wireshark they used to fail — thirty-one red results saying nothing about the
+  code, and three minutes to produce them, one of which ended in a deadlock
+  rather than a message. They skip themselves now. So that this cannot make CI
+  green while a third of the suite goes unrun, the workflows set
+  `PCAPTUI_REQUIRE_TSHARK`, which turns the skip back into a failure.
+
+### Removed
+
+- **The unused copy of the byte pane.** `widgets/hexdumper` had been replaced
+  by `widgets/hexdumper2` and was imported by nothing; its 40% coverage was
+  flattering the total while covering code that never ran.
+
 ### Fixed
+
+- **The cursor could step one byte past the end of the packet.** Right on the
+  last byte moved it to `len(data)`, which is not a byte: the pane draws no
+  cursor for such a position and the structure pane, asked which field owns
+  it, answers with nothing. So the highlight vanished, the two panes stopped
+  agreeing about where the reader was looking, and nothing was reported. Down
+  had always clamped to the last byte; Right now does too.
+
+- **A packet with no bytes could give the pane a negative cursor.** Down, `G`
+  and End on an empty capture computed `len(data)-1` and set the position to
+  -1. Nothing crashed and nothing said so.
 
 - **IPv6 hosts were invisible to Endpoints and to the Overview.** Both asked
   `tshark` for IPv4 endpoints only, so a capture of IPv6 traffic answered

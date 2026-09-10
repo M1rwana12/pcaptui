@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/m1rwana12/pcaptui"
+	"github.com/m1rwana12/pcaptui/internal/tsharktest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -103,6 +104,7 @@ func TestNothingNewIsAnEmptyList(t *testing.T) {
 const demoPcap = "../../scripts/pcaps/demo.pcap"
 
 func TestTheObjectsInTheCaptureAreWritten(t *testing.T) {
+	tsharktest.Need(t)
 	dir := t.TempDir()
 
 	written, err := Objects(demoPcap, "http", dir)
@@ -121,6 +123,7 @@ func TestTheObjectsInTheCaptureAreWritten(t *testing.T) {
 // is the case that would otherwise look like success and leave the user
 // looking for files that were never written.
 func TestACaptureWithNoObjectsOfThatTypeWritesNothing(t *testing.T) {
+	tsharktest.Need(t)
 	dir := t.TempDir()
 
 	written, err := Objects(demoPcap, "tftp", dir)
@@ -132,6 +135,7 @@ func TestACaptureWithNoObjectsOfThatTypeWritesNothing(t *testing.T) {
 // The directory is made if it is not there, including its parents - the name
 // carries a timestamp, so it never is.
 func TestTheDirectoryIsMadeIfItIsNotThere(t *testing.T) {
+	tsharktest.Need(t)
 	dir := filepath.Join(t.TempDir(), "not", "there", "yet")
 
 	_, err := Objects(demoPcap, "http", dir)
@@ -144,6 +148,7 @@ func TestTheDirectoryIsMadeIfItIsNotThere(t *testing.T) {
 
 // Files already in the directory are not claimed as newly written.
 func TestFilesThatWereAlreadyThereAreNotClaimed(t *testing.T) {
+	tsharktest.Need(t)
 	dir := t.TempDir()
 	require.NoError(t, os.WriteFile(filepath.Join(dir, "mine.txt"), []byte("hi"), 0644))
 
@@ -163,6 +168,7 @@ func TestAnUnknownTypeIsAnError(t *testing.T) {
 
 // The list this offers has to be the list tshark accepts.
 func TestEveryTypeTsharkOffersIsOneItAccepts(t *testing.T) {
+	tsharktest.Need(t)
 	types, err := Types()
 	require.NoError(t, err)
 	require.NotEmpty(t, types)

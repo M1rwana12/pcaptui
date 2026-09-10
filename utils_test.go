@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/blang/semver"
+	"github.com/m1rwana12/pcaptui/internal/tsharktest"
 	"github.com/m1rwana12/pcaptui/pkg/format"
 	"github.com/stretchr/testify/assert"
 )
@@ -177,6 +178,9 @@ func TestMACComp1(t *testing.T) {
 }
 
 func TestFolders(t *testing.T) {
+	// TsharkSetting asks tshark itself where its folders are.
+	tsharktest.Need(t)
+
 	// tshark reads its temporary directory from TMPDIR on Unix, but from
 	// TEMP on Windows, so the test has to ask for whichever one this
 	// platform actually honours.

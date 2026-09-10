@@ -6,12 +6,16 @@ package fields
 import (
 	"testing"
 
+	"github.com/m1rwana12/pcaptui/internal/tsharktest"
 	"github.com/stretchr/testify/assert"
 )
 
 //======================================================================
 
+// InitNoCache asks a real tshark for its field list, so without one there is
+// nothing here to test.
 func TestFields1(t *testing.T) {
+	tsharktest.Need(t)
 
 	fields := New()
 	err := fields.InitNoCache()
