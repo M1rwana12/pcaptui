@@ -1,6 +1,6 @@
 # Maintainer: m1rwana12 <senja3209@icloud.com>
 pkgname=pcaptui
-pkgver=1.0.0
+pkgver=1.2.0
 pkgrel=1
 pkgdesc="Terminal interface to tshark: packet list, protocol tree and hex view, over SSH"
 arch=('x86_64' 'aarch64')
@@ -9,7 +9,7 @@ license=('MIT')
 depends=('wireshark-cli')
 makedepends=('go')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/m1rwana12/pcaptui/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('dcec9fb3179563e6fc9e1753d8d59bf8ff0ca0715a94b1024635f56abe068e87')
+sha256sums=('908d38340cb3d865a88775f8adf913a2c451b7568146577b0a499f81a6763240')
 
 build() {
   cd "$pkgname-$pkgver"
@@ -22,8 +22,12 @@ build() {
   export CGO_LDFLAGS="${LDFLAGS}"
   export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw"
 
-  go build -ldflags "-linkmode=external -X main.version=$pkgver" \
-    -o "$pkgname" ./cmd/pcaptui
+  # No -X for the version. It is a var in the root package, set in version.go
+  # and compiled in - the release workflow refuses a tag that disagrees with
+  # it - so there is nothing here to inject. The flag this used to carry aimed
+  # at main.version, which this program does not have: it set nothing and read
+  # as though it did.
+  go build -ldflags "-linkmode=external" -o "$pkgname" ./cmd/pcaptui
 }
 
 check() {

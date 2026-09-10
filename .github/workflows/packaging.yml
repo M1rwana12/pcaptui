@@ -1,0 +1,72 @@
+name: Packaging
+
+# Run by hand. Builds the package definitions in packaging/ on the platform
+# each one targets, which is the step that could not be taken here: there is no
+# Arch machine and no macOS machine.
+#
+# Until this ran, "the PKGBUILD is ready to submit" was a claim about a file
+# nobody had built. What it checks is the whole of it - makepkg's own linting,
+# the source hash against the published tag, the build, the test suite, and
+# then installing the package and running the binary out of /usr/bin.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  aur:
+    name: PKGBUILD on Arch
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:base-devel
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install what the package needs
+        run: |
+          pacman -Syu --noconfirm git go wireshark-cli namcap
+
+      # makepkg refuses to run as root, on purpose: a PKGBUILD is somebody
+      # else's shell script and it is about to be executed.
+      - name: Make a build user
+        run: |
+          useradd -m builder
+          echo 'builder ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
+          cp packaging/aur/PKGBUILD /home/builder/
+          chown -R builder:builder /home/builder
+
+      - name: namcap the recipe
+        run: |
+          cd /home/builder
+          sudo -u builder namcap PKGBUILD
+
+      # --nocheck is not passed: the check() function runs go test ./..., and
+      # wireshark-cli is installed above, so the tests that drive a real tshark
+      # run here rather than skipping.
+      - name: Build, test and package
+        run: |
+          cd /home/builder
+          sudo -u builder makepkg --printsrcinfo > .SRCINFO
+          cat .SRCINFO
+          sudo -u builder makepkg --syncdeps --noconfirm
+
+      - name: Install the package and run it
+        run: |
+          cd /home/builder
+          pacman -U --noconfirm pcaptui-*.pkg.tar.zst
+          # --pass-thru=false because stdout is a pipe here, and without it the
+          # program hands its arguments to tshark and prints tshark's version.
+          test "$(pcaptui --pass-thru=false --version)" = "pcaptui v1.2.0"
+          pcaptui --pass-thru=false --version
+
+      - name: namcap the built package
+        run: |
+          cd /home/builder
+          namcap pcaptui-*.pkg.tar.zst
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: srcinfo
+          path: /home/builder/.SRCINFO

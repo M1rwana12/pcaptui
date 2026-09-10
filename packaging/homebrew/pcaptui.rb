@@ -1,7 +1,7 @@
 class Pcaptui < Formula
   desc "Terminal interface to tshark: packet list, protocol tree and hex view, over SSH"
   homepage "https://github.com/m1rwana12/pcaptui"
-  version "1.0.0"
+  version "1.2.0"
   license "MIT"
 
   # The release binaries rather than a source build: they are what CI produced
@@ -9,23 +9,23 @@ class Pcaptui < Formula
   # the same artefact that was tested and published.
   on_macos do
     on_intel do
-      url "https://github.com/m1rwana12/pcaptui/releases/download/v1.0.0/pcaptui_1.0.0_darwin_amd64.tar.gz"
-      sha256 "eab6c16486e65991a91e08823dda1bba7647fdcd4ee46168ba8b626026835158"
+      url "https://github.com/m1rwana12/pcaptui/releases/download/v1.2.0/pcaptui_1.2.0_darwin_amd64.tar.gz"
+      sha256 "3fc6094bea93d5bab712fc690a623b5cb03c9561775147226f8f5287ed96794f"
     end
     on_arm do
-      url "https://github.com/m1rwana12/pcaptui/releases/download/v1.0.0/pcaptui_1.0.0_darwin_arm64.tar.gz"
-      sha256 "ac0774fd076182bdbbe715536063c4751b81e6acf5650c88de0144af6c67bc29"
+      url "https://github.com/m1rwana12/pcaptui/releases/download/v1.2.0/pcaptui_1.2.0_darwin_arm64.tar.gz"
+      sha256 "317ac3d0c8c66ad572ec96879f92c4b395a581170de7830a9112d5e783a858e7"
     end
   end
 
   on_linux do
     on_intel do
-      url "https://github.com/m1rwana12/pcaptui/releases/download/v1.0.0/pcaptui_1.0.0_linux_amd64.tar.gz"
-      sha256 "4d0a55041a019fcae683c0da389a8279d992ee610fafc93a722ceee9fa60235a"
+      url "https://github.com/m1rwana12/pcaptui/releases/download/v1.2.0/pcaptui_1.2.0_linux_amd64.tar.gz"
+      sha256 "2f69b54e12808c1ee7bc37581517f30fdeda70310dad8b15662be17c4cf77efa"
     end
     on_arm do
-      url "https://github.com/m1rwana12/pcaptui/releases/download/v1.0.0/pcaptui_1.0.0_linux_arm64.tar.gz"
-      sha256 "e1e75076d4af1d1d3851d3daf25775d280439ffdb1642dc73c688ceaa6a42488"
+      url "https://github.com/m1rwana12/pcaptui/releases/download/v1.2.0/pcaptui_1.2.0_linux_arm64.tar.gz"
+      sha256 "893c376ebc3c39913e3af1373327f3625e240cbc99ace265df43c659dde672fe"
     end
   end
 
