@@ -49,6 +49,7 @@ const (
 	UDP         Protocol = iota
 	TLS         Protocol = iota
 	WebSocket   Protocol = iota
+	HTTP2       Protocol = iota
 )
 
 var _ fmt.Stringer = Protocol(0)
@@ -65,6 +66,8 @@ func (p Protocol) String() string {
 		return "TLS"
 	case WebSocket:
 		return "WebSocket"
+	case HTTP2:
+		return "HTTP/2"
 	default:
 		panic(fmt.Sprintf("unknown stream protocol %d", int(p)))
 	}

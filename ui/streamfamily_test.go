@@ -73,15 +73,15 @@ func family(t *testing.T, token string) streams.Family {
 //======================================================================
 
 func TestTheTransportStreamIsWhatTheKeyFollows(t *testing.T) {
-	f, idx, err := pickStreamFamily(nil, tcpPacket())
+	ref, err := pickStreamFamily(nil, tcpPacket())
 	require.NoError(t, err)
-	assert.Equal(t, streams.TCP, f.Proto)
-	assert.Equal(t, 4, idx)
+	assert.Equal(t, streams.TCP, ref.Family.Proto)
+	assert.Equal(t, 4, ref.Index)
 
-	f, idx, err = pickStreamFamily(nil, udpPacket())
+	ref, err = pickStreamFamily(nil, udpPacket())
 	require.NoError(t, err)
-	assert.Equal(t, streams.UDP, f.Proto)
-	assert.Equal(t, 1, idx)
+	assert.Equal(t, streams.UDP, ref.Family.Proto)
+	assert.Equal(t, 1, ref.Index)
 }
 
 // The guarantee the whole design rests on. Following this packet as TLS would
@@ -89,22 +89,22 @@ func TestTheTransportStreamIsWhatTheKeyFollows(t *testing.T) {
 // keyless TLS stream with a full banner, no payload and exit status 0 - so the
 // key keeps giving the bytes, and TLS is asked for by name.
 func TestATLSPacketIsStillFollowedAsTCPUnlessAsked(t *testing.T) {
-	f, idx, err := pickStreamFamily(nil, tlsPacket())
+	ref, err := pickStreamFamily(nil, tlsPacket())
 
 	require.NoError(t, err)
-	assert.Equal(t, streams.TCP, f.Proto, "TLS was chosen for a user who did not ask for it")
-	assert.Equal(t, 7, idx, "and with the TCP stream's index, not the TLS one")
+	assert.Equal(t, streams.TCP, ref.Family.Proto, "TLS was chosen for a user who did not ask for it")
+	assert.Equal(t, 7, ref.Index, "and with the TCP stream's index, not the TLS one")
 }
 
 func TestAskingForTLSFollowsTLS(t *testing.T) {
 	want := family(t, "tls")
 
-	f, idx, err := pickStreamFamily(&want, tlsPacket())
+	ref, err := pickStreamFamily(&want, tlsPacket())
 
 	require.NoError(t, err)
-	assert.Equal(t, streams.TLS, f.Proto)
-	assert.Equal(t, 2, idx, "the tls.stream index, which is not the tcp.stream one")
-	assert.Equal(t, "tls.stream eq 2", f.Filter(idx))
+	assert.Equal(t, streams.TLS, ref.Family.Proto)
+	assert.Equal(t, 2, ref.Index, "the tls.stream index, which is not the tcp.stream one")
+	assert.Equal(t, "tls.stream eq 2", ref.Filter())
 }
 
 // A WebSocket stream is numbered by the TCP stream underneath it. Reading the
@@ -113,12 +113,12 @@ func TestAskingForTLSFollowsTLS(t *testing.T) {
 func TestAWebSocketStreamIsNumberedByTheTCPStreamUnderIt(t *testing.T) {
 	want := family(t, "websocket")
 
-	f, idx, err := pickStreamFamily(&want, websocketPacket())
+	ref, err := pickStreamFamily(&want, websocketPacket())
 
 	require.NoError(t, err)
-	assert.Equal(t, streams.WebSocket, f.Proto)
-	assert.Equal(t, 3, idx)
-	assert.Equal(t, "tcp.stream eq 3", f.Filter(idx))
+	assert.Equal(t, streams.WebSocket, ref.Family.Proto)
+	assert.Equal(t, 3, ref.Index)
+	assert.Equal(t, "tcp.stream eq 3", ref.Filter())
 }
 
 // The index alone cannot tell the families apart, because every TLS or
@@ -128,7 +128,7 @@ func TestAskingForAFamilyThePacketDoesNotHave(t *testing.T) {
 	for _, token := range []string{"tls", "websocket"} {
 		want := family(t, token)
 
-		_, _, err := pickStreamFamily(&want, tcpPacket())
+		_, err := pickStreamFamily(&want, tcpPacket())
 
 		require.Error(t, err, token)
 		assert.Contains(t, err.Error(), want.Label, "the refusal should name what was asked for")
@@ -146,7 +146,7 @@ func TestALayerWithNoStreamNumberSaysWhichFieldIsMissing(t *testing.T) {
 		indexes: map[string]int{"tcp.stream": 7},
 	}
 
-	_, _, err := pickStreamFamily(&want, pkt)
+	_, err := pickStreamFamily(&want, pkt)
 
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "tls.stream")
@@ -155,7 +155,7 @@ func TestALayerWithNoStreamNumberSaysWhichFieldIsMissing(t *testing.T) {
 func TestAPacketWithNoStreamAtAll(t *testing.T) {
 	pkt := fakePacket{layers: map[string]bool{"icmp": true}}
 
-	_, _, err := pickStreamFamily(nil, pkt)
+	_, err := pickStreamFamily(nil, pkt)
 
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "TCP or UDP")
@@ -172,12 +172,65 @@ func TestOnAnOlderWiresharkTLSIsIndexedByTheTCPStream(t *testing.T) {
 		indexes: map[string]int{"tcp.stream": 7},
 	}
 
-	f, idx, err := pickStreamFamilyWith(&want, pkt, noTLSStream)
+	ref, err := pickStreamFamilyWith(&want, pkt, noTLSStream)
 
 	require.NoError(t, err, "following TLS should still work where tls.stream does not exist")
-	assert.Equal(t, streams.TLS, f.Proto)
-	assert.Equal(t, 7, idx)
-	assert.Equal(t, "tcp.stream eq 7", f.Filter(idx))
+	assert.Equal(t, streams.TLS, ref.Family.Proto)
+	assert.Equal(t, 7, ref.Index)
+	assert.Equal(t, "tcp.stream eq 7", ref.Filter())
+}
+
+// An HTTP/2 stream is two numbers, and both come off the packet: the TCP
+// stream it travelled in and the stream id within it.
+func TestAnHTTP2StreamIsTwoNumbersFromTheSamePacket(t *testing.T) {
+	want := family(t, "http2")
+	pkt := fakePacket{
+		layers:  map[string]bool{"tcp": true, "http2": true},
+		indexes: map[string]int{"tcp.stream": 0, "http2.streamid": 1},
+	}
+
+	ref, err := pickStreamFamily(&want, pkt)
+
+	require.NoError(t, err)
+	assert.Equal(t, streams.HTTP2, ref.Family.Proto)
+	assert.Equal(t, 0, ref.Index)
+	assert.Equal(t, 1, ref.Sub)
+	assert.Equal(t, "tcp.stream eq 0 and http2.streamid eq 1", ref.Filter())
+	assert.Equal(t, "follow,http2,raw,0,1", ref.FollowArg("raw"))
+}
+
+// The frames that set a connection up - the preface and SETTINGS - belong to
+// stream 0 and carry no http2.streamid field of their own. Following them
+// would hand tshark one number where it needs two, which is an error and not
+// an empty pane, so the refusal has to happen here and say what is missing.
+func TestAnHTTP2PacketWithNoStreamIdIsRefusedWithItsName(t *testing.T) {
+	want := family(t, "http2")
+	pkt := fakePacket{
+		layers:  map[string]bool{"tcp": true, "http2": true},
+		indexes: map[string]int{"tcp.stream": 0},
+	}
+
+	_, err := pickStreamFamily(&want, pkt)
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "http2.streamid")
+	assert.Contains(t, err.Error(), "multiplexes")
+}
+
+// And such a packet is not offered as a followable HTTP/2 stream either - the
+// offer list has to apply the same rule as the choice.
+func TestTheOfferListLeavesOutAFamilyMissingItsSecondNumber(t *testing.T) {
+	want := family(t, "tls")
+	pkt := fakePacket{
+		layers:  map[string]bool{"tcp": true, "http2": true},
+		indexes: map[string]int{"tcp.stream": 0},
+	}
+
+	_, err := pickStreamFamily(&want, pkt)
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), ":streams tcp")
+	assert.NotContains(t, err.Error(), ":streams http2")
 }
 
 // The refusal lists what this packet does offer, so that a user who asked for
@@ -185,7 +238,7 @@ func TestOnAnOlderWiresharkTLSIsIndexedByTheTCPStream(t *testing.T) {
 func TestTheRefusalNamesEveryFamilyThePacketOffers(t *testing.T) {
 	want := family(t, "tls")
 
-	_, _, err := pickStreamFamily(&want, websocketPacket())
+	_, err := pickStreamFamily(&want, websocketPacket())
 
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), ":streams tcp")

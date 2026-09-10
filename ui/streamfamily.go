@@ -25,13 +25,6 @@ type streamPacket interface {
 	HasLayer(name string) bool
 }
 
-// pickStreamFamily answers which family to follow for this packet and which
-// stream of it.
-//
-// With want == nil this is the `s` key: the transport stream, TCP first, then
-// UDP - unchanged behaviour. With a want it is :streams <family>, and the
-// packet has to actually carry that family; a stream index alone does not
-// prove it, because a TLS packet has a tcp.stream like any other.
 // knownField answers whether this tshark has a field of that name, for
 // Family.Resolve. Before the field list has loaded there is nothing to ask, and
 // nil means "assume the field is there".
@@ -45,31 +38,33 @@ func knownField() func(string) bool {
 	}
 }
 
-func pickStreamFamily(want *streams.Family, pkt streamPacket) (streams.Family, int, error) {
+// pickStreamFamily answers which stream to follow for this packet: the family,
+// and the one or two indexes that name it.
+//
+// With want == nil this is the `s` key: the transport stream, TCP first, then
+// UDP - unchanged behaviour. With a want it is :streams <family>, and the
+// packet has to actually carry that family; a stream index alone does not
+// prove it, because a TLS packet has a tcp.stream like any other.
+func pickStreamFamily(want *streams.Family, pkt streamPacket) (streams.Ref, error) {
 	return pickStreamFamilyWith(want, pkt, knownField())
 }
 
-func pickStreamFamilyWith(want *streams.Family, pkt streamPacket, known func(string) bool) (streams.Family, int, error) {
+func pickStreamFamilyWith(want *streams.Family, pkt streamPacket, known func(string) bool) (streams.Ref, error) {
 	if want != nil {
 		resolved := want.Resolve(known)
 		want = &resolved
 
 		if !pkt.HasLayer(want.Layer) {
-			return streams.Family{}, 0, fmt.Errorf(
+			return streams.Ref{}, fmt.Errorf(
 				"This packet carries no %s.%s", want.Label, offerFor(pkt, known))
 		}
 
-		idx := pkt.FieldIndex(want.IndexField)
-		if idx.IsNone() {
-			// tshark dissected the layer but did not number the stream. Naming
-			// the field is the only useful thing to say: it is the thing that
-			// would have to be there.
-			return streams.Family{}, 0, fmt.Errorf(
-				"This %s packet has no %s, so there is no stream to follow.",
-				want.Label, want.IndexField)
+		ref, err := refFor(*want, pkt)
+		if err != nil {
+			return streams.Ref{}, err
 		}
 
-		return *want, idx.Val(), nil
+		return ref, nil
 	}
 
 	for _, f := range streams.Families() {
@@ -79,12 +74,44 @@ func pickStreamFamilyWith(want *streams.Family, pkt streamPacket, known func(str
 		if !pkt.HasLayer(f.Layer) {
 			continue
 		}
-		if idx := pkt.FieldIndex(f.IndexField); !idx.IsNone() {
-			return f, idx.Val(), nil
+		if ref, err := refFor(f, pkt); err == nil {
+			return ref, nil
 		}
 	}
 
-	return streams.Family{}, 0, fmt.Errorf("Please select a TCP or UDP packet.")
+	return streams.Ref{}, fmt.Errorf("Please select a TCP or UDP packet.")
+}
+
+// refFor reads the one or two indexes that name this packet's stream of that
+// family. Naming the field that is missing is the only useful thing to say
+// when tshark dissected the layer but did not number it - that field is the
+// thing that would have to be there.
+func refFor(f streams.Family, pkt streamPacket) (streams.Ref, error) {
+	idx := pkt.FieldIndex(f.IndexField)
+	if idx.IsNone() {
+		return streams.Ref{}, fmt.Errorf(
+			"This %s packet has no %s, so there is no stream to follow.", f.Label, f.IndexField)
+	}
+
+	ref := streams.Ref{Family: f, Index: idx.Val()}
+
+	if f.SubIndexField == "" {
+		return ref, nil
+	}
+
+	// A two-index family. Handing tshark one index is not an empty answer but
+	// an error, so a packet whose second index is missing has to be refused
+	// here rather than followed.
+	sub := pkt.FieldIndex(f.SubIndexField)
+	if sub.IsNone() {
+		return streams.Ref{}, fmt.Errorf(
+			"This %s packet has no %s. %s multiplexes streams over one connection, "+
+				"so a stream of it needs both numbers; this packet carries only the connection.",
+			f.Label, f.SubIndexField, f.Label)
+	}
+
+	ref.Sub = sub.Val()
+	return ref, nil
 }
 
 // offerFor names the families this packet does have, so that a refusal is not
@@ -94,7 +121,10 @@ func offerFor(pkt streamPacket, known func(string) bool) string {
 	got := make([]string, 0, 2)
 	for _, f := range streams.Families() {
 		f = f.Resolve(known)
-		if pkt.HasLayer(f.Layer) && !pkt.FieldIndex(f.IndexField).IsNone() {
+		if !pkt.HasLayer(f.Layer) {
+			continue
+		}
+		if _, err := refFor(f, pkt); err == nil {
 			got = append(got, ":streams "+f.Token)
 		}
 	}

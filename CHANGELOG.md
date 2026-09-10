@@ -1,5 +1,47 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- **`:streams http2`** — one HTTP/2 exchange out of a connection that
+  multiplexes many. `tshark` hands back the request's and the response's
+  headers decoded to text, then the DATA payload, where the TCP stream
+  underneath carries the connection preface, the SETTINGS frames and every
+  stream's framing bytes interleaved.
+
+  A stream of it is *two* numbers — the TCP connection and the stream id inside
+  it — and both are read from the packet you selected. Handing `tshark` one
+  where it needs two is not an empty answer but an error, so a packet that
+  carries only the connection is refused with the name of the field that is
+  missing. The frames that set a connection up belong to stream 0, and
+  following one of those shows that stream, which is what `tshark` reports.
+
+  A third number is never appended: `tshark` reads a third positional argument
+  as a range of chunks to print, so `follow,http2,raw,0,1,3` returns the third
+  chunk alone and exits 0 — a stream shown as part of itself, reported as
+  success.
+
+  Not `quic`, and the reason changed: two indexes are no longer the obstacle,
+  keys are. Its streams are 1-RTT protected, so without a key log it answers
+  with the same dead banner as TLS, and a fixture for it can only be built by
+  inventing the traffic secrets — which would test the invention.
+
+### Fixed
+
+- **The stream parser could not read four of the thirteen names `tshark`
+  prints.** The grammar's character class for a family name allowed letters
+  only, so a `Follow: http2,raw` header — or `mpeg-pes` — ended the parse, and
+  the stream view reported the reassembly as incomplete rather than the name as
+  unreadable.
+
+- **`pkg/streams/follow.go` is generated from its grammar again.** It carries a
+  "DO NOT EDIT" header and had been edited anyway, in three places, so
+  regenerating it produced code that would not compile — which is a fine way to
+  make a grammar unmaintainable. The grammar now says what the generated file
+  said, the file is that grammar's output, and the header records how to
+  regenerate it and with which `pigeon`.
+
 ## [1.2.0] - 2026-09-10
 
 ### Added

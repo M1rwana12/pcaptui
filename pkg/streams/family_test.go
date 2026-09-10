@@ -85,7 +85,50 @@ func TestTheFilterIsSpelledTheWayTsharkSpellsIt(t *testing.T) {
 	} {
 		f, ok := FamilyByToken(tc.token)
 		require.True(t, ok, tc.token)
-		assert.Equal(t, tc.want, f.Filter(tc.idx))
+		assert.Equal(t, tc.want, Ref{Family: f, Index: tc.idx}.Filter())
+	}
+}
+
+// HTTP/2 multiplexes streams over one TCP connection, so one of its streams is
+// two numbers: the connection and the stream id. tshark wants both, in that
+// order, and refuses one - `tshark: Error creating filter for this stream`,
+// exit 1 - so this is arithmetic that cannot degrade quietly.
+func TestATwoIndexFamilyCarriesBothNumbers(t *testing.T) {
+	h2, ok := FamilyByToken("http2")
+	require.True(t, ok)
+	assert.Equal(t, "http2.streamid", h2.SubIndexField)
+
+	ref := Ref{Family: h2, Index: 3, Sub: 5}
+
+	assert.Equal(t, "follow,http2,raw,3,5", ref.FollowArg("raw"))
+	assert.Equal(t, "tcp.stream eq 3 and http2.streamid eq 5", ref.Filter())
+	assert.Equal(t, "HTTP/2 stream 5 of TCP stream 3", ref.Describe())
+
+	// The one-index families keep one, and are described by it.
+	tcp, _ := FamilyByToken("tcp")
+	one := Ref{Family: tcp, Index: 7}
+	assert.Empty(t, tcp.SubIndexField)
+	assert.Equal(t, "follow,tcp,raw,7", one.FollowArg("raw"))
+	assert.Equal(t, "TCP stream 7", one.Describe())
+}
+
+// tshark reads a third positional argument as a range of chunks to print:
+// `follow,http2,raw,0,1,3` returns the third chunk of that stream and nothing
+// else, and exits 0. So an argument with one field too many does not fail, it
+// silently shows part of the conversation as though it were all of it.
+func TestTheFollowArgumentNeverCarriesAThirdNumber(t *testing.T) {
+	for _, f := range Families() {
+		arg := Ref{Family: f, Index: 1, Sub: 2}.FollowArg("raw")
+
+		fields := strings.Split(arg, ",")
+		want := 4
+		if f.SubIndexField != "" {
+			want = 5
+		}
+		assert.Len(t, fields, want, "%s built %q", f.Token, arg)
+		assert.Equal(t, "follow", fields[0])
+		assert.Equal(t, f.Token, fields[1])
+		assert.Equal(t, "raw", fields[2])
 	}
 }
 
@@ -128,6 +171,7 @@ func TestALayeredFamilyIsNeverChosenForTheUser(t *testing.T) {
 		{"udp", false},
 		{"tls", true},
 		{"websocket", true},
+		{"http2", true},
 	} {
 		f, ok := FamilyByToken(tc.token)
 		require.True(t, ok, tc.token)
@@ -141,9 +185,7 @@ func TestALayeredFamilyIsNeverChosenForTheUser(t *testing.T) {
 }
 
 // Every family's token has to survive the header parser, because tshark echoes
-// it in the Follow: line of its own output. This is not hypothetical: the
-// grammar's FollowExpr is [a-zA-Z,]+, so `Follow: http2,raw` fails to parse -
-// which is one of the two reasons http2 is not in the table.
+// it in the Follow: line of its own output.
 func TestTheParserAcceptsEveryFamilysHeader(t *testing.T) {
 	for _, f := range Families() {
 		inp := fmt.Sprintf(`
@@ -155,31 +197,57 @@ Node 0: 10.0.0.5:51000
 Node 1: 10.0.0.80:80
 48656c6c6f
 ===================================================================
-`, f.Token, f.Filter(0))
+`, f.Token, Ref{Family: f}.Filter())
 
 		_, err := ParseReader("", strings.NewReader(inp))
 		assert.NoError(t, err, "the parser cannot read a %s stream's own header", f.Token)
 	}
 }
 
-func TestAFamilyTheParserCannotReadIsNotInTheTable(t *testing.T) {
-	// The guard rail for the test above: prove the parser really does refuse a
-	// name with a digit in it, so that "every family parses" means something.
-	inp := `
+// The grammar's FollowExpr used to be [a-zA-Z,]+, which reads four of the
+// thirteen names tshark can print and silently fails on the rest: a digit or a
+// hyphen ends the parse, and the stream view reports the reassembly as
+// incomplete. Every name this tshark offers is listed here, including the ones
+// no family in the table uses, so that narrowing the character class again
+// fails here rather than in whichever family is added next.
+func TestTheParserReadsEveryNameTsharkCanPrint(t *testing.T) {
+	// From `tshark -z help` on Wireshark 4.6.8.
+	names := []string{
+		"dccp", "dtls", "http", "http2", "mp2t", "mpeg-pes", "quic",
+		"sip", "tcp", "tls", "udp", "usbcom", "websocket",
+	}
+
+	for _, name := range names {
+		// The two-index families print a filter with two clauses, so that is
+		// what a header carries for them.
+		filter := "tcp.stream eq 0"
+		if name == "http2" {
+			filter = "tcp.stream eq 0 and http2.streamid eq 1"
+		}
+		if name == "quic" {
+			filter = "quic.connection.number eq 0 and quic.stream.stream_id eq 0"
+		}
+		if name == "mp2t" || name == "mpeg-pes" {
+			filter = "mp2t.stream == 1 && mp2t.pid == 0x0100"
+		}
+
+		inp := fmt.Sprintf(`
 
 ===================================================================
-Follow: http2,raw
-Filter: tcp.stream eq 0 and http2.streamid eq 1
+Follow: %s,raw
+Filter: %s
 Node 0: 10.0.0.5:51000
 Node 1: 10.0.0.80:80
 48656c6c6f
 ===================================================================
-`
-	_, err := ParseReader("", strings.NewReader(inp))
-	require.Error(t, err, "if this passes, http2 can be added to the table")
+`, name, filter)
 
-	_, ok := FamilyByToken("http2")
-	assert.False(t, ok)
+		got := &chunkCollector{}
+		_, err := ParseReader("", strings.NewReader(inp), GlobalStore("callbacks", got))
+		require.NoError(t, err, "the parser cannot read a %s header", name)
+		assert.Equal(t, name+",raw", got.header.Follow)
+		assert.Equal(t, filter, got.header.Filter)
+	}
 }
 
 // tshark writes CRLF on Windows, and a header field captured up to the newline
@@ -239,10 +307,14 @@ func fieldExists(t *testing.T) func(string) bool {
 }
 
 func followWith(t *testing.T, pcap string, f Family, idx int) *chunkCollector {
+	return followRef(t, pcap, Ref{Family: f, Index: idx})
+}
+
+func followRef(t *testing.T, pcap string, ref Ref) *chunkCollector {
 	t.Helper()
 	tsharktest.Need(t)
 
-	cmd := MakeCommands().Stream(pcap, f.Token, idx)
+	cmd := MakeCommands().Stream(pcap, ref.FollowArg("raw"))
 	out, err := cmd.StdoutReader()
 	require.NoError(t, err)
 	require.NoError(t, cmd.Start())
@@ -276,7 +348,7 @@ func TestAWebSocketStreamIsTheMessagesNotTheFraming(t *testing.T) {
 	// The client frame is masked on the wire; following the TCP stream instead
 	// gives the handshake and the mask, which is the whole point of asking for
 	// the WebSocket family.
-	assert.Equal(t, ws.Resolve(fieldExists(t)).Filter(0), got.header.Filter,
+	assert.Equal(t, Ref{Family: ws.Resolve(fieldExists(t))}.Filter(), got.header.Filter,
 		"the filter this program composes is not the one tshark reports")
 
 	tcp, _ := FamilyByToken("tcp")
@@ -286,6 +358,55 @@ func TestAWebSocketStreamIsTheMessagesNotTheFraming(t *testing.T) {
 		"the TCP stream carries the handshake")
 	assert.NotContains(t, string(raw.chunks[0].StreamData()), "Hello",
 		"and the client's message masked, not in the clear")
+}
+
+// The payoff for following an HTTP/2 stream rather than the TCP stream under
+// it: one exchange out of a connection that multiplexes many, and tshark hands
+// back the decoded HPACK headers as text before the DATA payload. The TCP
+// stream carries the preface, the SETTINGS frames and every stream's framing
+// bytes interleaved.
+func TestAnHTTP2StreamIsOneExchangeOutOfTheConnection(t *testing.T) {
+	h2, ok := FamilyByToken("http2")
+	require.True(t, ok)
+
+	ref := Ref{Family: h2, Index: 0, Sub: 1}
+	got := followRef(t, "../../scripts/pcaps/http2.pcap", ref)
+
+	require.Len(t, got.chunks, 4, "headers and data, each way")
+
+	// The headers arrive decoded, as text, which is not something the bytes on
+	// the wire contain: they are HPACK on the wire.
+	assert.Contains(t, string(got.chunks[0].StreamData()), ":method: POST")
+	assert.Equal(t, Client, got.chunks[0].Direction())
+	assert.Contains(t, string(got.chunks[1].StreamData()), ":status: 200")
+	assert.Equal(t, Server, got.chunks[1].Direction())
+
+	assert.Equal(t, "hello from http2", string(got.chunks[2].StreamData()))
+	assert.Equal(t, "hi from server h2", string(got.chunks[3].StreamData()))
+
+	assert.Equal(t, ref.Filter(), got.header.Filter,
+		"the filter this program composes is not the one tshark reports")
+
+	// The same capture followed as TCP is the multiplexed frames.
+	tcp, _ := FamilyByToken("tcp")
+	raw := followWith(t, "../../scripts/pcaps/http2.pcap", tcp, 0)
+	require.NotEmpty(t, raw.chunks)
+	assert.Contains(t, string(raw.chunks[0].StreamData()), "PRI * HTTP/2.0",
+		"the TCP stream starts with the connection preface")
+}
+
+// A stream id that is not in the capture is answered the same way a stream
+// that does not exist at all is: a complete banner with empty node addresses,
+// no payload, and exit status 0. Nothing about the exit code says which.
+func TestAnHTTP2StreamThatIsNotThereIsSilent(t *testing.T) {
+	h2, ok := FamilyByToken("http2")
+	require.True(t, ok)
+
+	got := followRef(t, "../../scripts/pcaps/http2.pcap", Ref{Family: h2, Index: 0, Sub: 99})
+
+	assert.Empty(t, got.chunks)
+	assert.Equal(t, ":0", got.header.Node0)
+	assert.Equal(t, "tcp.stream eq 0 and http2.streamid eq 99", got.header.Filter)
 }
 
 // This is the measurement :streams tls exists the way it does because of. If a
@@ -302,7 +423,7 @@ func TestFollowingTLSWithoutKeysIsEmptyAndSaysNothingAboutIt(t *testing.T) {
 
 	// Not a hard-coded field name: this is tls.stream from Wireshark 4.4 and
 	// tcp.stream before it, and the contract is that the two agree.
-	assert.Equal(t, tls.Resolve(fieldExists(t)).Filter(0), got.header.Filter,
+	assert.Equal(t, Ref{Family: tls.Resolve(fieldExists(t))}.Filter(), got.header.Filter,
 		"the filter this program composes is not the one tshark reports")
 	// The banner is complete and the addresses are empty - the same answer
 	// tshark gives for a stream that does not exist at all.

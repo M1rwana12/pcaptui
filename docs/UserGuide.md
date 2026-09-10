@@ -195,14 +195,20 @@ this stream.
 
 ### Following something other than the transport
 
-`s` follows the transport stream — TCP, or UDP if the packet is not TCP. Two
+`s` follows the transport stream — TCP, or UDP if the packet is not TCP. Three
 more families can be asked for by name:
 
 | Command | What it shows |
 |---|---|
 | `:streams websocket` | the WebSocket messages, unmasked, without the HTTP handshake or the framing bytes around them |
+| `:streams http2` | one HTTP/2 exchange out of a connection that multiplexes many, with its headers decoded to text |
 | `:streams tls` | the decrypted TLS payload, which needs `--tls-keylog` |
 | `:streams tcp`, `:streams udp` | the transport stream, the same as `s` |
+
+An HTTP/2 stream is two numbers — the TCP connection and the stream id inside
+it — and both are read from the packet you have selected. The frames that set a
+connection up belong to stream 0, so selecting one of those follows the
+connection's own stream rather than an exchange.
 
 They are not chosen for you, and that is deliberate. A TLS packet is a TCP
 packet too, so following it as TLS looks like the better answer — but with no
@@ -526,7 +532,7 @@ Press `:` for the command line. Tab lists and completes.
 | `quit` | quit |
 | `recents` | load a recently-used capture |
 | `set` | change a setting |
-| `streams` | stream reassembly; takes an optional family — `tcp`, `udp`, `tls`, `websocket` |
+| `streams` | stream reassembly; takes an optional family — `tcp`, `udp`, `tls`, `websocket`, `http2` |
 | `theme` | choose a theme |
 | `unmap` | remove a key mapping |
 | `wormhole` | send the current capture |

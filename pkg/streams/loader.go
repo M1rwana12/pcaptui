@@ -26,8 +26,9 @@ var Goroutinewg *sync.WaitGroup
 //======================================================================
 
 type ILoaderCmds interface {
-	// token is the tshark spelling of the family - tcp, udp, tls, websocket.
-	Stream(pcap string, token string, idx int) pcap.IPcapCommand
+	// follow is the whole -z value, e.g. follow,tcp,raw,0 - built by Ref so
+	// that the two-index families and the never-a-third rule live in one place.
+	Stream(pcap string, follow string) pcap.IPcapCommand
 	// The indexer is given the whole display filter rather than a family and
 	// an index, because the field carrying the index is not always named
 	// after the family: a WebSocket stream is indexed by tcp.stream.
@@ -42,10 +43,10 @@ func MakeCommands() commands {
 
 var _ ILoaderCmds = commands{}
 
-func (c commands) Stream(pcapfile string, token string, idx int) pcap.IPcapCommand {
+func (c commands) Stream(pcapfile string, follow string) pcap.IPcapCommand {
 	// -q is not optional: without it tshark prints the whole packet summary
 	// before the stream, and the parser is handed a listing to read.
-	args := []string{"-r", pcapfile, "-q", "-z", fmt.Sprintf("follow,%s,raw,%d", token, idx)}
+	args := []string{"-r", pcapfile, "-q", "-z", follow}
 	// Including the TLS key log, without which a reassembled stream is
 	// ciphertext - which the User Guide says it is not.
 	args = append(args, pcaptui.TsharkExtras()...)
@@ -110,15 +111,15 @@ type IIndexerCallbacks interface {
 	AfterIndexEnd(success bool)
 }
 
-func (c *Loader) StartLoad(pcap string, f Family, idx int, app gowid.IApp, cb IIndexerCallbacks) {
+func (c *Loader) StartLoad(pcap string, ref Ref, app gowid.IApp, cb IIndexerCallbacks) {
 	c.SuppressErrors = false
 
 	pcaptui.TrackedGo(func() {
-		c.loadStreamReassemblyAsync(pcap, f, idx, app, cb)
+		c.loadStreamReassemblyAsync(pcap, ref, app, cb)
 	}, Goroutinewg)
 
 	pcaptui.TrackedGo(func() {
-		c.startStreamIndexerAsync(pcap, f, idx, app, cb)
+		c.startStreamIndexerAsync(pcap, ref, app, cb)
 	}, Goroutinewg)
 }
 
@@ -127,7 +128,7 @@ type ISavedData interface {
 	Chunk(i int) IChunk
 }
 
-func (c *Loader) loadStreamReassemblyAsync(pcapf string, f Family, idx int, app gowid.IApp, cb interface{}) {
+func (c *Loader) loadStreamReassemblyAsync(pcapf string, ref Ref, app gowid.IApp, cb interface{}) {
 	c.streamCtx, c.streamCancelFn = context.WithCancel(c.mainCtx)
 
 	procChan := make(chan int)
@@ -139,7 +140,7 @@ func (c *Loader) loadStreamReassemblyAsync(pcapf string, f Family, idx int, app 
 		}
 	}()
 
-	c.streamCmd = c.cmds.Stream(pcapf, f.Token, idx)
+	c.streamCmd = c.cmds.Stream(pcapf, ref.FollowArg("raw"))
 
 	termChan := make(chan error)
 
@@ -252,7 +253,7 @@ func (c *Loader) loadStreamReassemblyAsync(pcapf string, f Family, idx int, app 
 	c.streamCancelFn()
 }
 
-func (c *Loader) startStreamIndexerAsync(pcapf string, f Family, idx int, app gowid.IApp, cb IIndexerCallbacks) {
+func (c *Loader) startStreamIndexerAsync(pcapf string, ref Ref, app gowid.IApp, cb IIndexerCallbacks) {
 	res := false
 
 	procChan := make(chan int)
@@ -266,7 +267,7 @@ func (c *Loader) startStreamIndexerAsync(pcapf string, f Family, idx int, app go
 
 	c.indexerCtx, c.indexerCancelFn = context.WithCancel(c.mainCtx)
 
-	c.indexerCmd = c.cmds.Indexer(pcapf, f.Filter(idx))
+	c.indexerCmd = c.cmds.Indexer(pcapf, ref.Filter())
 
 	streamOut, err := c.indexerCmd.StdoutReader()
 	if err != nil {
@@ -348,7 +349,7 @@ func (c *Loader) startStreamIndexerAsync(pcapf string, f Family, idx int, app go
 	pid = c.indexerCmd.Pid()
 	procChan <- pid
 
-	res = decodeStreamXml(streamOut, f.Transport, c.indexerCtx, cb)
+	res = decodeStreamXml(streamOut, ref.Family.Transport, c.indexerCtx, cb)
 }
 
 func decodeStreamXml(streamOut io.Reader, proto string, ctx context.Context, cb ITrackPayload) bool {

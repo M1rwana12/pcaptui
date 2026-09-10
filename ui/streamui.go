@@ -46,6 +46,7 @@ var StreamLoader *streams.Loader // DOC - one because it holds stream index stat
 type streamKey struct {
 	proto streams.Protocol
 	idx   int
+	sub   int // the second index of a two-index family, e.g. an http2.streamid
 }
 
 //======================================================================
@@ -122,21 +123,21 @@ func startStreamReassemblyOf(want *streams.Family, app gowid.IApp) {
 		return
 	}
 
-	family, streamIndex, err := pickStreamFamily(want, model)
+	ref, err := pickStreamFamily(want, model)
 	if err != nil {
 		OpenError(err.Error(), app)
 		return
 	}
-	proto := family.Proto
+	proto := ref.Family.Proto
 
-	filter := family.Filter(streamIndex)
+	filter := ref.Filter()
 
 	previousFilterValue := FilterWidget.Value()
 
 	FilterWidget.SetValue(filter, app)
 	RequestNewFilter(filter, app)
 
-	currentStreamKey = &streamKey{proto: proto, idx: streamIndex}
+	currentStreamKey = &streamKey{proto: proto, idx: ref.Index, sub: ref.Sub}
 
 	newSize, reset := pcaptui.FileSizeDifferentTo(Loader.PcapPdml, streamsPcapSize)
 	if reset {
@@ -169,18 +170,16 @@ func startStreamReassemblyOf(want *streams.Family, app gowid.IApp) {
 		StreamLoader = streams.NewLoader(streams.MakeCommands(), Loader.Context())
 
 		sh := &streamParseHandler{
-			app:    app,
-			name:   Loader.String(),
-			proto:  proto,
-			family: family,
-			idx:    streamIndex,
-			wid:    swid,
+			app:   app,
+			name:  Loader.String(),
+			proto: proto,
+			ref:   ref,
+			wid:   swid,
 		}
 
 		StreamLoader.StartLoad(
 			Loader.PcapPdml,
-			family,
-			streamIndex,
+			ref,
 			app,
 			sh,
 		)
@@ -198,8 +197,7 @@ type streamParseHandler struct {
 	pktIndices       chan int
 	name             string
 	proto            streams.Protocol
-	family           streams.Family
-	idx              int
+	ref              streams.Ref
 	wid              *streamwidget.Widget
 	pleaseWaitClosed bool
 	openedStreams    bool
@@ -337,9 +335,9 @@ func (t *streamParseHandler) AfterEnd(code pcap.HandlerCode, app gowid.IApp) {
 			// and exit status 0. So this message is the only place the
 			// difference can be explained, and "No stream payloads found"
 			// explained none of it.
-			msg := fmt.Sprintf("%s stream %d carried no payload.", t.family.Label, t.idx)
-			if t.family.EmptyReason != "" {
-				msg = fmt.Sprintf("%s %s", msg, t.family.EmptyReason)
+			msg := fmt.Sprintf("%s carried no payload.", t.ref.Describe())
+			if t.ref.Family.EmptyReason != "" {
+				msg = fmt.Sprintf("%s %s", msg, t.ref.Family.EmptyReason)
 			}
 			OpenMessage(msg, appView, app)
 		}

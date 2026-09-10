@@ -111,7 +111,7 @@ does not exist, exits zero and decrypts nothing" is worth more in the log than
 | `pkg/pdmltree` | the protocol tree model |
 | `pkg/shark` | column formats, Wireshark configuration |
 | `pkg/stats` | Expert Information, Protocol Hierarchy |
-| `pkg/streams` | stream reassembly — TCP, UDP, TLS, WebSocket |
+| `pkg/streams` | stream reassembly — TCP, UDP, TLS, WebSocket, HTTP/2 |
 | `pkg/convs` | conversations |
 | `pkg/cli` | command-line options |
 | `ui` | everything on screen |

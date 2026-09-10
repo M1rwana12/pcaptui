@@ -84,7 +84,7 @@ menu.
 | `w` | HTTP | how the HTTP responses turned out, by status |
 | `d` | DNS | what was asked for, and how the answers turned out |
 | `v` | Conversations | who talked to whom, by packets and bytes |
-| `s` | Reassemble stream | follow the conversation this packet is in; `:streams tls`/`websocket` for those |
+| `s` | Reassemble stream | follow the conversation this packet is in; `:streams tls`/`websocket`/`http2` for those |
 | `p` | Capture file properties | size, duration, encapsulation, hashes |
 | `x` | Export objects | write the files this capture carried out to disk |
 

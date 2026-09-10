@@ -83,7 +83,7 @@ tcpdump -w - port 53 | pcaptui -r -
 | `w` | HTTP | чим закінчились HTTP-відповіді, за статусом |
 | `d` | DNS | що питали і чим відповіли |
 | `v` | Conversations | хто з ким говорив, у пакетах і байтах |
-| `s` | Reassemble stream | зібрати потік, до якого належить пакет; `:streams tls`/`websocket` — для цих родин |
+| `s` | Reassemble stream | зібрати потік, до якого належить пакет; `:streams tls`/`websocket`/`http2` — для цих родин |
 | `p` | Capture file properties | розмір, тривалість, інкапсуляція, хеші |
 | `x` | Export objects | записати на диск файли, які ніс цей захват |
 

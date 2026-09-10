@@ -31,7 +31,11 @@ func TestTheStreamCommandsCarryTheSharedArguments(t *testing.T) {
 	pcaptui.SetTsharkExtras([]string{"tcp.port==23,http"},
 		[]string{"-o", "tls.keylog_file:/keys"})
 
-	follow := joinedArgs(t, MakeCommands().Stream("capture.pcap", "tcp", 0))
+	tcp, ok := FamilyByToken("tcp")
+	require.True(t, ok)
+
+	follow := joinedArgs(t, MakeCommands().Stream("capture.pcap",
+		Ref{Family: tcp, Index: 0}.FollowArg("raw")))
 	assert.Contains(t, follow, "-o tls.keylog_file:/keys")
 	assert.Contains(t, follow, "-d tcp.port==23,http")
 	assert.Contains(t, follow, "-z follow,tcp,raw,0")
@@ -48,15 +52,27 @@ func TestTheStreamCommandsCarryTheSharedArguments(t *testing.T) {
 	// websocket.stream field in Wireshark at all.
 	ws, ok := FamilyByToken("websocket")
 	require.True(t, ok)
-	wsFollow := joinedArgs(t, MakeCommands().Stream("capture.pcap", ws.Token, 2))
+	wsRef := Ref{Family: ws, Index: 2}
+	wsFollow := joinedArgs(t, MakeCommands().Stream("capture.pcap", wsRef.FollowArg("raw")))
 	assert.Contains(t, wsFollow, "-z follow,websocket,raw,2")
-	wsIndex := joinedArgs(t, MakeCommands().Indexer("capture.pcap", ws.Filter(2)))
+	wsIndex := joinedArgs(t, MakeCommands().Indexer("capture.pcap", wsRef.Filter()))
 	assert.Contains(t, wsIndex, "-Y tcp.stream eq 2")
 
 	tls, ok := FamilyByToken("tls")
 	require.True(t, ok)
-	tlsIndex := joinedArgs(t, MakeCommands().Indexer("capture.pcap", tls.Filter(1)))
+	tlsIndex := joinedArgs(t, MakeCommands().Indexer("capture.pcap",
+		Ref{Family: tls, Index: 1}.Filter()))
 	assert.Contains(t, tlsIndex, "-Y tls.stream eq 1")
+
+	// A two-index family carries both numbers into both passes, and the index
+	// pass filters on both fields.
+	h2, ok := FamilyByToken("http2")
+	require.True(t, ok)
+	h2Ref := Ref{Family: h2, Index: 3, Sub: 5}
+	h2Follow := joinedArgs(t, MakeCommands().Stream("capture.pcap", h2Ref.FollowArg("raw")))
+	assert.Contains(t, h2Follow, "-z follow,http2,raw,3,5")
+	h2Index := joinedArgs(t, MakeCommands().Indexer("capture.pcap", h2Ref.Filter()))
+	assert.Contains(t, h2Index, "-Y tcp.stream eq 3 and http2.streamid eq 5")
 }
 
 //======================================================================
