@@ -32,11 +32,31 @@ type streamPacket interface {
 // UDP - unchanged behaviour. With a want it is :streams <family>, and the
 // packet has to actually carry that family; a stream index alone does not
 // prove it, because a TLS packet has a tcp.stream like any other.
+// knownField answers whether this tshark has a field of that name, for
+// Family.Resolve. Before the field list has loaded there is nothing to ask, and
+// nil means "assume the field is there".
+func knownField() func(string) bool {
+	if FieldCompleter == nil {
+		return nil
+	}
+	return func(name string) bool {
+		ok, _ := FieldCompleter.LookupField(name)
+		return ok
+	}
+}
+
 func pickStreamFamily(want *streams.Family, pkt streamPacket) (streams.Family, int, error) {
+	return pickStreamFamilyWith(want, pkt, knownField())
+}
+
+func pickStreamFamilyWith(want *streams.Family, pkt streamPacket, known func(string) bool) (streams.Family, int, error) {
 	if want != nil {
+		resolved := want.Resolve(known)
+		want = &resolved
+
 		if !pkt.HasLayer(want.Layer) {
 			return streams.Family{}, 0, fmt.Errorf(
-				"This packet carries no %s.%s", want.Label, offerFor(pkt))
+				"This packet carries no %s.%s", want.Label, offerFor(pkt, known))
 		}
 
 		idx := pkt.FieldIndex(want.IndexField)
@@ -70,9 +90,10 @@ func pickStreamFamily(want *streams.Family, pkt streamPacket) (streams.Family, i
 // offerFor names the families this packet does have, so that a refusal is not
 // merely a refusal. It returns the empty string when there is nothing to
 // offer, which is the one case where there is nothing useful to add.
-func offerFor(pkt streamPacket) string {
+func offerFor(pkt streamPacket, known func(string) bool) string {
 	got := make([]string, 0, 2)
 	for _, f := range streams.Families() {
+		f = f.Resolve(known)
 		if pkt.HasLayer(f.Layer) && !pkt.FieldIndex(f.IndexField).IsNone() {
 			got = append(got, ":streams "+f.Token)
 		}

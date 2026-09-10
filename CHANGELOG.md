@@ -56,6 +56,12 @@
   names the families it does: "This packet carries no WebSocket. Here you can
   follow `:streams tcp`."
 
+  The field carrying a TLS stream's number is `tls.stream` from Wireshark 4.4
+  and `tcp.stream` before it, and pcaptui asks its own `tshark` which it has
+  rather than assuming: a filter naming a field a build does not know is
+  rejected outright, not empty, so assuming would have broken TLS following on
+  4.2 — where the tap exists and reports `tcp.stream` in its own filter.
+
   Not included, each for a measured reason: `http2` and `quic` need two indexes
   rather than one, and the stream parser's grammar cannot read a `Follow:`
   header whose family name has a digit in it; `mp2t` and `mpeg-pes` need two as

@@ -161,6 +161,25 @@ func TestAPacketWithNoStreamAtAll(t *testing.T) {
 	assert.Contains(t, err.Error(), "TCP or UDP")
 }
 
+// On a Wireshark with no tls.stream - anything before 4.4 - the TLS family is
+// indexed by the TCP stream underneath, which is what that tshark reports as
+// the filter for its own follow,tls tap.
+func TestOnAnOlderWiresharkTLSIsIndexedByTheTCPStream(t *testing.T) {
+	want := family(t, "tls")
+	noTLSStream := func(name string) bool { return name != "tls.stream" }
+	pkt := fakePacket{
+		layers:  map[string]bool{"tcp": true, "tls": true},
+		indexes: map[string]int{"tcp.stream": 7},
+	}
+
+	f, idx, err := pickStreamFamilyWith(&want, pkt, noTLSStream)
+
+	require.NoError(t, err, "following TLS should still work where tls.stream does not exist")
+	assert.Equal(t, streams.TLS, f.Proto)
+	assert.Equal(t, 7, idx)
+	assert.Equal(t, "tcp.stream eq 7", f.Filter(idx))
+}
+
 // The refusal lists what this packet does offer, so that a user who asked for
 // the wrong family is told the right one rather than just told no.
 func TestTheRefusalNamesEveryFamilyThePacketOffers(t *testing.T) {

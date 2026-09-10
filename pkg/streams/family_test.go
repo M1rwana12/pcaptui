@@ -6,7 +6,9 @@ package streams
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"os"
+	"os/exec"
 	"strings"
 	"sync"
 	"testing"
@@ -74,6 +76,8 @@ func TestTheFilterIsSpelledTheWayTsharkSpellsIt(t *testing.T) {
 	}{
 		{"tcp", 0, "tcp.stream eq 0"},
 		{"udp", 3, "udp.stream eq 3"},
+		// The spelling from Wireshark 4.4 onwards; Resolve handles the builds
+		// before it, which have no tls.stream at all.
 		{"tls", 1, "tls.stream eq 1"},
 		// Not websocket.stream: Wireshark has no such field, and tshark's own
 		// filter for follow,websocket is the TCP stream underneath.
@@ -82,6 +86,34 @@ func TestTheFilterIsSpelledTheWayTsharkSpellsIt(t *testing.T) {
 		f, ok := FamilyByToken(tc.token)
 		require.True(t, ok, tc.token)
 		assert.Equal(t, tc.want, f.Filter(tc.idx))
+	}
+}
+
+// tls.stream arrived in Wireshark 4.4. In 4.2 the TLS follow tap exists and
+// reports tcp.stream as its filter, and a display filter naming a field the
+// build does not know is rejected rather than empty - so composing
+// `tls.stream eq 0` there breaks the index pass instead of degrading.
+func TestAnIndexFieldThisTsharkLacksFallsBackToTheTransport(t *testing.T) {
+	without := func(missing string) func(string) bool {
+		return func(name string) bool { return name != missing }
+	}
+
+	tls, ok := FamilyByToken("tls")
+	require.True(t, ok)
+
+	assert.Equal(t, "tls.stream", tls.Resolve(without("nothing")).IndexField,
+		"a build that has the field keeps it")
+	assert.Equal(t, "tcp.stream", tls.Resolve(without("tls.stream")).IndexField,
+		"a build without it is told the transport's field, which is what its own tap reports")
+	assert.Equal(t, "tls.stream", tls.Resolve(nil).IndexField,
+		"nil means the field list has not loaded yet - assume the field is there")
+
+	// The families whose index field is already the transport's cannot move.
+	for _, token := range []string{"tcp", "udp", "websocket"} {
+		f, ok := FamilyByToken(token)
+		require.True(t, ok, token)
+		assert.Equal(t, f.IndexField, f.Resolve(without(f.IndexField)).IndexField,
+			"%s has nothing to fall back to", token)
 	}
 }
 
@@ -192,6 +224,20 @@ func (c *chunkCollector) OnStreamChunk(chunk IChunk) { c.chunks = append(c.chunk
 // reach the screen. See TestTheHeaderLosesItsLineEndings.
 func (c *chunkCollector) OnStreamHeader(header FollowHeader) { c.header = header.Clean() }
 
+// fieldExists asks this tshark whether it knows a field name, which is what
+// decides the spelling of a TLS stream's filter. -T fields with an unknown
+// field is an error naming it, so running it is the whole test.
+func fieldExists(t *testing.T) func(string) bool {
+	t.Helper()
+	return func(name string) bool {
+		cmd := exec.Command("tshark", "-r", "../../scripts/pcaps/tls.pcap",
+			"-T", "fields", "-e", name)
+		cmd.Stdout = io.Discard
+		cmd.Stderr = io.Discard
+		return cmd.Run() == nil
+	}
+}
+
 func followWith(t *testing.T, pcap string, f Family, idx int) *chunkCollector {
 	t.Helper()
 	tsharktest.Need(t)
@@ -230,8 +276,8 @@ func TestAWebSocketStreamIsTheMessagesNotTheFraming(t *testing.T) {
 	// The client frame is masked on the wire; following the TCP stream instead
 	// gives the handshake and the mask, which is the whole point of asking for
 	// the WebSocket family.
-	assert.Equal(t, "tcp.stream eq 0", got.header.Filter,
-		"tshark indexes a websocket stream by the TCP stream under it")
+	assert.Equal(t, ws.Resolve(fieldExists(t)).Filter(0), got.header.Filter,
+		"the filter this program composes is not the one tshark reports")
 
 	tcp, _ := FamilyByToken("tcp")
 	raw := followWith(t, "../../scripts/pcaps/websocket.pcap", tcp, 0)
@@ -253,7 +299,11 @@ func TestFollowingTLSWithoutKeysIsEmptyAndSaysNothingAboutIt(t *testing.T) {
 
 	assert.Empty(t, got.chunks,
 		"tshark returned TLS payload for a capture with no key log")
-	assert.Equal(t, "tls.stream eq 0", got.header.Filter)
+
+	// Not a hard-coded field name: this is tls.stream from Wireshark 4.4 and
+	// tcp.stream before it, and the contract is that the two agree.
+	assert.Equal(t, tls.Resolve(fieldExists(t)).Filter(0), got.header.Filter,
+		"the filter this program composes is not the one tshark reports")
 	// The banner is complete and the addresses are empty - the same answer
 	// tshark gives for a stream that does not exist at all.
 	assert.Equal(t, ":0", got.header.Node0)

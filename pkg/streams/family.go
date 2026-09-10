@@ -162,6 +162,27 @@ func (f Family) Filter(idx int) string {
 	return fmt.Sprintf("%s eq %d", f.IndexField, idx)
 }
 
+// Resolve adjusts the index field to the fields this tshark actually has.
+//
+// tls.stream does not exist before Wireshark 4.4. The TLS follow tap is there
+// in 4.2 and reports `tcp.stream eq N` as its own filter - measured on the CI
+// runner's 4.2.2, against 4.6.8 here, which reports tls.stream. That matters
+// beyond a label: a display filter naming a field this build does not know is
+// rejected outright, so the index pass would fail rather than come back empty,
+// and following a TLS stream would break on a Wireshark this program is
+// supposed to support.
+//
+// known answers whether a field name exists; nil means "assume it does",
+// which is what happens before the field list has loaded.
+func (f Family) Resolve(known func(string) bool) Family {
+	if known == nil || known(f.IndexField) {
+		return f
+	}
+
+	f.IndexField = f.Transport + ".stream"
+	return f
+}
+
 //======================================================================
 // Local Variables:
 // mode: Go
