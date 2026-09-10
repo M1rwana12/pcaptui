@@ -54,9 +54,14 @@ jobs:
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tshark
 
       # Releasing something whose tests were never run is how a broken binary
-      # reaches people who then have no reason to trust the next one.
+      # reaches people who then have no reason to trust the next one. The
+      # variable is what makes that true: the thirty-one tests that drive a
+      # real tshark skip themselves when there is none, and this is the last
+      # run where a silent skip would matter.
       - name: Test
         run: go test ./...
+        env:
+          PCAPTUI_REQUIRE_TSHARK: 1
 
       - uses: goreleaser/goreleaser-action@v6
         with:

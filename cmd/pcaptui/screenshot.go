@@ -83,11 +83,20 @@ const (
 //
 // So the load itself is asked, and the picture only has to be still after it
 // says it is done.
+// And a load that says it is done is not a screen that is complete: the two
+// halves arrive separately and the detail lands in a cache the panes read on
+// their next render, so between them the packet list is drawn over two empty
+// panes. Asking whether the focused packet's detail is there closes that
+// window - the gate produced exactly that picture at random three times in one
+// day before this.
 func stillLoading() bool {
 	if ui.Loader == nil {
 		return false
 	}
-	return ui.Loader.PsmlLoader.IsLoading() || ui.Loader.PdmlLoader.IsLoading()
+	if ui.Loader.PsmlLoader.IsLoading() || ui.Loader.PdmlLoader.IsLoading() {
+		return true
+	}
+	return !ui.SelectedPacketDetailLoaded()
 }
 
 // captureWhenSettled writes the screen once it stops changing, then quits.

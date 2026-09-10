@@ -3325,6 +3325,39 @@ func ApplyCurrentTheme(app gowid.IApp) {
 // screen. Nothing else should set it.
 var ScreenOverride tcell.Screen
 
+// SelectedPacketDetailLoaded reports whether the tree and bytes for the packet
+// the list has focused are there to be drawn.
+//
+// Both loaders can say they are finished while this is still false: the packet
+// list comes from PSML, the detail from PDML, and the detail is put into a
+// cache that the panes read on their next render. So "nothing is loading" is
+// not "the screen is complete", and a screenshot taken between the two shows a
+// packet list with two empty panes under it. That is the failure the screenshot
+// gate produced at random three times in one day - twice in CI and once here,
+// as a command that answered "the details for this packet have not loaded
+// yet".
+//
+// True when there is nothing to wait for: no list, no rows, or no capture.
+func SelectedPacketDetailLoaded() bool {
+	if packetListView == nil {
+		return true
+	}
+
+	fxy, err := packetListView.FocusXY()
+	if err != nil {
+		// No focused row - an empty capture has none, and there is no detail
+		// coming for it.
+		return true
+	}
+
+	rid, ok := packetListView.Model().RowIdentifier(fxy.Row)
+	if !ok {
+		return true
+	}
+
+	return getCurrentStructModel(int(rid)) != nil
+}
+
 func Build(tty string) (*gowid.App, error) {
 
 	var err error
