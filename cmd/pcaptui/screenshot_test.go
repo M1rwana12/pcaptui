@@ -94,6 +94,34 @@ func TestPrintableCharactersStandForThemselves(t *testing.T) {
 	}
 }
 
+// A space is a separator in a vim mapping, not a printable character, so the
+// parser drops it - and a command line missing a word is still a command line,
+// so nothing complains. `:streams websocket` arrived as `:streamswebsocket`,
+// which is no command at all, and the screenshot showed the main view as
+// though the keys had never been typed.
+func TestARawSpaceMeansSpace(t *testing.T) {
+	keys := parseKeys("a b")
+
+	require.Len(t, keys, 3)
+	assert.Equal(t, 'a', keys[0].Rune())
+	assert.Equal(t, ' ', keys[1].Rune())
+	assert.Equal(t, 'b', keys[2].Rune())
+}
+
+func TestACommandWithAnArgumentSurvives(t *testing.T) {
+	keys := parseKeys(":streams websocket<enter>")
+
+	var typed string
+	for _, k := range keys {
+		if k.Key() == tcell.KeyRune {
+			typed += string(k.Rune())
+		}
+	}
+
+	assert.Equal(t, ":streams websocket", typed)
+	assert.Equal(t, tcell.KeyEnter, keys[len(keys)-1].Key())
+}
+
 //======================================================================
 // Local Variables:
 // mode: Go

@@ -193,6 +193,28 @@ one direction alone or both interleaved. Each chunk is labelled with the
 direction it travelled. From here you can filter the packet list down to just
 this stream.
 
+### Following something other than the transport
+
+`s` follows the transport stream — TCP, or UDP if the packet is not TCP. Two
+more families can be asked for by name:
+
+| Command | What it shows |
+|---|---|
+| `:streams websocket` | the WebSocket messages, unmasked, without the HTTP handshake or the framing bytes around them |
+| `:streams tls` | the decrypted TLS payload, which needs `--tls-keylog` |
+| `:streams tcp`, `:streams udp` | the transport stream, the same as `s` |
+
+They are not chosen for you, and that is deliberate. A TLS packet is a TCP
+packet too, so following it as TLS looks like the better answer — but with no
+key log there is nothing to decrypt, and `tshark` reports that exactly the way
+it reports a stream that does not exist: an empty result and a successful exit.
+Choosing TLS on your behalf would therefore replace the bytes you can read with
+an empty pane, without saying why. Ask for it and, if it is empty, pcaptui
+tells you what is missing.
+
+If the selected packet has no stream of the family you asked for, pcaptui says
+so and names the families it does have.
+
 ## Conversations
 
 `v`, `:convs`, or **Conversations** in the Analysis menu, lists the conversations in
@@ -368,7 +390,9 @@ be indented beneath nothing.
 ## Decrypting TLS
 
 With the session keys, TLS payloads become ordinary protocol layers — HTTP
-inside TLS, and so on — and stream reassembly shows the plaintext.
+inside TLS, and so on — and `:streams tls` shows the plaintext. Without them it
+shows nothing, and says that is why: see [following something other than the
+transport](#following-something-other-than-the-transport).
 
 Browsers and many command-line tools write those keys when `SSLKEYLOGFILE` is
 set:
@@ -502,7 +526,7 @@ Press `:` for the command line. Tab lists and completes.
 | `quit` | quit |
 | `recents` | load a recently-used capture |
 | `set` | change a setting |
-| `streams` | stream reassembly |
+| `streams` | stream reassembly; takes an optional family — `tcp`, `udp`, `tls`, `websocket` |
 | `theme` | choose a theme |
 | `unmap` | remove a key mapping |
 | `wormhole` | send the current capture |

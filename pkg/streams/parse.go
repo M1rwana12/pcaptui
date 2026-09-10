@@ -47,6 +47,8 @@ const (
 	Unspecified Protocol = 0
 	TCP         Protocol = iota
 	UDP         Protocol = iota
+	TLS         Protocol = iota
+	WebSocket   Protocol = iota
 )
 
 var _ fmt.Stringer = Protocol(0)
@@ -59,6 +61,10 @@ func (p Protocol) String() string {
 		return "TCP"
 	case UDP:
 		return "UDP"
+	case TLS:
+		return "TLS"
+	case WebSocket:
+		return "WebSocket"
 	default:
 		panic(fmt.Sprintf("unknown stream protocol %d", int(p)))
 	}
@@ -107,6 +113,26 @@ func (b Bytes) String() string {
 }
 
 //======================================================================
+
+// Clean returns the header with the line endings taken off its four fields.
+//
+// tshark writes CRLF on Windows and the grammar captures a header line up to
+// the newline, so every field arrives with a carriage return on the end there
+// and without one everywhere else. Node0 and Node1 are drawn into the
+// conversation menu and into the "client → server (N bytes)" line, where a
+// stray CR lands in the middle of the text and sends the cursor back to the
+// start of the row.
+func (f FollowHeader) Clean() FollowHeader {
+	trim := func(s string) string {
+		return strings.TrimRight(s, "\r\n \t")
+	}
+	return FollowHeader{
+		Follow: trim(f.Follow),
+		Filter: trim(f.Filter),
+		Node0:  trim(f.Node0),
+		Node1:  trim(f.Node1),
+	}
+}
 
 type FollowHeader struct {
 	Follow string

@@ -17,6 +17,7 @@ import (
 	"github.com/gcla/gowid/vim"
 	"github.com/m1rwana12/pcaptui"
 	"github.com/m1rwana12/pcaptui/configs/profiles"
+	"github.com/m1rwana12/pcaptui/pkg/streams"
 	"github.com/m1rwana12/pcaptui/pkg/theme"
 	"github.com/m1rwana12/pcaptui/widgets/mapkeys"
 	"github.com/m1rwana12/pcaptui/widgets/minibuffer"
@@ -902,6 +903,46 @@ func (d helpCommand) Arguments(toks []string, app gowid.IApp) []minibuffer.IArg 
 	res := make([]minibuffer.IArg, 0)
 	if len(toks) == 1 {
 		res = append(res, newHelpArg(toks[0]))
+	}
+	return res
+}
+
+//======================================================================
+
+// streamsCommand is `:streams`, with an optional family: tcp, udp, tls or
+// websocket. Bare `:streams` and the `s` key both follow the transport
+// stream, which is what they have always done; the families layered on top
+// have to be named, because one of them coming back empty is a legitimate
+// answer and not one to spring on somebody who asked for "the stream".
+type streamsCommand struct{}
+
+var _ minibuffer.IAction = streamsCommand{}
+
+func (d streamsCommand) Run(app gowid.IApp, args ...string) error {
+	switch len(args) {
+	case 1:
+		startStreamReassembly(app)
+	case 2:
+		f, ok := streams.FamilyByToken(args[1])
+		if !ok {
+			return fmt.Errorf("Don't know how to follow %s. Try one of: %s.",
+				args[1], strings.Join(streams.Tokens(), ", "))
+		}
+		startStreamReassemblyAs(f, app)
+	default:
+		return fmt.Errorf("Usage: streams [%s]", strings.Join(streams.Tokens(), "|"))
+	}
+	return nil
+}
+
+func (d streamsCommand) OfferCompletion() bool {
+	return true
+}
+
+func (d streamsCommand) Arguments(toks []string, app gowid.IApp) []minibuffer.IArg {
+	res := make([]minibuffer.IArg, 0)
+	if len(toks) == 1 {
+		res = append(res, substrArg{sub: toks[0], candidates: streams.Tokens()})
 	}
 	return res
 }

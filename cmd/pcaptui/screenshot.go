@@ -215,16 +215,21 @@ func typeKeys(app *gowid.App, screen tcell.SimulationScreen, keys string) {
 
 // parseKeys turns the flag's value into keypresses.
 //
-// A literal newline or tab in the argument means the named key, because that
-// is how a shell writes one and how this flag was used before it understood
-// names. The vim parser drops both silently - which is how a screenshot came
-// out showing ":expert" typed into the command line but never run.
+// A literal newline, tab or space in the argument means the named key, because
+// that is how a shell writes one and how this flag was used before it
+// understood names. The vim parser drops all three silently - which is how a
+// screenshot came out showing ":expert" typed into the command line but never
+// run, and, later, how ":streams websocket" was typed as ":streamswebsocket"
+// and did nothing at all. A space is a separator in a vim mapping and not a
+// printable character, so it has to be named; the failure is the quiet kind,
+// because a command line with a word missing is still a command line.
 func parseKeys(keys string) []gowid.Key {
 	keys = strings.NewReplacer(
 		"\r\n", "<enter>",
 		"\n", "<enter>",
 		"\r", "<enter>",
 		"\t", "<tab>",
+		" ", "<space>",
 	).Replace(keys)
 
 	res := make([]gowid.Key, 0, len(keys))

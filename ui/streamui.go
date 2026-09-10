@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/gcla/gowid"
-	"github.com/gcla/gowid/gwutil"
 	"github.com/gcla/gowid/widgets/holder"
 	"github.com/gcla/gowid/widgets/menu"
 	"github.com/gcla/gowid/widgets/null"
@@ -77,7 +76,27 @@ func streamKeyPress(evk *tcell.EventKey, app gowid.IApp) bool {
 	return handled
 }
 
+// startStreamReassembly follows the transport stream the selected packet
+// belongs to - TCP, or UDP if it is not TCP. That is what the `s` key has
+// always done and what it still does.
+//
+// The families layered on top are asked for by name, with :streams tls or
+// :streams websocket, and are never chosen on the user's behalf. A packet
+// carrying TLS is a TCP packet too, so preferring TLS for it would be a
+// silent trade of the bytes for an empty pane every time there is no key log:
+// measured, `-z follow,tls,raw,0` on a TLS stream with no keys answers with a
+// full banner, empty node addresses, no payload and exit status 0 - the same
+// shape as a stream that does not exist.
 func startStreamReassembly(app gowid.IApp) {
+	startStreamReassemblyOf(nil, app)
+}
+
+// startStreamReassemblyAs follows a named family - the :streams <family> form.
+func startStreamReassemblyAs(f streams.Family, app gowid.IApp) {
+	startStreamReassemblyOf(&f, app)
+}
+
+func startStreamReassemblyOf(want *streams.Family, app gowid.IApp) {
 	var model *pdmltree.Model
 	haveSelectedPacket := false
 
@@ -103,27 +122,21 @@ func startStreamReassembly(app gowid.IApp) {
 		return
 	}
 
-	proto := streams.TCP
-	streamIndex := model.TCPStreamIndex()
-	if streamIndex.IsNone() {
-		proto = streams.UDP
-		streamIndex = model.UDPStreamIndex()
-		if streamIndex.IsNone() {
-			OpenError("Please select a TCP or UDP packet.", app)
-			return
-		}
+	family, streamIndex, err := pickStreamFamily(want, model)
+	if err != nil {
+		OpenError(err.Error(), app)
+		return
 	}
+	proto := family.Proto
 
-	filterProto := gwutil.If(proto == streams.TCP, "tcp", "udp").(string)
-
-	filter := fmt.Sprintf("%s.stream eq %d", filterProto, streamIndex.Val())
+	filter := family.Filter(streamIndex)
 
 	previousFilterValue := FilterWidget.Value()
 
 	FilterWidget.SetValue(filter, app)
 	RequestNewFilter(filter, app)
 
-	currentStreamKey = &streamKey{proto: proto, idx: streamIndex.Val()}
+	currentStreamKey = &streamKey{proto: proto, idx: streamIndex}
 
 	newSize, reset := pcaptui.FileSizeDifferentTo(Loader.PcapPdml, streamsPcapSize)
 	if reset {
@@ -156,17 +169,18 @@ func startStreamReassembly(app gowid.IApp) {
 		StreamLoader = streams.NewLoader(streams.MakeCommands(), Loader.Context())
 
 		sh := &streamParseHandler{
-			app:   app,
-			name:  Loader.String(),
-			proto: proto,
-			idx:   streamIndex.Val(),
-			wid:   swid,
+			app:    app,
+			name:   Loader.String(),
+			proto:  proto,
+			family: family,
+			idx:    streamIndex,
+			wid:    swid,
 		}
 
 		StreamLoader.StartLoad(
 			Loader.PcapPdml,
-			filterProto,
-			streamIndex.Val(),
+			family,
+			streamIndex,
 			app,
 			sh,
 		)
@@ -184,6 +198,7 @@ type streamParseHandler struct {
 	pktIndices       chan int
 	name             string
 	proto            streams.Protocol
+	family           streams.Family
 	idx              int
 	wid              *streamwidget.Widget
 	pleaseWaitClosed bool
@@ -317,7 +332,16 @@ func (t *streamParseHandler) AfterEnd(code pcap.HandlerCode, app gowid.IApp) {
 		}
 
 		if t.wid.NumChunks() == 0 {
-			OpenMessage("No stream payloads found.", appView, app)
+			// tshark reports an empty stream exactly as it reports a stream
+			// that carries nothing: a complete banner, empty node addresses,
+			// and exit status 0. So this message is the only place the
+			// difference can be explained, and "No stream payloads found"
+			// explained none of it.
+			msg := fmt.Sprintf("%s stream %d carried no payload.", t.family.Label, t.idx)
+			if t.family.EmptyReason != "" {
+				msg = fmt.Sprintf("%s %s", msg, t.family.EmptyReason)
+			}
+			OpenMessage(msg, appView, app)
 		}
 	}))
 	close(t.stopChunks)
@@ -330,8 +354,12 @@ func (t *streamParseHandler) TrackPayloadPacket(packet int) {
 }
 
 func (t *streamParseHandler) OnStreamHeader(hdr streams.FollowHeader) {
+	// Cleaned here because this is where the header stops being tshark's
+	// output and becomes text on the screen - the node addresses are drawn
+	// into the conversation menu and into the byte counts beside it.
+	clean := hdr.Clean()
 	t.app.Run(gowid.RunFunction(func(app gowid.IApp) {
-		t.wid.AddHeader(hdr, app)
+		t.wid.AddHeader(clean, app)
 	}))
 }
 

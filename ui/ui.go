@@ -1452,6 +1452,12 @@ func lastLineMode(app gowid.IApp) {
 		}))
 	}
 
+	// Registered after that loop, deliberately: `streams` comes out of the
+	// same list as every other analysis view, and this replaces it with a
+	// version that takes an optional family. The key, the menu entry and both
+	// help screens still come from the one record.
+	MiniBuffer.Register("streams", streamsCommand{})
+
 	MiniBuffer.Register("columns", minibufferFn(func(gowid.IApp, ...string) error {
 		openEditColumns(app)
 		return nil

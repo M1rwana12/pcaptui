@@ -222,6 +222,38 @@ func (p *Model) UDPStreamIndex() gwutil.IntOption {
 	return p.streamIndex("udp")
 }
 
+// FieldIndex reads a numeric field named in full, for the stream families
+// whose index is not called <family>.stream: TLS uses tls.stream, and a
+// WebSocket stream is indexed by the tcp.stream underneath it, because
+// Wireshark has no websocket.stream field to read.
+func (p *Model) FieldIndex(field string) gwutil.IntOption {
+	var res gwutil.IntOption
+	doc := p.queryDoc()
+	if doc == nil {
+		return res
+	}
+	if showNode := xmlquery.FindOne(doc, fmt.Sprintf("//field[@name='%s']/@show", field)); showNode != nil {
+		idx, err := strconv.Atoi(showNode.InnerText())
+		if err != nil {
+			log.Warnf("Unexpected %s node innertext value %s", field, showNode.InnerText())
+		} else {
+			res = gwutil.SomeInt(idx)
+		}
+	}
+	return res
+}
+
+// HasLayer says whether the packet carries this protocol at all. A TLS packet
+// is a TCP packet too, so the index alone cannot tell the families apart -
+// tcp.stream is present either way.
+func (p *Model) HasLayer(name string) bool {
+	doc := p.queryDoc()
+	if doc == nil {
+		return false
+	}
+	return xmlquery.FindOne(doc, fmt.Sprintf("//proto[@name='%s']", name)) != nil
+}
+
 // Return None if not TCP
 func (p *Model) streamIndex(proto string) gwutil.IntOption {
 	var res gwutil.IntOption

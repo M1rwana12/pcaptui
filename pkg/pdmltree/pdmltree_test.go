@@ -224,6 +224,29 @@ func TestAPacketWithNoStreamSaysSo(t *testing.T) {
 	assert.True(t, tree.UDPStreamIndex().IsNone(), "this packet is TCP, not UDP")
 }
 
+// The families layered over a transport are numbered by fields that are not
+// called <family>.stream - tls.stream for TLS, and tcp.stream for WebSocket,
+// which has no field of its own in Wireshark at all.
+func TestAnyNumericFieldCanBeReadByName(t *testing.T) {
+	tree := DecodePacket([]byte(p1))
+
+	assert.Equal(t, 0, tree.FieldIndex("tcp.stream").Val())
+	assert.True(t, tree.FieldIndex("tls.stream").IsNone(), "this packet is not TLS")
+	assert.True(t, tree.FieldIndex("nosuch.field").IsNone())
+}
+
+// Which family a packet belongs to cannot be settled by the index: a TLS
+// packet has a tcp.stream like every other TCP packet. The layer is the only
+// thing that distinguishes them.
+func TestTheLayersOfAPacketCanBeAsked(t *testing.T) {
+	tree := DecodePacket([]byte(p1))
+
+	assert.True(t, tree.HasLayer("tcp"))
+	assert.False(t, tree.HasLayer("tls"))
+	assert.False(t, tree.HasLayer("websocket"))
+	assert.False(t, tree.HasLayer("udp"))
+}
+
 //======================================================================
 // Local Variables:
 // mode: Go

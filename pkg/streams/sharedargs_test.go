@@ -37,9 +37,26 @@ func TestTheStreamCommandsCarryTheSharedArguments(t *testing.T) {
 	assert.Contains(t, follow, "-z follow,tcp,raw,0")
 
 	// The index pass reads the same packets and has to agree with it.
-	index := joinedArgs(t, MakeCommands().Indexer("capture.pcap", "tcp", 0))
+	index := joinedArgs(t, MakeCommands().Indexer("capture.pcap", "tcp.stream eq 0"))
 	assert.Contains(t, index, "-o tls.keylog_file:/keys")
 	assert.Contains(t, index, "-d tcp.port==23,http")
+	assert.Contains(t, index, "-Y tcp.stream eq 0")
+
+	// A family layered over TCP asks tshark for that family, and indexes the
+	// packets by the field that actually carries the number - which for
+	// WebSocket is the TCP stream underneath, because there is no
+	// websocket.stream field in Wireshark at all.
+	ws, ok := FamilyByToken("websocket")
+	require.True(t, ok)
+	wsFollow := joinedArgs(t, MakeCommands().Stream("capture.pcap", ws.Token, 2))
+	assert.Contains(t, wsFollow, "-z follow,websocket,raw,2")
+	wsIndex := joinedArgs(t, MakeCommands().Indexer("capture.pcap", ws.Filter(2)))
+	assert.Contains(t, wsIndex, "-Y tcp.stream eq 2")
+
+	tls, ok := FamilyByToken("tls")
+	require.True(t, ok)
+	tlsIndex := joinedArgs(t, MakeCommands().Indexer("capture.pcap", tls.Filter(1)))
+	assert.Contains(t, tlsIndex, "-Y tls.stream eq 1")
 }
 
 //======================================================================

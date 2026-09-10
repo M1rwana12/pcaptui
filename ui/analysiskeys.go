@@ -51,7 +51,7 @@ func analysisViews() []analysisView {
 			Key:     's',
 			Command: "streams",
 			Name:    "Reassemble stream",
-			Summary: "Follow the stream the selected packet belongs to",
+			Summary: "Follow the stream the selected packet belongs to; :streams tls or :streams websocket for those",
 			Open:    startStreamReassembly,
 		},
 		{

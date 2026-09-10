@@ -31,6 +31,37 @@
   pass that was already running. The interval is chosen from the length of the
   capture, about twenty marks, rounded to a number a person would have picked.
 
+- **Two more kinds of stream can be followed**: `:streams websocket` and
+  `:streams tls`, with `:streams tcp` and `:streams udp` naming what `s` has
+  always done. `s` is unchanged.
+
+  WebSocket following is the one with an obvious payoff: `tshark` hands back the
+  messages, unmasked, where the TCP stream underneath carries the HTTP upgrade
+  handshake, the frame headers and the client's masking key. A stream is
+  numbered by the TCP stream beneath it, because Wireshark has no
+  `websocket.stream` field at all — asking for one is an error — and that is
+  the number `tshark` puts in its own filter.
+
+  **The layered families are asked for, never chosen for you.** A TLS packet is
+  a TCP packet as well, so preferring TLS whenever it is available looks like
+  the better answer and is not: TLS following shows the *decrypted* payload, so
+  with no key log there is nothing to show, and `tshark` reports that exactly
+  the way it reports a stream that does not exist — a complete banner, empty
+  node addresses, no payload, exit status 0. Measured on a synthesised TLS
+  capture, and kept as a test. Choosing TLS silently would therefore have
+  traded the bytes you can read for an empty pane. Ask for it, and if it comes
+  back empty pcaptui says which family and stream it was and what is missing.
+
+  Asking for a family the selected packet does not carry is a refusal that
+  names the families it does: "This packet carries no WebSocket. Here you can
+  follow `:streams tcp`."
+
+  Not included, each for a measured reason: `http2` and `quic` need two indexes
+  rather than one, and the stream parser's grammar cannot read a `Follow:`
+  header whose family name has a digit in it; `mp2t` and `mpeg-pes` need two as
+  well and spell their filters differently again; `follow,sip` is registered by
+  `tshark` and refuses every index form; and `follow,http` loses the request.
+
 ### Changed
 
 - **The conversations parser is a function, and has tests.** It was fused to
@@ -124,6 +155,20 @@
 - **A packet with no bytes could give the pane a negative cursor.** Down, `G`
   and End on an empty capture computed `len(data)-1` and set the position to
   -1. Nothing crashed and nothing said so.
+
+- **The stream view's node addresses carried a carriage return on Windows.**
+  `tshark` writes CRLF there and the header parser captures a line up to the
+  newline, so the addresses drawn into the conversation menu and into the
+  "client → server (N bytes)" line ended with a CR — which, mid-line, sends the
+  terminal's cursor back to the start of the row.
+
+- **`--screenshot-keys` dropped every space.** A space is a separator in a vim
+  mapping rather than a printable character, so `:streams websocket` was typed
+  as `:streamswebsocket` — no command, no error, and a screenshot showing the
+  view the program opens on as though nothing had been typed. Newlines and tabs
+  were already translated for the same reason; spaces are now too. This is the
+  project's own screenshot tool, so the failure was invisible in exactly the
+  place it was being used to check things.
 
 - **IPv6 hosts were invisible to Endpoints and to the Overview.** Both asked
   `tshark` for IPv4 endpoints only, so a capture of IPv6 traffic answered
