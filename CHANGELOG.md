@@ -176,6 +176,16 @@
   project's own screenshot tool, so the failure was invisible in exactly the
   place it was being used to check things.
 
+- **A screenshot could be taken before the packet's detail arrived**, showing a
+  full packet list over two empty panes. The capture is loaded in two halves —
+  the list from PSML, the detail from PDML — and the detail lands in a cache the
+  panes read on their next render, so both loaders can report finished while the
+  screen is still incomplete. Waiting is now also on the focused packet's
+  detail, not only on the loaders. The same window was reachable from the
+  program: a command that needs the selected packet could answer "the details
+  for this packet have not loaded yet" the moment after a capture finished
+  loading.
+
 - **IPv6 hosts were invisible to Endpoints and to the Overview.** Both asked
   `tshark` for IPv4 endpoints only, so a capture of IPv6 traffic answered
   "Nothing to report" to the question "who is on the wire" — six lines below
