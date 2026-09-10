@@ -2,7 +2,8 @@
 // code is governed by the MIT license that can be found in the LICENSE
 // file.
 
-// Package hexdumper provides a numeric widget with a couple of buttons that increase or decrease its value.
+// Package number provides a numeric widget with a couple of buttons that
+// increase or decrease its value.
 package number
 
 import (
